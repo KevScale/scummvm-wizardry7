@@ -106,6 +106,7 @@ Wizardry7Console::Wizardry7Console(Wizardry7Engine *vm) : GUI::Debugger(), _vm(v
 	registerCmd("encounter", WRAP_METHOD(Wizardry7Console, cmdEncounter));
 	registerCmd("placement", WRAP_METHOD(Wizardry7Console, cmdPlacement));
 	registerCmd("placeview", WRAP_METHOD(Wizardry7Console, cmdPlaceView));
+	registerCmd("viewfixed", WRAP_METHOD(Wizardry7Console, cmdViewFixed));
 	registerCmd("script", WRAP_METHOD(Wizardry7Console, cmdScript));
 }
 
@@ -224,6 +225,8 @@ bool Wizardry7Console::runScript(const Common::Path &path) {
 			ok &= cmdPlacement(count, argv);
 		else if (command == "placeview")
 			ok &= cmdPlaceView(count, argv);
+		else if (command == "viewfixed")
+			ok &= cmdViewFixed(count, argv);
 		else if (command == "script")
 			ok &= cmdScript(count, argv);
 		else {
@@ -466,6 +469,24 @@ bool Wizardry7Console::cmdCharGen(int argc, const char **argv) {
 
 bool Wizardry7Console::cmdCharGenUI(int argc, const char **argv) {
 	_vm->runCharacterCreationUI("VBFONT0.VGA", argc >= 2 ? Common::Path(argv[1]) : Common::Path());
+	return true;
+}
+
+bool Wizardry7Console::cmdViewFixed(int argc, const char **argv) {
+	if (argc < 2 || argc > 3) {
+		print("Usage: viewfixed <mode> [mirror]\n");
+		return true;
+	}
+	int mode = 0, mirror = 0;
+	if (!parseInteger(argv[1], mode) || (argc == 3 && !parseInteger(argv[2], mirror))) {
+		print("Bad mode/mirror\n");
+		return true;
+	}
+	if (!_vm->showViewFixed((uint)mode, mirror != 0)) {
+		print("Cannot render fixed view mode %d\n", mode);
+		return true;
+	}
+	print("Rendered fixed pieces for view mode %d (mirror %d)\n", mode, mirror != 0);
 	return true;
 }
 

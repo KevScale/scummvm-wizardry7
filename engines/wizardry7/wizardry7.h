@@ -68,6 +68,7 @@ public:
 	bool showCharacterReview(const Common::Path &rosterPath, uint slot,
 		const Common::String &fontName = "VBFONT0.VGA");
 	bool showPlacement(const Common::Path &bundlePath, uint record, int dx = 0, int dy = 0);
+	bool showViewFixed(uint mode, bool mirror);
 
 	/** Interactive DOS-style creation dialogs (mouse/keyboard). */
 	bool runCharacterCreationUI(const Common::String &fontName = "VBFONT0.VGA",

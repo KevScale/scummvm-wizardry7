@@ -11,6 +11,7 @@
 #include "wizardry7/maze.h"
 #include "wizardry7/monster.h"
 #include "wizardry7/attack.h"
+#include "wizardry7/view.h"
 #include "wizardry7/party.h"
 #include "wizardry7/xp.h"
 #include "wizardry7/save.h"
@@ -847,5 +848,20 @@ public:
 		TS_ASSERT_EQUALS(roll.damageIndex, 5);
 		TS_ASSERT_EQUALS(roll.specialIndex, 3);
 		TS_ASSERT_EQUALS(roll.severity, 3);
+	}
+
+	void testViewFixedPieces() {
+		Common::Array<Wizardry7::ViewPiece> town = Wizardry7::ViewCompositor::fixedPieces(3, true);
+		TS_ASSERT_EQUALS(town.size(), 2u);
+		TS_ASSERT_EQUALS(town[0].slot, 4);
+		TS_ASSERT_EQUALS(town[0].piece, 4);
+		TS_ASSERT_EQUALS(town[0].sel, 4);
+		TS_ASSERT_EQUALS(town[1].slot, 2);
+		TS_ASSERT_EQUALS(town[1].piece, 0xAD);
+		TS_ASSERT_EQUALS(town[1].sel, 0xAD);
+		Common::Array<Wizardry7::ViewPiece> noMirror = Wizardry7::ViewCompositor::fixedPieces(3, false);
+		TS_ASSERT_EQUALS(noMirror[0].sel, 0xFFFF);
+		TS_ASSERT_EQUALS(Wizardry7::ViewCompositor::fixedPieces(1, true).size(), 2u);
+		TS_ASSERT_EQUALS(Wizardry7::ViewCompositor::fixedPieces(5, true).size(), 1u);
 	}
 };

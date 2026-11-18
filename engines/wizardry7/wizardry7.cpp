@@ -35,6 +35,7 @@
 #include "wizardry7/font.h"
 #include "wizardry7/items.h"
 #include "wizardry7/xp.h"
+#include "wizardry7/view.h"
 #include "wizardry7/save.h"
 #include "wizardry7/wizardry7.h"
 
@@ -532,6 +533,19 @@ bool Wizardry7Engine::showPlacement(const Common::Path &bundlePath, uint record,
 		return false;
 	const int x = (placement.xExtra + placement.x) * 8 + dx;
 	bundle.drawChunk(placement.bitmap, _screen, x, placement.y + dy);
+	_screen->makeAllDirty();
+	_screen->update();
+	return true;
+}
+
+bool Wizardry7Engine::showViewFixed(uint mode, bool mirror) {
+	if (!showScreen("PCVWSCRN"))
+		return false;
+	ViewCompositor compositor;
+	compositor.loadBundles();
+	const Common::Array<ViewPiece> pieces = ViewCompositor::fixedPieces(mode, mirror);
+	for (uint i = 0; i < pieces.size(); ++i)
+		compositor.drawPiece(_screen, pieces[i]);
 	_screen->makeAllDirty();
 	_screen->update();
 	return true;
