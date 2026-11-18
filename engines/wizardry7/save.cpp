@@ -161,6 +161,7 @@ bool SaveGame::load(const Common::Path &path) {
 bool SaveGame::loadFromData(const byte *data, uint32 size) {
 	_kind = kSaveUnknown;
 	_size = size;
+	_raw.clear();
 	_characters.clear();
 
 	if (_size < 4)
@@ -173,9 +174,41 @@ bool SaveGame::loadFromData(const byte *data, uint32 size) {
 	// Gold .SGM: 414-byte header + compressed 16*(1346+1740) payload + trailer.
 	if (_size > 414) {
 		_kind = kSaveGold;
+		_raw.resize(size);
+		memcpy(_raw.data(), data, size);
 		return true;
 	}
 	return false;
+}
+
+bool SaveGame::setCharacterRecord(uint index, const byte *record, uint32 size) {
+	if (_kind != kSaveDos || index >= _characters.size() || !record || size != kCharacterSize)
+		return false;
+	const uint32 offset = kDosStateSize + kDosRandomSize + index * kCharacterSize;
+	if (offset + kCharacterSize > _raw.size())
+		return false;
+	memcpy(_raw.data() + offset, record, kCharacterSize);
+	parseCharacter(record, _characters[index]);
+	return true;
+}
+
+bool SaveGame::writeToData(Common::Array<byte> &out) const {
+	if (_raw.empty())
+		return false;
+	out = _raw;
+	return true;
+}
+
+bool SaveGame::save(const Common::Path &path) const {
+	Common::Array<byte> data;
+	if (!writeToData(data))
+		return false;
+	Common::DumpFile out;
+	if (!out.open(path))
+		return false;
+	const bool ok = out.write(data.data(), data.size()) == data.size();
+	out.close();
+	return ok;
 }
 
 bool SaveGame::parseDos(const byte *data, uint32 size) {
@@ -186,6 +219,8 @@ bool SaveGame::parseDos(const byte *data, uint32 size) {
 	}
 
 	_kind = kSaveDos;
+	_raw.resize(size);
+	memcpy(_raw.data(), data, size);
 	_characters.resize(count);
 	for (uint i = 0; i < count; ++i) {
 		const byte *record = data + kDosStateSize + kDosRandomSize + i * kCharacterSize;

@@ -94,6 +94,11 @@ public:
 
 	bool load(const Common::Path &path);
 	bool loadFromData(const byte *data, uint32 size);
+	bool save(const Common::Path &path) const;
+
+	/** Replace one DOS character record (584 B); no-op for compressed Gold saves. */
+	bool setCharacterRecord(uint index, const byte *record, uint32 size);
+	bool writeToData(Common::Array<byte> &out) const;
 
 	SaveKind getKind() const { return _kind; }
 	uint32 getSize() const { return _size; }
@@ -108,6 +113,7 @@ private:
 
 	SaveKind _kind;
 	uint32 _size;
+	Common::Array<byte> _raw;
 	Common::Array<SaveCharacter> _characters;
 };
 

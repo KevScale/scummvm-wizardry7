@@ -123,6 +123,21 @@ public:
 		TS_ASSERT_EQUALS(c.gender, 1);
 		TS_ASSERT_EQUALS(c.klass, 2);
 		TS_ASSERT_EQUALS(c.alignment, 3);
+
+		byte replacement[584];
+		memset(replacement, 0, sizeof(replacement));
+		memcpy(replacement, "NEW", 3);
+		replacement[0x18] = 5;
+		TS_ASSERT(save.setCharacterRecord(0, replacement, sizeof(replacement)));
+		TS_ASSERT_EQUALS(save.getCharacter(0).name, Common::String("NEW"));
+		TS_ASSERT_EQUALS(save.getCharacter(0).hp, 5u);
+		Common::Array<byte> out;
+		TS_ASSERT(save.writeToData(out));
+		TS_ASSERT_EQUALS(out.size(), data.size());
+		TS_ASSERT_EQUALS(memcmp(out.data() + 10820, replacement, sizeof(replacement)), 0);
+		Wizardry7::SaveGame roundTrip;
+		TS_ASSERT(roundTrip.loadFromData(out.data(), out.size()));
+		TS_ASSERT_EQUALS(roundTrip.getCharacter(0).name, Common::String("NEW"));
 	}
 
 	void testRoster() {
