@@ -149,6 +149,7 @@ Common::Array<uint> CharacterCreation::getEligibleClasses() const {
 }
 
 CharacterCreationFlow::CharacterCreationFlow() : _step(kStepSex), _race(0) {
+	memset(_bonusSpent, 0, sizeof(_bonusSpent));
 }
 
 void CharacterCreationFlow::begin(const byte *stats, int bonusPoints) {
@@ -156,6 +157,7 @@ void CharacterCreationFlow::begin(const byte *stats, int bonusPoints) {
 	_character.setBonusPoints(bonusPoints);
 	_name.clear();
 	_race = 0;
+	memset(_bonusSpent, 0, sizeof(_bonusSpent));
 	_step = kStepSex;
 }
 
@@ -202,10 +204,22 @@ bool CharacterCreationFlow::finishName() {
 }
 
 bool CharacterCreationFlow::addBonusPoint(uint statIndex) {
-	if (_step != kStepBonus || statIndex >= CharacterCreation::kStatCount || _character.getBonusPoints() <= 0)
+	if (_step != kStepBonus || statIndex >= CharacterCreation::kStatCount)
+		return false;
+	if (_character.getBonusPoints() <= 0 || _character.getStat(statIndex) >= 18)
 		return false;
 	_character.setStat(statIndex, _character.getStat(statIndex) + 1);
 	_character.setBonusPoints(_character.getBonusPoints() - 1);
+	++_bonusSpent[statIndex];
+	return true;
+}
+
+bool CharacterCreationFlow::removeBonusPoint(uint statIndex) {
+	if (_step != kStepBonus || statIndex >= CharacterCreation::kStatCount || _bonusSpent[statIndex] == 0)
+		return false;
+	_character.setStat(statIndex, _character.getStat(statIndex) - 1);
+	_character.setBonusPoints(_character.getBonusPoints() + 1);
+	--_bonusSpent[statIndex];
 	return true;
 }
 

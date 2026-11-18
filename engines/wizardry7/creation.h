@@ -113,6 +113,7 @@ public:
 	bool setName(const Common::String &name);
 	bool finishName();
 	bool addBonusPoint(uint statIndex);
+	bool removeBonusPoint(uint statIndex);
 	bool finish();
 
 private:
@@ -120,6 +121,7 @@ private:
 	Step _step;
 	Common::String _name;
 	uint8 _race;
+	uint8 _bonusSpent[CharacterCreation::kStatCount];
 };
 
 } // End of namespace Wizardry7

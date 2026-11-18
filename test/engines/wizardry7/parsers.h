@@ -209,6 +209,13 @@ public:
 		TS_ASSERT_EQUALS(flow.getCharacter().getBonusPoints(), 5);
 		for (int i = 0; i < 5; ++i)
 			TS_ASSERT(flow.addBonusPoint(0));
+		TS_ASSERT_EQUALS(flow.getCharacter().getStat(0), 17);
+		TS_ASSERT_EQUALS(flow.getCharacter().getBonusPoints(), 0);
+		TS_ASSERT(!flow.addBonusPoint(0)); // no points left
+		TS_ASSERT(flow.removeBonusPoint(0));
+		TS_ASSERT_EQUALS(flow.getCharacter().getStat(0), 16);
+		TS_ASSERT_EQUALS(flow.getCharacter().getBonusPoints(), 1);
+		TS_ASSERT(flow.addBonusPoint(0));
 		TS_ASSERT(flow.finish());
 		TS_ASSERT_EQUALS(flow.getStep(), Wizardry7::CharacterCreationFlow::kStepDone);
 	}
@@ -244,5 +251,20 @@ public:
 		TS_ASSERT(strong.hpMax >= 12 && strong.hpMax <= 16);
 		TS_ASSERT_EQUALS(strong.staminaMax, 198);
 		TS_ASSERT_EQUALS(strong.carryingCapacity, 2970);
+	}
+
+	void testCreationBonusCap() {
+		Wizardry7::CharacterCreationFlow flow;
+		const byte stats[8] = { 18, 10, 10, 10, 10, 10, 10, 0 };
+		flow.begin(stats, 2);
+		TS_ASSERT(flow.chooseSex(0));
+		TS_ASSERT(flow.chooseRace(0));
+		TS_ASSERT(flow.chooseProfession(0));
+		TS_ASSERT(flow.setName("CAP"));
+		TS_ASSERT(flow.finishName());
+		TS_ASSERT(!flow.addBonusPoint(0)); // stat already at the cap
+		TS_ASSERT(flow.addBonusPoint(1));
+		TS_ASSERT(flow.removeBonusPoint(1));
+		TS_ASSERT_EQUALS(flow.getCharacter().getBonusPoints(), 2);
 	}
 };
