@@ -69,9 +69,9 @@ public:
 	/** Initial bonus pool: rand(6)+5, two 1-in-20 +8 rolls, minimum 9. */
 	static int rollBonusPoints(WizardryRNG &rng);
 
-	/** Raise the stats to the race's minimums (race 0..10). */
+	/** Raise the stats to the shared race minimums. */
 	void applyRaceMinimums(uint8 race);
-	/** Female adjustment: STR -2, PER +1, trailing KAR/portrait byte +1. */
+	/** Female: STR -2, PER +1, trailing KAR/portrait +1 (both builds). */
 	void applySexModifiers(byte sex);
 	int getClass() const { return _classIndex; }
 

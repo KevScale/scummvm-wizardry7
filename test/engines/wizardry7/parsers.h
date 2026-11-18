@@ -295,23 +295,22 @@ public:
 		Wizardry7::CharacterCreationFlow flow;
 		const byte humanStats[8] = { 7, 10, 8, 10, 9, 9, 9, 11 };
 		flow.begin(humanStats, 11);
-		TS_ASSERT_EQUALS(flow.getStep(), Wizardry7::CharacterCreationFlow::kStepSex);
-
-		TS_ASSERT(!flow.chooseRace(0)); // wrong step
-		TS_ASSERT(flow.chooseSex(0));
-		TS_ASSERT_EQUALS(flow.getStep(), Wizardry7::CharacterCreationFlow::kStepRace);
-		TS_ASSERT(flow.chooseRace(0)); // human
-		TS_ASSERT_EQUALS(flow.getStep(), Wizardry7::CharacterCreationFlow::kStepProfession);
-
-		TS_ASSERT(!flow.chooseProfession(7)); // not affordable
-		TS_ASSERT(flow.chooseProfession(0)); // fighter
 		TS_ASSERT_EQUALS(flow.getStep(), Wizardry7::CharacterCreationFlow::kStepName);
-		TS_ASSERT_EQUALS(flow.getCharacter().getBonusPoints(), 6);
 
 		TS_ASSERT(!flow.setName("")); // empty names rejected
 		TS_ASSERT(flow.setName("TESTY"));
 		TS_ASSERT(flow.finishName());
+		TS_ASSERT_EQUALS(flow.getStep(), Wizardry7::CharacterCreationFlow::kStepRace);
+		TS_ASSERT(!flow.chooseSex(0)); // wrong step
+		TS_ASSERT(flow.chooseRace(0)); // human
+		TS_ASSERT_EQUALS(flow.getStep(), Wizardry7::CharacterCreationFlow::kStepSex);
+		TS_ASSERT(flow.chooseSex(0));
+		TS_ASSERT_EQUALS(flow.getStep(), Wizardry7::CharacterCreationFlow::kStepProfession);
+
+		TS_ASSERT(!flow.chooseProfession(7)); // not affordable
+		TS_ASSERT(flow.chooseProfession(0)); // fighter
 		TS_ASSERT_EQUALS(flow.getStep(), Wizardry7::CharacterCreationFlow::kStepBonus);
+		TS_ASSERT_EQUALS(flow.getCharacter().getBonusPoints(), 6);
 		TS_ASSERT(!flow.finish()); // six points still unspent
 		TS_ASSERT(flow.addBonusPoint(1));
 		TS_ASSERT_EQUALS(flow.getCharacter().getStat(1), 11);
@@ -384,11 +383,11 @@ public:
 		Wizardry7::CharacterCreationFlow flow;
 		const byte stats[8] = { 18, 10, 10, 10, 10, 10, 10, 0 };
 		flow.begin(stats, 2);
-		TS_ASSERT(flow.chooseSex(0));
-		TS_ASSERT(flow.chooseRace(0));
-		TS_ASSERT(flow.chooseProfession(0));
 		TS_ASSERT(flow.setName("CAP"));
 		TS_ASSERT(flow.finishName());
+		TS_ASSERT(flow.chooseRace(0));
+		TS_ASSERT(flow.chooseSex(0));
+		TS_ASSERT(flow.chooseProfession(0));
 		TS_ASSERT(!flow.addBonusPoint(0)); // stat already at the cap
 		TS_ASSERT(flow.addBonusPoint(1));
 		TS_ASSERT(flow.removeBonusPoint(1));
@@ -509,11 +508,11 @@ public:
 		Wizardry7::CharacterCreationFlow flow;
 		const byte stats[8] = { 7, 10, 8, 10, 9, 9, 9, 11 };
 		flow.begin(stats, 11);
-		TS_ASSERT(flow.chooseSex(0));
-		TS_ASSERT(flow.chooseRace(0));
-		TS_ASSERT(flow.chooseProfession(0)); // Fighter
 		TS_ASSERT(flow.setName("TESTY"));
 		TS_ASSERT(flow.finishName());
+		TS_ASSERT(flow.chooseRace(0));
+		TS_ASSERT(flow.chooseSex(0));
+		TS_ASSERT(flow.chooseProfession(0)); // Fighter
 		while (flow.getCharacter().getBonusPoints() > 0)
 			TS_ASSERT(flow.addBonusPoint(0));
 
@@ -535,11 +534,11 @@ public:
 		Wizardry7::CharacterCreationFlow flow;
 		const byte stats[8] = { 7, 10, 8, 10, 9, 9, 9, 11 };
 		flow.begin(stats, 11);
-		TS_ASSERT(flow.chooseSex(0));
-		TS_ASSERT(flow.chooseRace(0));
-		TS_ASSERT(flow.chooseProfession(0));
 		TS_ASSERT(flow.setName("TESTY"));
 		TS_ASSERT(flow.finishName());
+		TS_ASSERT(flow.chooseRace(0));
+		TS_ASSERT(flow.chooseSex(0));
+		TS_ASSERT(flow.chooseProfession(0));
 		while (flow.getCharacter().getBonusPoints() > 0)
 			TS_ASSERT(flow.addBonusPoint(0));
 		Wizardry7::CreatedCharacter created;

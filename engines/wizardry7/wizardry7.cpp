@@ -833,13 +833,9 @@ bool Wizardry7Engine::creationChooseSex(uint sex) {
 		return false;
 	if (!_creation.chooseSex((byte)sex))
 		return false;
-	if (_creation.isGoldOrder()) {
-		// Gold runs race before sex, so the female adjustment and bonus roll
-		// happen only after the sex choice.
-		CharacterCreation &character = _creation.getCharacter();
-		character.applySexModifiers(character.getSex());
-		character.setBonusPoints(CharacterCreation::rollBonusPoints(_rng));
-	}
+	CharacterCreation &character = _creation.getCharacter();
+	character.applySexModifiers(character.getSex());
+	character.setBonusPoints(CharacterCreation::rollBonusPoints(_rng));
 	return true;
 }
 
@@ -848,10 +844,6 @@ bool Wizardry7Engine::creationChooseRace(uint race) {
 		return false;
 	CharacterCreation &character = _creation.getCharacter();
 	character.applyRaceMinimums((uint8)race);
-	if (!_creation.isGoldOrder()) {
-		character.applySexModifiers(character.getSex());
-		character.setBonusPoints(CharacterCreation::rollBonusPoints(_rng));
-	}
 	return true;
 }
 
