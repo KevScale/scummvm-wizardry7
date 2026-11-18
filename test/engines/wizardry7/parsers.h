@@ -237,11 +237,13 @@ public:
 		TS_ASSERT(rolls.hpMax >= 10 && rolls.hpMax <= 14);
 		TS_ASSERT_EQUALS(rolls.staminaMax, 126); // (STR + VIT*2) * 3
 		TS_ASSERT_EQUALS(rolls.carryingCapacity, 1755); // (VIT + STR*2) * 3 * 15
+		TS_ASSERT_EQUALS(rolls.ac, 10);
 
 		// Faerie starting gold is reduced to two-thirds.
 		rng.reset();
 		const Wizardry7::CreationRolls faerie = creation.rollDerived(5, rng);
 		TS_ASSERT_EQUALS(faerie.carryingCapacity, 1170);
+		TS_ASSERT_EQUALS(faerie.ac, 8); // Faerie -2
 
 		// VIT above 15/17 adds VIT to ST and HP, STR above 15/17 adds STR to gold.
 		const byte strongStats[8] = { 18, 10, 10, 18, 10, 10, 10, 0 };
@@ -445,5 +447,6 @@ public:
 		TS_ASSERT_EQUALS(c.age, created.rolls.ageDays);
 		TS_ASSERT_EQUALS(c.hp, created.rolls.hpMax);
 		TS_ASSERT_EQUALS(c.stamina, created.rolls.staminaMax);
+		TS_ASSERT_EQUALS(c.ac, created.rolls.ac);
 	}
 };

@@ -37,6 +37,7 @@ struct CreationRolls {
 	uint16 hpMax;
 	uint16 staminaMax;
 	uint16 carryingCapacity; // stored value for 0x697D72 (display divides by 10)
+	uint8 ac;
 };
 
 /**

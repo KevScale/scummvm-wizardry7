@@ -183,6 +183,14 @@ CreationRolls CharacterCreation::rollDerived(uint8 raceIndex, WizardryRNG &rng) 
 	if (raceIndex == 5) // FAERIE
 		rolls.carryingCapacity = rolls.carryingCapacity * 2 / 3;
 
+	rolls.ac = 10;
+	const byte spd = _stats[5];
+	if (spd > 15)
+		--rolls.ac;
+	if (spd > 17)
+		--rolls.ac;
+	if (raceIndex == 5) // FAERIE
+		rolls.ac -= 2;
 	return rolls;
 }
 
@@ -205,6 +213,7 @@ bool writeCharacterRecord(const CreatedCharacter &character, byte *record, uint 
 	WRITE_LE_UINT16(record + 0x1A, character.rolls.hpMax);
 	WRITE_LE_UINT16(record + 0x1C, character.rolls.staminaMax);
 	WRITE_LE_UINT16(record + 0x1E, character.rolls.staminaMax);
+	WRITE_LE_UINT16(record + 0x40, character.rolls.ac);
 	record[0x237] = character.race;
 	record[0x238] = character.sex;
 	record[0x239] = character.classIndex;
