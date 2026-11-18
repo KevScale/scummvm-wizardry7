@@ -109,6 +109,7 @@ Wizardry7Console::Wizardry7Console(Wizardry7Engine *vm) : GUI::Debugger(), _vm(v
 	registerCmd("viewfixed", WRAP_METHOD(Wizardry7Console, cmdViewFixed));
 	registerCmd("viewpaint", WRAP_METHOD(Wizardry7Console, cmdViewPaint));
 	registerCmd("viewkind", WRAP_METHOD(Wizardry7Console, cmdViewKind));
+	registerCmd("viewtrace", WRAP_METHOD(Wizardry7Console, cmdViewTrace));
 	registerCmd("script", WRAP_METHOD(Wizardry7Console, cmdScript));
 }
 
@@ -233,6 +234,8 @@ bool Wizardry7Console::runScript(const Common::Path &path) {
 			ok &= cmdViewPaint(count, argv);
 		else if (command == "viewkind")
 			ok &= cmdViewKind(count, argv);
+		else if (command == "viewtrace")
+			ok &= cmdViewTrace(count, argv);
 		else if (command == "script")
 			ok &= cmdScript(count, argv);
 		else {
@@ -475,6 +478,19 @@ bool Wizardry7Console::cmdCharGen(int argc, const char **argv) {
 
 bool Wizardry7Console::cmdCharGenUI(int argc, const char **argv) {
 	_vm->runCharacterCreationUI("VBFONT0.VGA", argc >= 2 ? Common::Path(argv[1]) : Common::Path());
+	return true;
+}
+
+bool Wizardry7Console::cmdViewTrace(int argc, const char **argv) {
+	if (argc != 2) {
+		print("Usage: viewtrace <trace.txt>\n");
+		return true;
+	}
+	if (!_vm->showViewTrace(Common::Path(argv[1]))) {
+		print("Cannot replay trace '%s'\n", argv[1]);
+		return true;
+	}
+	print("Replayed view trace '%s'\n", argv[1]);
 	return true;
 }
 

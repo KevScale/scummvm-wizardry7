@@ -19,6 +19,10 @@
  *
  */
 
+#include "common/file.h"
+#include "common/fs.h"
+#include "common/tokenizer.h"
+
 #include "graphics/screen.h"
 
 #include "wizardry7/gfx.h"
@@ -194,6 +198,45 @@ bool ViewCompositor::loadBundles() {
 		}
 	}
 	return _bundles[0] != nullptr;
+}
+
+bool ViewCompositor::drawTrace(const Common::Path &path, Graphics::Screen *screen) {
+	Common::FSNode node(path);
+	if (!node.exists() || node.isDirectory())
+		return false;
+	Common::SeekableReadStream *stream = node.createReadStream();
+	if (!stream)
+		return false;
+	static const int kModeSlot[8] = { -1, 1, 0, 6, 2, -1, 5, 4 };
+	while (!stream->eos()) {
+		const Common::String line = stream->readLine();
+		if (line.empty())
+			continue;
+		Common::StringTokenizer tok(line, " \t");
+		if (tok.empty())
+			continue;
+		int values[7] = { 0 };
+		uint count = 0;
+		while (!tok.empty() && count < 7) {
+			const Common::String field = tok.nextToken();
+			char *end = nullptr;
+			values[count++] = (int)strtol(field.c_str(), &end, 10);
+		}
+		if (count != 6 && count != 7)
+			continue;
+		const bool hasTime = count == 7;
+		const int mode = values[hasTime ? 1 : 0];
+		const uint tile = (uint)values[hasTime ? 2 : 1];
+		const int x = values[hasTime ? 4 : 3], y = values[hasTime ? 5 : 4];
+		if (mode < 0 || mode >= 8 || kModeSlot[mode] < 0)
+			continue;
+		const int slot = kModeSlot[mode];
+		if (!_bundles[slot])
+			continue;
+		_bundles[slot]->drawChunk(tile, screen, x, y);
+	}
+	delete stream;
+	return true;
 }
 
 bool ViewCompositor::drawPiece(Graphics::Screen *screen, const ViewPiece &piece) const {

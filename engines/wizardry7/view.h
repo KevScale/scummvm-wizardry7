@@ -92,6 +92,9 @@ public:
 	bool loadBundles();
 	bool drawPiece(Graphics::Screen *screen, const ViewPiece &piece) const;
 
+	/** Replay a captured framecap/composecap trace (t_ms mode tile sel x y clip). */
+	bool drawTrace(const Common::Path &path, Graphics::Screen *screen);
+
 private:
 	VgaBundle *_bundles[7];
 };
