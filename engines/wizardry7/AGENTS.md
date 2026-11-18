@@ -71,7 +71,7 @@ M1 asset/test bring-up, not a playable game:
 - `PALETTE.DEF`, raw 320×200 screen dumps, VGA image bundles, bitmap fonts
 - debug console: `msg`, `msginfo`, `records`, `record`, `rng`, `rngseed`,
   `status`, `screen`, `screenshot`, `bundle`, `fontinfo`, `glyph`, `glyphs`,
-  `text`, `saveinfo`, `script`
+  `text`, `saveinfo`, `chargen`, `chargenui`, `create`, `party`, `script`
 - headless scenario runner via the target config key `wizardry7_script`
   (plus `enable_unsupported_game_warning=false`); use
   `tools/run_scenario.py <data-dir> <script>` from the RE repo
