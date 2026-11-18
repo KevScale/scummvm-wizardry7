@@ -74,7 +74,7 @@ M1 asset/test bring-up, not a playable game:
   `text`, `saveinfo`, `chargen`, `chargenui`, `create`, `party`, `item`,
   `sheet`, `review`, `saveparty`, `xp`, `maze`, `encounter`, `placement`,
   `placeview`, `viewfixed`, `viewpaint`, `viewkind`, `viewtrace`, `cell`,
-  `cellray`, `monster`, `anim`, `script`
+  `cellray`, `kindtable`, `monster`, `anim`, `script`
 - headless scenario runner via the target config key `wizardry7_script`
   (plus `enable_unsupported_game_warning=false`); use
   `tools/run_scenario.py <data-dir> <script>` from the RE repo

@@ -70,8 +70,15 @@ public:
 	/** Step one local cell across the 16-cell graph. dz/dx follow the Gold axes. */
 	bool stepCell(uint &cell, uint &localZ, uint &localX, int dz, int dx) const;
 	/** Five depth kinds along a ray; false if the ray leaves the cell graph.
-	 *  This is a diagnostic: the final per-column start/step is still open. */
+	 *  This is a diagnostic; the validated column table uses deriveKindTable(). */
 	bool getKindRay(uint cell, uint localZ, uint localX, int dz, int dx, uint8 kinds[5]) const;
+
+	/**
+	 * The fully offline 5x5 painter kind table for a party position/facing.
+	 * Columns 0..1 visit depths {0,-1,+1}; columns 2..4 add {-2,+2}.
+	 * Validated 25/25 against the recorded facing-3 town frame.
+	 */
+	bool deriveKindTable(int partyA, int partyB, uint facing, uint8 kinds[5][5]) const;
 	byte getEncounterGroup(uint slot, bool uncommon) const;
 	byte getEncounterChance(uint slot) const;
 	byte getMonster(uint row, uint columnGroup, uint band) const;

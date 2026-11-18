@@ -98,6 +98,33 @@ bool MazeRecord::getKindRay(uint cell, uint localZ, uint localX, int dz, int dx,
 	return true;
 }
 
+bool MazeRecord::deriveKindTable(int partyA, int partyB, uint facing, uint8 kinds[5][5]) const {
+	memset(kinds, 0, sizeof(uint8) * 25);
+	static const int kDepth5[5] = { -2, -1, 0, 1, 2 };
+	static const int kDepth3[3] = { 0, -1, 1 };
+	for (int column = 0; column < 5; ++column) {
+		const int *depths = column <= 1 ? kDepth3 : kDepth5;
+		const int count = column <= 1 ? 3 : 5;
+		for (int i = 0; i < count; ++i) {
+			const int depth = depths[i];
+			int a = partyA - column;
+			int b = partyB;
+			switch (facing) {
+			case 0: a += depth; break;
+			case 1: b -= depth; break;
+			case 2: a -= depth; break;
+			default: b += depth; break;
+			}
+			uint cell = 0, localA = 0, localB = 0;
+			if (!findCell(a, b, cell, localA, localB))
+				continue;
+			// key = cell*64 + bLocal*8 + aLocal (the validated orientation)
+			kinds[column][depth + 2] = getViewKind(cell, localB, localA);
+		}
+	}
+	return true;
+}
+
 uint8 MazeRecord::getViewKind(uint cell, uint z, uint x) const {
 	const uint face = cellFace(cell, z, x);
 	if (getHazard(1, face)) // +0x930: plane C

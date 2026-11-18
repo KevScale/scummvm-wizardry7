@@ -69,6 +69,7 @@ private:
 	bool cmdViewTrace(int argc, const char **argv);
 	bool cmdCell(int argc, const char **argv);
 	bool cmdCellRay(int argc, const char **argv);
+	bool cmdKindTable(int argc, const char **argv);
 	bool cmdCreate(int argc, const char **argv);
 	bool cmdParty(int argc, const char **argv);
 	bool cmdScreen(int argc, const char **argv);

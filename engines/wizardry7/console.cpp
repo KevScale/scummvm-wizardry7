@@ -112,6 +112,7 @@ Wizardry7Console::Wizardry7Console(Wizardry7Engine *vm) : GUI::Debugger(), _vm(v
 	registerCmd("viewtrace", WRAP_METHOD(Wizardry7Console, cmdViewTrace));
 	registerCmd("cell", WRAP_METHOD(Wizardry7Console, cmdCell));
 	registerCmd("cellray", WRAP_METHOD(Wizardry7Console, cmdCellRay));
+	registerCmd("kindtable", WRAP_METHOD(Wizardry7Console, cmdKindTable));
 	registerCmd("script", WRAP_METHOD(Wizardry7Console, cmdScript));
 }
 
@@ -242,6 +243,8 @@ bool Wizardry7Console::runScript(const Common::Path &path) {
 			ok &= cmdCell(count, argv);
 		else if (command == "cellray")
 			ok &= cmdCellRay(count, argv);
+		else if (command == "kindtable")
+			ok &= cmdKindTable(count, argv);
 		else if (command == "script")
 			ok &= cmdScript(count, argv);
 		else {
@@ -484,6 +487,31 @@ bool Wizardry7Console::cmdCharGen(int argc, const char **argv) {
 
 bool Wizardry7Console::cmdCharGenUI(int argc, const char **argv) {
 	_vm->runCharacterCreationUI("VBFONT0.VGA", argc >= 2 ? Common::Path(argv[1]) : Common::Path());
+	return true;
+}
+
+bool Wizardry7Console::cmdKindTable(int argc, const char **argv) {
+	if (argc != 5) {
+		print("Usage: kindtable <maze> <partyA> <partyB> <facing>\n");
+		return true;
+	}
+	int mazeId = 0, a = 0, b = 0, facing = 0;
+	if (!parseInteger(argv[1], mazeId) || !parseInteger(argv[2], a) ||
+		!parseInteger(argv[3], b) || !parseInteger(argv[4], facing) ||
+		mazeId < 0 || mazeId >= 32 || facing < 0 || facing > 3) {
+		print("Bad kindtable arguments\n");
+		return true;
+	}
+	Wizardry7::MazeRecord maze;
+	if (!maze.load(*_vm->getScenario(), (uint)mazeId)) {
+		print("Cannot load maze %d\n", mazeId);
+		return true;
+	}
+	uint8 kinds[5][5];
+	maze.deriveKindTable(a, b, (uint)facing, kinds);
+	for (int c = 0; c < 5; ++c)
+		print("col %d: %u %u %u %u %u\n", c, kinds[c][0], kinds[c][1],
+			kinds[c][2], kinds[c][3], kinds[c][4]);
 	return true;
 }
 
