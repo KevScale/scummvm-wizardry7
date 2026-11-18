@@ -35,9 +35,9 @@ static const uint32 kCharacterSize = 584;
 static const uint32 kRosterHeaderSize = 24;
 
 static void parseCharacter(const byte *record, SaveCharacter &character) {
-	char name[9];
-	memcpy(name, record, 8);
-	name[8] = 0;
+	char name[13];
+	memcpy(name, record, 12);
+	name[12] = 0;
 	character.name = name;
 	character.age = READ_LE_UINT32(record + 0x08);
 	character.xp = READ_LE_UINT32(record + 0x0C);
@@ -105,7 +105,7 @@ bool CharacterRoster::loadFromData(const byte *source, uint32 size) {
 		return false;
 	const uint16 stride = READ_LE_UINT16(data.data());
 	const uint16 slots = READ_LE_UINT16(data.data() + 2);
-	const uint16 headerSize = READ_LE_UINT16(data.data() + 4);
+	const uint32 headerSize = READ_LE_UINT32(data.data() + 4);
 	if (stride != kCharacterSize || slots == 0 || slots > 16 ||
 		headerSize < kRosterHeaderSize ||
 		data.size() < headerSize + (uint32)slots * stride)

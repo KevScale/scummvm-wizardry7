@@ -224,11 +224,11 @@ public:
 		TS_ASSERT_EQUALS(roster.findFreeSlot(), 1);
 		byte record[584];
 		memset(record, 0, sizeof(record));
-		memcpy(record, "NEW", 3);
+		memcpy(record, "NEWCHAR12345", 12);
 		record[0x238] = 1; // female
 		TS_ASSERT(roster.setCharacterRecord(1, record, sizeof(record)));
 		TS_ASSERT(roster.isSlotUsed(1));
-		TS_ASSERT_EQUALS(roster.getCharacter(1).name, Common::String("NEW"));
+		TS_ASSERT_EQUALS(roster.getCharacter(1).name, Common::String("NEWCHAR12345"));
 		TS_ASSERT_EQUALS(roster.getCharacter(1).gender, 1);
 		TS_ASSERT_EQUALS(roster.findFreeSlot(), -1);
 
@@ -241,7 +241,7 @@ public:
 		Wizardry7::CharacterRoster roundTrip;
 		TS_ASSERT(roundTrip.loadFromData(out.data(), out.size()));
 		TS_ASSERT(roundTrip.isSlotUsed(1));
-		TS_ASSERT_EQUALS(roundTrip.getCharacter(1).name, Common::String("NEW"));
+		TS_ASSERT_EQUALS(roundTrip.getCharacter(1).name, Common::String("NEWCHAR12345"));
 	}
 
 	void testCreationEligibility() {

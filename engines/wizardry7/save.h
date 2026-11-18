@@ -102,7 +102,7 @@ private:
 	Common::Array<SaveCharacter> _characters;
 	Common::Array<bool> _used;
 	uint16 _stride;
-	uint16 _headerSize;
+	uint32 _headerSize;
 };
 
 class SaveGame {
