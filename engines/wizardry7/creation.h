@@ -23,6 +23,7 @@
 
 #include "common/array.h"
 #include "common/scummsys.h"
+#include "common/str.h"
 
 namespace Wizardry7 {
 
@@ -35,6 +36,8 @@ namespace Wizardry7 {
  * class raises the stats to the minimums and deducts the deficit. Valkyrie is
  * additionally female-only.
  */
+class CharacterCreationFlow;
+
 class CharacterCreation {
 public:
 	enum { kStatCount = 8, kClassCount = 14 };
@@ -65,6 +68,43 @@ private:
 	byte _stats[kStatCount];
 	int _bonusPoints;
 	byte _sex;
+};
+
+/** Step/selection state for the DOS character-creation dialogs. */
+class CharacterCreationFlow {
+public:
+	enum Step {
+		kStepSex,
+		kStepRace,
+		kStepProfession,
+		kStepName,
+		kStepBonus,
+		kStepDone
+	};
+
+	CharacterCreationFlow();
+
+	/** Start with the rolled/base stats and the initial bonus pool. */
+	void begin(const byte *stats, int bonusPoints);
+	Step getStep() const { return _step; }
+	CharacterCreation &getCharacter() { return _character; }
+	const CharacterCreation &getCharacter() const { return _character; }
+	const Common::String &getName() const { return _name; }
+	uint8 getRace() const { return _race; }
+
+	bool chooseSex(byte sex);
+	bool chooseRace(uint8 race);
+	bool chooseProfession(uint classIndex);
+	bool setName(const Common::String &name);
+	bool finishName();
+	bool addBonusPoint(uint statIndex);
+	bool finish();
+
+private:
+	CharacterCreation _character;
+	Step _step;
+	Common::String _name;
+	uint8 _race;
 };
 
 } // End of namespace Wizardry7

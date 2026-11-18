@@ -180,4 +180,35 @@ public:
 		TS_ASSERT_EQUALS(creation.getClassCost(8), 0);
 		TS_ASSERT(creation.isClassEligible(8));
 	}
+
+	void testCreationFlow() {
+		Wizardry7::CharacterCreationFlow flow;
+		const byte humanStats[8] = { 7, 10, 8, 10, 9, 9, 9, 11 };
+		flow.begin(humanStats, 11);
+		TS_ASSERT_EQUALS(flow.getStep(), Wizardry7::CharacterCreationFlow::kStepSex);
+
+		TS_ASSERT(!flow.chooseRace(0)); // wrong step
+		TS_ASSERT(flow.chooseSex(0));
+		TS_ASSERT_EQUALS(flow.getStep(), Wizardry7::CharacterCreationFlow::kStepRace);
+		TS_ASSERT(flow.chooseRace(0)); // human
+		TS_ASSERT_EQUALS(flow.getStep(), Wizardry7::CharacterCreationFlow::kStepProfession);
+
+		TS_ASSERT(!flow.chooseProfession(7)); // not affordable
+		TS_ASSERT(flow.chooseProfession(0)); // fighter
+		TS_ASSERT_EQUALS(flow.getStep(), Wizardry7::CharacterCreationFlow::kStepName);
+		TS_ASSERT_EQUALS(flow.getCharacter().getBonusPoints(), 6);
+
+		TS_ASSERT(!flow.setName("")); // empty names rejected
+		TS_ASSERT(flow.setName("TESTY"));
+		TS_ASSERT(flow.finishName());
+		TS_ASSERT_EQUALS(flow.getStep(), Wizardry7::CharacterCreationFlow::kStepBonus);
+		TS_ASSERT(!flow.finish()); // six points still unspent
+		TS_ASSERT(flow.addBonusPoint(1));
+		TS_ASSERT_EQUALS(flow.getCharacter().getStat(1), 11);
+		TS_ASSERT_EQUALS(flow.getCharacter().getBonusPoints(), 5);
+		for (int i = 0; i < 5; ++i)
+			TS_ASSERT(flow.addBonusPoint(0));
+		TS_ASSERT(flow.finish());
+		TS_ASSERT_EQUALS(flow.getStep(), Wizardry7::CharacterCreationFlow::kStepDone);
+	}
 };

@@ -96,6 +96,74 @@ Common::Array<uint> CharacterCreation::getEligibleClasses() const {
 	return classes;
 }
 
+CharacterCreationFlow::CharacterCreationFlow() : _step(kStepSex), _race(0) {
+}
+
+void CharacterCreationFlow::begin(const byte *stats, int bonusPoints) {
+	_character.setStats(stats);
+	_character.setBonusPoints(bonusPoints);
+	_name.clear();
+	_race = 0;
+	_step = kStepSex;
+}
+
+bool CharacterCreationFlow::chooseSex(byte sex) {
+	if (_step != kStepSex || sex > 1)
+		return false;
+	_character.setSex(sex);
+	_step = kStepRace;
+	return true;
+}
+
+bool CharacterCreationFlow::chooseRace(uint8 race) {
+	if (_step != kStepRace || race > 10)
+		return false;
+	_race = race;
+	_step = kStepProfession;
+	return true;
+}
+
+bool CharacterCreationFlow::chooseProfession(uint classIndex) {
+	if (_step != kStepProfession || !_character.selectClass(classIndex))
+		return false;
+	_step = kStepName;
+	return true;
+}
+
+bool CharacterCreationFlow::setName(const Common::String &name) {
+	if (_step != kStepName || name.empty() || name.size() > 8)
+		return false;
+	for (uint i = 0; i < name.size(); ++i) {
+		const byte c = name[i];
+		if (c < 32 || c >= 127)
+			return false;
+	}
+	_name = name;
+	return true;
+}
+
+bool CharacterCreationFlow::finishName() {
+	if (_step != kStepName || _name.empty())
+		return false;
+	_step = kStepBonus;
+	return true;
+}
+
+bool CharacterCreationFlow::addBonusPoint(uint statIndex) {
+	if (_step != kStepBonus || statIndex >= CharacterCreation::kStatCount || _character.getBonusPoints() <= 0)
+		return false;
+	_character.setStat(statIndex, _character.getStat(statIndex) + 1);
+	_character.setBonusPoints(_character.getBonusPoints() - 1);
+	return true;
+}
+
+bool CharacterCreationFlow::finish() {
+	if (_step != kStepBonus || _character.getBonusPoints() != 0)
+		return false;
+	_step = kStepDone;
+	return true;
+}
+
 const char *CharacterCreation::getClassName(uint classIndex) {
 	static const char *const names[kClassCount] = {
 		"FIGHTER", "MAGE", "PRIEST", "THIEF", "RANGER", "ALCHEMIST", "BARD",
