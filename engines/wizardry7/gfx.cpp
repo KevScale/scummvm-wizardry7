@@ -182,6 +182,18 @@ uint16 VgaBundle::getRecordWord(uint record, uint field) const {
 	return READ_LE_UINT16(_data.data() + _recordTableOffset + record * 5 + field * 2);
 }
 
+bool VgaBundle::getPlacement(uint record, VgaPlacement &placement) const {
+	if (record >= _recordCount || _recordTableOffset + record * 5 + 5 > _data.size())
+		return false;
+	const byte *p = _data.data() + _recordTableOffset + record * 5;
+	placement.bitmap = p[0];
+	placement.x = (int8)p[1];
+	placement.y = p[2];
+	placement.xExtra = p[3];
+	placement.rows = p[4];
+	return true;
+}
+
 byte VgaBundle::getRecordByte(uint record, uint offset) const {
 	if (record >= _recordCount || offset >= 5)
 		return 0;

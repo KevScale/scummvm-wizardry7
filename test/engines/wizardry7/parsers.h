@@ -40,6 +40,28 @@ public:
 		TS_ASSERT_EQUALS(size, 8u);
 	}
 
+	void testVgaPlacement() {
+		byte data[4 + 6 + 5 + 8];
+		memset(data, 0, sizeof(data));
+		data[0] = 1; // chunks
+		data[2] = 1; // records
+		data[4] = 0; // segment
+		data[6] = 15; // offset 15 (4+6+5)
+		data[8] = 1; // stride 8
+		data[9] = 1; // height 1
+		data[10] = 3; data[11] = 0xFE; data[12] = 4; data[13] = 5; data[14] = 6;
+		Wizardry7::VgaBundle bundle;
+		TS_ASSERT(bundle.loadFromData(data, sizeof(data)));
+		Wizardry7::VgaPlacement p;
+		TS_ASSERT(bundle.getPlacement(0, p));
+		TS_ASSERT_EQUALS(p.bitmap, 3);
+		TS_ASSERT_EQUALS(p.x, -2);
+		TS_ASSERT_EQUALS(p.y, 4);
+		TS_ASSERT_EQUALS(p.xExtra, 5);
+		TS_ASSERT_EQUALS(p.rows, 6);
+		TS_ASSERT(!bundle.getPlacement(1, p));
+	}
+
 	void testFontGlyphs() {
 		Common::Array<byte> data;
 		data.resize(0x110 + 2 * 2);

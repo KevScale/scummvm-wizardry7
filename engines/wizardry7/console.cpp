@@ -104,6 +104,7 @@ Wizardry7Console::Wizardry7Console(Wizardry7Engine *vm) : GUI::Debugger(), _vm(v
 	registerCmd("monster", WRAP_METHOD(Wizardry7Console, cmdMonster));
 	registerCmd("anim", WRAP_METHOD(Wizardry7Console, cmdAnim));
 	registerCmd("encounter", WRAP_METHOD(Wizardry7Console, cmdEncounter));
+	registerCmd("placement", WRAP_METHOD(Wizardry7Console, cmdPlacement));
 	registerCmd("script", WRAP_METHOD(Wizardry7Console, cmdScript));
 }
 
@@ -218,6 +219,8 @@ bool Wizardry7Console::runScript(const Common::Path &path) {
 			ok &= cmdAnim(count, argv);
 		else if (command == "encounter")
 			ok &= cmdEncounter(count, argv);
+		else if (command == "placement")
+			ok &= cmdPlacement(count, argv);
 		else if (command == "script")
 			ok &= cmdScript(count, argv);
 		else {
@@ -460,6 +463,35 @@ bool Wizardry7Console::cmdCharGen(int argc, const char **argv) {
 
 bool Wizardry7Console::cmdCharGenUI(int argc, const char **argv) {
 	_vm->runCharacterCreationUI("VBFONT0.VGA", argc >= 2 ? Common::Path(argv[1]) : Common::Path());
+	return true;
+}
+
+bool Wizardry7Console::cmdPlacement(int argc, const char **argv) {
+	if (argc != 3) {
+		print("Usage: placement <file.VGA> <record>\n");
+		return true;
+	}
+	int record = 0;
+	if (!parseInteger(argv[2], record) || record < 0) {
+		print("Bad record '%s'\n", argv[2]);
+		return true;
+	}
+	Common::String file(argv[1]);
+	if (!file.hasSuffixIgnoreCase(".VGA"))
+		file += ".VGA";
+	VgaBundle bundle;
+	if (!bundle.load(Common::Path(file))) {
+		print("Cannot load '%s'\n", file.c_str());
+		return true;
+	}
+	VgaPlacement p;
+	if (!bundle.getPlacement((uint)record, p)) {
+		print("No placement record %d (%u records)\n", record, bundle.getRecordCount());
+		return true;
+	}
+	print("%s record %d: bitmap %u x %d y %u x_extra %u rows %u (screen_x %d)\n",
+		file.c_str(), record, p.bitmap, p.x, p.y, p.xExtra, p.rows,
+		(p.xExtra + p.x) * 8);
 	return true;
 }
 

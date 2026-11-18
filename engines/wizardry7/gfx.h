@@ -51,6 +51,14 @@ private:
  * A Basedata VGA image bundle: chunk table + optional record table + raw
  * 8bpp chunk data occupied by PALETTE.DEF colours.
  */
+struct VgaPlacement {
+	uint8 bitmap;
+	int8 x;
+	uint8 y;
+	uint8 xExtra;
+	uint8 rows;
+};
+
 class VgaBundle {
 public:
 	VgaBundle();
@@ -67,6 +75,7 @@ public:
 
 	uint16 getRecordWord(uint record, uint field) const;
 	byte getRecordByte(uint record, uint offset) const;
+	bool getPlacement(uint record, VgaPlacement &placement) const;
 
 private:
 	struct Entry {
