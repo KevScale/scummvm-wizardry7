@@ -92,6 +92,7 @@ Wizardry7Console::Wizardry7Console(Wizardry7Engine *vm) : GUI::Debugger(), _vm(v
 	registerCmd("text", WRAP_METHOD(Wizardry7Console, cmdText));
 	registerCmd("roster", WRAP_METHOD(Wizardry7Console, cmdRoster));
 	registerCmd("item", WRAP_METHOD(Wizardry7Console, cmdItem));
+	registerCmd("sheet", WRAP_METHOD(Wizardry7Console, cmdSheet));
 	registerCmd("script", WRAP_METHOD(Wizardry7Console, cmdScript));
 }
 
@@ -190,6 +191,8 @@ bool Wizardry7Console::runScript(const Common::Path &path) {
 			ok &= cmdRoster(count, argv);
 		else if (command == "item")
 			ok &= cmdItem(count, argv);
+		else if (command == "sheet")
+			ok &= cmdSheet(count, argv);
 		else if (command == "script")
 			ok &= cmdScript(count, argv);
 		else {
@@ -432,6 +435,48 @@ bool Wizardry7Console::cmdCharGen(int argc, const char **argv) {
 
 bool Wizardry7Console::cmdCharGenUI(int argc, const char **argv) {
 	_vm->runCharacterCreationUI("VBFONT0.VGA", argc >= 2 ? Common::Path(argv[1]) : Common::Path());
+	return true;
+}
+
+bool Wizardry7Console::cmdSheet(int argc, const char **argv) {
+	if (argc != 3) {
+		print("Usage: sheet <PCFILE> <slot>\n");
+		return true;
+	}
+	int slot = 0;
+	if (!parseInteger(argv[2], slot) || slot < 0) {
+		print("Bad slot '%s'\n", argv[2]);
+		return true;
+	}
+	CharacterRoster roster;
+	if (!roster.load(Common::Path(argv[1])) || (uint)slot >= roster.getSlotCount() ||
+		!roster.isSlotUsed((uint)slot)) {
+		print("No used roster slot %d\n", slot);
+		return true;
+	}
+	const SaveCharacter &c = roster.getCharacter((uint)slot);
+	static const char *const races[] = {
+		"HUMAN", "HOBBIT", "FELPURR", "ELF", "FAERIE", "RAWULF",
+		"DWARF", "LIZARDMAN", "MOOK", "GNOME", "DRACON"
+	};
+	const char *raceName = c.race < 11 ? races[c.race] : "?";
+	print("%s  %c-%s %s  align %u\n", c.name.c_str(), c.gender ? 'F' : 'M',
+		raceName, CharacterCreation::getClassName(c.klass), c.alignment);
+	print("age %u  hp %u/%u  st %u/%u  ac %u  gold %u  portrait %u\n",
+		c.age, c.hp, c.hpMax, c.stamina, c.staminaMax, c.ac, c.gold, c.portrait);
+	static const char *const names[7] = { "STR", "INT", "PIE", "VIT", "DEX", "SPD", "PER" };
+	for (uint i = 0; i < 7; ++i)
+		print("%s %u%s", names[i], c.stats[i], i == 6 ? "\n" : "  ");
+	for (uint i = 0; i < 5; ++i) {
+		if (!c.inventory[i])
+			continue;
+		ItemInfo info;
+		if (loadItem(*_vm->getScenario(), c.inventory[i], info))
+			print("  item %u: %s x%u\n", c.inventory[i], info.displayName.c_str(),
+				c.inventoryCount[i] ? c.inventoryCount[i] : 1);
+		else
+			print("  item %u: (unknown)\n", c.inventory[i]);
+	}
 	return true;
 }
 

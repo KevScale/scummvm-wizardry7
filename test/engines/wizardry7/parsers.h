@@ -106,6 +106,9 @@ public:
 		record[0x238] = 1; // female
 		record[0x239] = 2; // priest
 		record[0x23A] = 3; // alignment
+		record[0x170] = 12; // STR
+		record[0x177] = 12; // portrait
+		record[0x40 + 6] = 1; // first slot count
 
 		Wizardry7::SaveGame save;
 		TS_ASSERT(save.loadFromData(data.data(), data.size()));
@@ -123,6 +126,9 @@ public:
 		TS_ASSERT_EQUALS(c.gender, 1);
 		TS_ASSERT_EQUALS(c.klass, 2);
 		TS_ASSERT_EQUALS(c.alignment, 3);
+		TS_ASSERT_EQUALS(c.stats[0], 12);
+		TS_ASSERT_EQUALS(c.portrait, 12);
+		TS_ASSERT_EQUALS(c.inventoryCount[0], 1);
 
 		byte replacement[584];
 		memset(replacement, 0, sizeof(replacement));

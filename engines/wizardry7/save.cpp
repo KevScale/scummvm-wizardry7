@@ -52,8 +52,13 @@ static void parseCharacter(const byte *record, SaveCharacter &character) {
 	character.gender = record[0x238]; // 0 = male, 1 = female
 	character.klass = record[0x239];
 	character.alignment = record[0x23A];
-	for (uint i = 0; i < 5; ++i)
+	for (uint i = 0; i < 7; ++i)
+		character.stats[i] = record[0x170 + i];
+	character.portrait = record[0x177];
+	for (uint i = 0; i < 5; ++i) {
 		character.inventory[i] = READ_LE_UINT16(record + 0x40 + i * 12);
+		character.inventoryCount[i] = record[0x40 + i * 12 + 6];
+	}
 }
 
 static bool readWholeFile(const Common::Path &path, Common::Array<byte> &data) {

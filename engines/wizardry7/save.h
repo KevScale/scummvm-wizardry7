@@ -36,7 +36,11 @@ enum SaveKind {
 
 struct SaveCharacter {
 	SaveCharacter() : age(0), xp(0), hp(0), hpMax(0), stamina(0), staminaMax(0),
-		weight(0), gold(0), ac(0), race(0), gender(0), alignment(0), klass(0), knack(0) {}
+		weight(0), gold(0), ac(0), race(0), gender(0), alignment(0), klass(0), knack(0),
+		portrait(0) {
+		memset(stats, 0, sizeof(stats));
+		memset(inventoryCount, 0, sizeof(inventoryCount));
+	}
 
 	Common::String name;
 	uint32 age;
@@ -53,7 +57,10 @@ struct SaveCharacter {
 	uint8 alignment;
 	uint8 klass;
 	uint8 knack;
+	uint8 portrait;
+	uint8 stats[7]; // STR INT PIE VIT DEX SPD PER at record +0x170
 	uint16 inventory[5]; // starting-kit slots at record +0x40, 12-byte stride
+	uint8 inventoryCount[5]; // slot +6 count/charges
 };
 
 /**
