@@ -557,7 +557,15 @@ bool Wizardry7Engine::showCharacterReview(const Common::Path &rosterPath, uint s
 	font.drawString(Common::String::format("HP %u/%u", c.hp, c.hpMax).c_str(), _screen, 8, 96, 1);
 	font.drawString(Common::String::format("ST %u/%u", c.stamina, c.staminaMax).c_str(), _screen, 8, 104, 1);
 	font.drawString(Common::String::format("GP %u", c.gold).c_str(), _screen, 104, 96, 1);
-	font.drawString(Common::String::format("AC %u", c.ac).c_str(), _screen, 228, 40, 1);
+	font.drawString(Common::String::format("AC +%u (+0)", c.ac).c_str(), _screen, 228, 32, 1);
+	const uint8 rank = ExperienceTable::getRank(level);
+	Common::String rankName = "NONE";
+	const uint16 rankMsg = 800 + c.klass * 10 + rank;
+	if (_messages.hasMessage(rankMsg))
+		rankName = _messages.getMessage(rankMsg);
+	font.drawString(Common::String::format("RNK %s", rankName.c_str()).c_str(), _screen, 240, 8, 1);
+	font.drawString(Common::String::format("EXP %u", c.xp).c_str(), _screen, 240, 16, 1);
+	font.drawString("MKS 0", _screen, 240, 24, 1);
 	font.drawString(c.name.c_str(), _screen, 20, 78, 1);
 	for (uint i = 0; i < 5; ++i) {
 		if (!c.inventory[i])

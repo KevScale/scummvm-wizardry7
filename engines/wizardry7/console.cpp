@@ -721,9 +721,15 @@ bool Wizardry7Console::cmdSheet(int argc, const char **argv) {
 	uint8 level = 1;
 	if (xpTable.load(*_vm->getScenario()))
 		level = xpTable.getLevel(c.klass, c.xp);
-	print("level %u rank %u  age %u  hp %u/%u  st %u/%u  ac %u  gold %u  portrait %u\n",
-		level, ExperienceTable::getRank(level), c.age, c.hp, c.hpMax, c.stamina,
-		c.staminaMax, c.ac, c.gold, c.portrait);
+	const uint8 rank = ExperienceTable::getRank(level);
+	Common::String rankName;
+	const uint16 rankMsg = 800 + c.klass * 10 + rank;
+	if (_vm->getMessages()->hasMessage(rankMsg))
+		rankName = _vm->getMessages()->getMessage(rankMsg);
+	print("level %u rank %u%s%s  age %u  hp %u/%u  st %u/%u  ac %u (slots %u,%u,%u,%u,%u)  gold %u  portrait %u\n",
+		level, rank, rankName.empty() ? "" : " ", rankName.c_str(), c.age, c.hp, c.hpMax,
+		c.stamina, c.staminaMax, c.ac, c.acSlots[0], c.acSlots[1], c.acSlots[2],
+		c.acSlots[3], c.acSlots[4], c.gold, c.portrait);
 	static const char *const names[7] = { "STR", "INT", "PIE", "VIT", "DEX", "SPD", "PER" };
 	for (uint i = 0; i < 7; ++i)
 		print("%s %u%s", names[i], c.stats[i], i == 6 ? "\n" : "  ");

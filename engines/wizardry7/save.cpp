@@ -59,6 +59,7 @@ static void parseCharacter(const byte *record, SaveCharacter &character) {
 	for (uint i = 0; i < 5; ++i) {
 		character.inventory[i] = READ_LE_UINT16(record + 0x40 + i * 12);
 		character.inventoryCount[i] = record[0x40 + i * 12 + 6];
+		character.acSlots[i] = record[0x1B9 + i];
 	}
 }
 

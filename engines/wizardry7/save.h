@@ -42,6 +42,7 @@ struct SaveCharacter {
 		portrait(0) {
 		memset(stats, 0, sizeof(stats));
 		memset(inventoryCount, 0, sizeof(inventoryCount));
+		memset(acSlots, 0, sizeof(acSlots));
 	}
 
 	Common::String name;
@@ -63,6 +64,7 @@ struct SaveCharacter {
 	uint8 stats[7]; // STR INT PIE VIT DEX SPD PER at record +0x170
 	uint16 inventory[5]; // starting-kit slots at record +0x40, 12-byte stride
 	uint8 inventoryCount[5]; // slot +6 count/charges
+	uint8 acSlots[5]; // copies at +0x1B9..+0x1BD
 };
 
 /**
