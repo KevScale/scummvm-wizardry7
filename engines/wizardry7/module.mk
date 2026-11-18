@@ -3,6 +3,7 @@ MODULE := engines/wizardry7
 MODULE_OBJS := \
 	console.o \
 	creation.o \
+	equipment.o \
 	font.o \
 	gfx.o \
 	metaengine.o \

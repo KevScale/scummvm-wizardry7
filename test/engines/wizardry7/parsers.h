@@ -3,6 +3,7 @@
 #include "graphics/screen.h"
 
 #include "wizardry7/creation.h"
+#include "wizardry7/equipment.h"
 #include "wizardry7/rng.h"
 #include "wizardry7/font.h"
 #include "wizardry7/gfx.h"
@@ -349,5 +350,33 @@ public:
 		TS_ASSERT_EQUALS(party.size(), 2u);
 		TS_ASSERT_EQUALS(party.getMember(0), 0);
 		TS_ASSERT_EQUALS(party.getMember(1), 1);
+	}
+
+	void testStartingEquipment() {
+		Wizardry7::StartingItem items[Wizardry7::StartingEquipment::kMaxItems];
+		TS_ASSERT_EQUALS(Wizardry7::StartingEquipment::getItems(0, 0, items), 5u); // Fighter
+		TS_ASSERT_EQUALS(items[0].itemId, 8);
+		TS_ASSERT_EQUALS(items[1].itemId, 135);
+		TS_ASSERT_EQUALS(items[4].itemId, 141);
+		TS_ASSERT_EQUALS(items[0].count, 1);
+
+		TS_ASSERT(Wizardry7::StartingEquipment::getItems(4, 0, items)); // Ranger
+		TS_ASSERT_EQUALS(items[1].itemId, 33); // Willow Arrows
+		TS_ASSERT_EQUALS(items[1].count, 100);
+		TS_ASSERT(Wizardry7::StartingEquipment::getItems(3, 0, items)); // Thief
+		TS_ASSERT_EQUALS(items[4].itemId, 27); // Bite Daggers
+		TS_ASSERT_EQUALS(items[4].count, 6);
+		TS_ASSERT(Wizardry7::StartingEquipment::getItems(12, 0, items)); // Monk
+		TS_ASSERT_EQUALS(items[1].itemId, 47); // Shurikens
+		TS_ASSERT_EQUALS(items[1].count, 15);
+
+		// Faerie overrides the whole kit, even for a Fighter.
+		TS_ASSERT(Wizardry7::StartingEquipment::getItems(0, 5, items));
+		TS_ASSERT_EQUALS(items[0].itemId, 397);
+		TS_ASSERT_EQUALS(items[1].itemId, 398);
+		TS_ASSERT_EQUALS(items[2].itemId, 399);
+		TS_ASSERT_EQUALS(items[3].itemId, 316);
+		TS_ASSERT_EQUALS(items[4].itemId, 384);
+		TS_ASSERT_EQUALS(Wizardry7::StartingEquipment::getItems(14, 0, items), 0u);
 	}
 };
