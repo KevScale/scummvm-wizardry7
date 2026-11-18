@@ -611,7 +611,7 @@ bool Wizardry7Engine::showCharacterReview(const Common::Path &rosterPath, uint s
 	font.drawString(Common::String::format("%u", c.portrait).c_str(), _screen, 146, 82, 1);
 	font.drawString(Common::String::format("HP %u/%u", c.hp, c.hpMax).c_str(), _screen, 8, 96, 1);
 	font.drawString(Common::String::format("ST %u/%u", c.stamina, c.staminaMax).c_str(), _screen, 8, 104, 1);
-	font.drawString(Common::String::format("GP %u", c.gold).c_str(), _screen, 104, 96, 1);
+	font.drawString(Common::String::format("CC %u", c.carryingCapacity).c_str(), _screen, 104, 96, 1);
 	font.drawString(Common::String::format("AC +%u (+0)", c.ac).c_str(), _screen, 228, 32, 1);
 	// Body-part AC rows on the reference sheet (diagonal down the right side).
 	static const int acX[4] = { 265, 275, 291, 275 };

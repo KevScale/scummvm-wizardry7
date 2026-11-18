@@ -126,7 +126,7 @@ public:
 		record[0x1C] = 30;  // stamina
 		record[0x1E] = 40;  // stamina max
 		record[0x20] = 100; // weight
-		record[0x22] = 50;  // gold
+		record[0x22] = 50;  // carrying capacity
 		record[0x1B6] = 7;  // ac
 		record[0x236] = 4;
 		record[0x237] = 3;
@@ -136,6 +136,9 @@ public:
 		record[0x170] = 12; // STR
 		record[0x177] = 12; // portrait
 		record[0x1B9] = 10; // AC slot copies
+		record[0x24] = 1; // level 1
+		record[0x182] = 3; record[0x183] = 1; record[0x184] = 1;
+		record[0x190] = 1;
 		record[0x40 + 6] = 1; // first slot count
 
 		Wizardry7::SaveGame save;
@@ -150,6 +153,12 @@ public:
 		TS_ASSERT_EQUALS(c.hpMax, 20u);
 		TS_ASSERT_EQUALS(c.stamina, 30u);
 		TS_ASSERT_EQUALS(c.ac, 7u);
+		TS_ASSERT_EQUALS(c.carryingCapacity, 50u);
+		TS_ASSERT_EQUALS(c.level, 1u);
+		TS_ASSERT_EQUALS(c.swimming, 3);
+		TS_ASSERT_EQUALS(c.climbing, 1);
+		TS_ASSERT_EQUALS(c.mapping, 0);
+		TS_ASSERT_EQUALS(c.artifacts, 1);
 		TS_ASSERT_EQUALS(c.race, 3);
 		TS_ASSERT_EQUALS(c.gender, 1);
 		TS_ASSERT_EQUALS(c.klass, 2);

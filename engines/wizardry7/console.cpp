@@ -906,14 +906,16 @@ bool Wizardry7Console::cmdSheet(int argc, const char **argv) {
 	const uint16 rankMsg = 800 + c.klass * 10 + rank;
 	if (_vm->getMessages()->hasMessage(rankMsg))
 		rankName = _vm->getMessages()->getMessage(rankMsg);
-	print("level %u rank %u%s%s  age %u  hp %u/%u  st %u/%u  ac %u (slots %u,%u,%u,%u,%u)  gold %u  portrait %u\n",
+	print("level %u rank %u%s%s  age %u  hp %u/%u  st %u/%u  ac %u (slots %u,%u,%u,%u,%u)  cc %u  portrait %u\n",
 		level, rank, rankName.empty() ? "" : " ", rankName.c_str(), c.age, c.hp, c.hpMax,
 		c.stamina, c.staminaMax, c.ac, c.acSlots[0], c.acSlots[1], c.acSlots[2],
-		c.acSlots[3], c.acSlots[4], c.gold, c.portrait);
+		c.acSlots[3], c.acSlots[4], c.carryingCapacity, c.portrait);
 	static const char *const names[7] = { "STR", "INT", "PIE", "VIT", "DEX", "SPD", "PER" };
 	for (uint i = 0; i < 7; ++i)
 		print("%s %u%s", names[i], c.stats[i], i == 6 ? "\n" : "  ");
-	for (uint i = 0; i < 5; ++i) {
+	print("skills: SWIM %u CLIMB %u SCOUT %u | ART %u MYTH %u MAP %u SCRIBE %u\n",
+		c.swimming, c.climbing, c.scouting, c.artifacts, c.mythology, c.mapping, c.scribe);
+	for (uint i = 0; i < 20; ++i) {
 		if (!c.inventory[i])
 			continue;
 		ItemInfo info;
@@ -1263,9 +1265,9 @@ bool Wizardry7Console::cmdSaveInfo(int argc, const char **argv) {
 		SaveGame::getKindName(save.getKind()), save.getSize(), save.getCharacterCount());
 	for (uint i = 0; i < save.getCharacterCount(); ++i) {
 		const SaveCharacter &c = save.getCharacter(i);
-		print("  %2u %-8s age %u xp %u hp %u/%u st %u/%u ac %u gold %u wt %u race %u class %u align %u knack %u\n",
+		print("  %2u %-8s age %u xp %u hp %u/%u st %u/%u ac %u cc %u wt %u race %u class %u align %u knack %u\n",
 			i, c.name.c_str(), c.age, c.xp, c.hp, c.hpMax, c.stamina, c.staminaMax,
-			c.ac, c.gold, c.weight, c.race, c.klass, c.alignment, c.knack);
+			c.ac, c.carryingCapacity, c.weight, c.race, c.klass, c.alignment, c.knack);
 	}
 	return true;
 }
@@ -1346,9 +1348,9 @@ bool Wizardry7Console::cmdRoster(int argc, const char **argv) {
 			continue;
 		}
 		const SaveCharacter &c = roster.getCharacter(i);
-		print("  %2u  %-8s age %u hp %u/%u st %u/%u ac %u gold %u race %u gender %u class %u align %u\n",
+		print("  %2u  %-8s age %u hp %u/%u st %u/%u ac %u cc %u race %u gender %u class %u align %u\n",
 			i, c.name.c_str(), c.age, c.hp, c.hpMax, c.stamina, c.staminaMax,
-			c.ac, c.gold, c.race, c.gender, c.klass, c.alignment);
+			c.ac, c.carryingCapacity, c.race, c.gender, c.klass, c.alignment);
 	}
 	return true;
 }

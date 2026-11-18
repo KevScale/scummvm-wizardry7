@@ -38,8 +38,9 @@ enum SaveKind {
 
 struct SaveCharacter {
 	SaveCharacter() : age(0), xp(0), hp(0), hpMax(0), stamina(0), staminaMax(0),
-		weight(0), gold(0), ac(0), race(0), gender(0), alignment(0), klass(0), knack(0),
-		portrait(0) {
+		weight(0), carryingCapacity(0), level(0), ac(0), race(0), gender(0),
+		alignment(0), klass(0), knack(0), portrait(0), swimming(0), climbing(0),
+		scouting(0), artifacts(0), mythology(0), mapping(0), scribe(0) {
 		memset(stats, 0, sizeof(stats));
 		memset(inventoryCount, 0, sizeof(inventoryCount));
 		memset(acSlots, 0, sizeof(acSlots));
@@ -52,8 +53,9 @@ struct SaveCharacter {
 	uint16 hpMax;
 	uint16 stamina;
 	uint16 staminaMax;
-	uint16 weight;
-	uint16 gold;
+	uint16 weight;           // carried weight (+0x20)
+	uint16 carryingCapacity; // +0x22 (not GP)
+	uint16 level;            // +0x24 (shipped pre-mades: 1)
 	uint16 ac;
 	uint8 race;
 	uint8 gender;
@@ -62,9 +64,12 @@ struct SaveCharacter {
 	uint8 knack;
 	uint8 portrait;
 	uint8 stats[7]; // STR INT PIE VIT DEX SPD PER at record +0x170
-	uint16 inventory[5]; // starting-kit slots at record +0x40, 12-byte stride
-	uint8 inventoryCount[5]; // slot +6 count/charges
+	uint16 inventory[20]; // 20 slots at +0x40 (two pages of ten), 12-byte stride
+	uint8 inventoryCount[20]; // slot +6 quantity/charges
+	uint8 inventoryKind[20]; // slot +4 cached item kind
 	uint8 acSlots[5]; // copies at +0x1B9..+0x1BD
+	uint8 swimming, climbing, scouting; // +0x182..+0x184
+	uint8 artifacts, mythology, mapping, scribe; // +0x190..+0x193
 };
 
 /**

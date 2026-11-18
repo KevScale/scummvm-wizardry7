@@ -39,14 +39,15 @@ static void parseCharacter(const byte *record, SaveCharacter &character) {
 	memcpy(name, record, 12);
 	name[12] = 0;
 	character.name = name;
-	character.age = READ_LE_UINT32(record + 0x08);
+	character.age = READ_LE_UINT16(record + 0x08);
 	character.xp = READ_LE_UINT32(record + 0x0C);
 	character.hp = READ_LE_UINT16(record + 0x18);
 	character.hpMax = READ_LE_UINT16(record + 0x1A);
 	character.stamina = READ_LE_UINT16(record + 0x1C);
 	character.staminaMax = READ_LE_UINT16(record + 0x1E);
 	character.weight = READ_LE_UINT16(record + 0x20);
-	character.gold = READ_LE_UINT16(record + 0x22);
+	character.carryingCapacity = READ_LE_UINT16(record + 0x22);
+	character.level = READ_LE_UINT16(record + 0x24);
 	character.ac = READ_LE_UINT16(record + 0x1B6);
 	character.knack = record[0x236];
 	character.race = record[0x237];
@@ -56,10 +57,19 @@ static void parseCharacter(const byte *record, SaveCharacter &character) {
 	for (uint i = 0; i < 7; ++i)
 		character.stats[i] = record[0x170 + i];
 	character.portrait = record[0x177];
-	for (uint i = 0; i < 5; ++i) {
+	character.swimming = record[0x182];
+	character.climbing = record[0x183];
+	character.scouting = record[0x184];
+	character.artifacts = record[0x190];
+	character.mythology = record[0x191];
+	character.mapping = record[0x192];
+	character.scribe = record[0x193];
+	for (uint i = 0; i < 20; ++i) {
 		character.inventory[i] = READ_LE_UINT16(record + 0x40 + i * 12);
+		character.inventoryKind[i] = record[0x40 + i * 12 + 4];
 		character.inventoryCount[i] = record[0x40 + i * 12 + 6];
-		character.acSlots[i] = record[0x1B9 + i];
+		if (i < 5)
+			character.acSlots[i] = record[0x1B9 + i];
 	}
 }
 
