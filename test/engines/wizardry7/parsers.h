@@ -9,6 +9,7 @@
 #include "wizardry7/gfx.h"
 #include "wizardry7/items.h"
 #include "wizardry7/maze.h"
+#include "wizardry7/monster.h"
 #include "wizardry7/party.h"
 #include "wizardry7/xp.h"
 #include "wizardry7/save.h"
@@ -713,5 +714,43 @@ public:
 		TS_ASSERT_EQUALS(maze.getEncounterGroup(0, false), 3);
 		TS_ASSERT_EQUALS(maze.getEncounterGroup(0, true), 4);
 		TS_ASSERT_EQUALS(maze.getEncounterChance(0), 65);
+	}
+
+	void testMonsterRecord() {
+		byte record[232];
+		memset(record, 0, sizeof(record));
+		memcpy(record, "DANDIPHOOT", 10);
+		memcpy(record + 0x10, "DANDIPHOOTS", 11);
+		memcpy(record + 0x20, "PHOOT", 5);
+		memcpy(record + 0x30, "PHOOTS", 6);
+		WRITE_LE_UINT32(record + 0x40, 390);
+		record[0x7A] = 5;
+		WRITE_LE_UINT32(record + 0x7E, 0x0103);
+		record[0x80] = 2;
+		WRITE_LE_UINT32(record + 0x82, 0x0204);
+		WRITE_LE_UINT32(record + 0x86, 0x0104);
+		record[0xAA] = 1;
+		record[0xAB] = 0;
+		record[0xAC] = 25;
+		record[0xAD] = 50;
+		record[0xD6] = 3;
+		record[0xD7] = 26;
+		record[0xE2] = 1;
+		Wizardry7::MonsterInfo info;
+		TS_ASSERT(Wizardry7::parseMonsterRecord(record, sizeof(record), info));
+		TS_ASSERT_EQUALS(info.names[0], Common::String("DANDIPHOOT"));
+		TS_ASSERT_EQUALS(info.names[1], Common::String("DANDIPHOOTS"));
+		TS_ASSERT_EQUALS(info.xp, 390u);
+		TS_ASSERT_EQUALS(info.spawnCount, 5);
+		// +0x80 is both the top byte of the level-dice u32 and the actor count.
+		TS_ASSERT_EQUALS(info.levelDice, 0x020103u);
+		TS_ASSERT_EQUALS(info.actorCount, 2);
+		TS_ASSERT_EQUALS(info.hpDice, 0x0204u);
+		TS_ASSERT_EQUALS(info.stDice, 0x0104u);
+		TS_ASSERT_EQUALS(info.variantId[0], 1);
+		TS_ASSERT_EQUALS(info.variantChance[0], 25);
+		TS_ASSERT_EQUALS(info.bodyType, 3);
+		TS_ASSERT_EQUALS(info.pictureId, 26);
+		TS_ASSERT_EQUALS(info.flags, 1);
 	}
 };

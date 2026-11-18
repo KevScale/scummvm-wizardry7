@@ -31,6 +31,7 @@
 #include "wizardry7/console.h"
 #include "wizardry7/items.h"
 #include "wizardry7/maze.h"
+#include "wizardry7/monster.h"
 #include "wizardry7/xp.h"
 #include "graphics/screen.h"
 
@@ -99,6 +100,7 @@ Wizardry7Console::Wizardry7Console(Wizardry7Engine *vm) : GUI::Debugger(), _vm(v
 	registerCmd("saveparty", WRAP_METHOD(Wizardry7Console, cmdSaveParty));
 	registerCmd("xp", WRAP_METHOD(Wizardry7Console, cmdXp));
 	registerCmd("maze", WRAP_METHOD(Wizardry7Console, cmdMaze));
+	registerCmd("monster", WRAP_METHOD(Wizardry7Console, cmdMonster));
 	registerCmd("script", WRAP_METHOD(Wizardry7Console, cmdScript));
 }
 
@@ -207,6 +209,8 @@ bool Wizardry7Console::runScript(const Common::Path &path) {
 			ok &= cmdXp(count, argv);
 		else if (command == "maze")
 			ok &= cmdMaze(count, argv);
+		else if (command == "monster")
+			ok &= cmdMonster(count, argv);
 		else if (command == "script")
 			ok &= cmdScript(count, argv);
 		else {
@@ -449,6 +453,31 @@ bool Wizardry7Console::cmdCharGen(int argc, const char **argv) {
 
 bool Wizardry7Console::cmdCharGenUI(int argc, const char **argv) {
 	_vm->runCharacterCreationUI("VBFONT0.VGA", argc >= 2 ? Common::Path(argv[1]) : Common::Path());
+	return true;
+}
+
+bool Wizardry7Console::cmdMonster(int argc, const char **argv) {
+	if (argc != 2) {
+		print("Usage: monster <id>\n");
+		return true;
+	}
+	int id = 0;
+	if (!parseInteger(argv[1], id) || id < 0 || id > 0xFFFF) {
+		print("Bad monster id '%s'\n", argv[1]);
+		return true;
+	}
+	Wizardry7::MonsterInfo info;
+	if (!Wizardry7::loadMonster(*_vm->getScenario(), (uint16)id, info)) {
+		print("No monster %d\n", id);
+		return true;
+	}
+	print("monster %d: %s / %s (%s / %s)\n", id, info.names[0].c_str(),
+		info.names[1].c_str(), info.names[2].c_str(), info.names[3].c_str());
+	print("xp %u spawn %u actors %u pic %u body %u flags %u\n", info.xp,
+		info.spawnCount, info.actorCount, info.pictureId, info.bodyType, info.flags);
+	print("level dice %08x hp %08x st %08x variants %u@%u%% %u@%u%%\n",
+		info.levelDice, info.hpDice, info.stDice, info.variantId[0],
+		info.variantChance[0], info.variantId[1], info.variantChance[1]);
 	return true;
 }
 

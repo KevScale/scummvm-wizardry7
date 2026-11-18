@@ -9,6 +9,7 @@ MODULE_OBJS := \
 	items.o \
 	maze.o \
 	metaengine.o \
+	monster.o \
 	msg.o \
 	party.o \
 	rng.o \
