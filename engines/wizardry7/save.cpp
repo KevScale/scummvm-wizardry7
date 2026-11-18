@@ -76,12 +76,20 @@ CharacterRoster::CharacterRoster() {
 }
 
 bool CharacterRoster::load(const Common::Path &path) {
-	_characters.clear();
-	_used.clear();
-
 	Common::Array<byte> data;
 	if (!readWholeFile(path, data))
 		return false;
+	return loadFromData(data.data(), data.size());
+}
+
+bool CharacterRoster::loadFromData(const byte *source, uint32 size) {
+	_characters.clear();
+	_used.clear();
+	if (size < kRosterHeaderSize)
+		return false;
+	Common::Array<byte> data;
+	data.resize(size);
+	memcpy(data.data(), source, size);
 
 	if (data.size() < kRosterHeaderSize)
 		return false;
@@ -110,22 +118,26 @@ bool SaveGame::readFile(const Common::Path &path, Common::Array<byte> &data) con
 }
 
 bool SaveGame::load(const Common::Path &path) {
-	_kind = kSaveUnknown;
-	_size = 0;
-	_characters.clear();
-
 	Common::Array<byte> data;
 	if (!readFile(path, data)) {
 		warning("Wizardry7: cannot read save '%s'", path.toString().c_str());
 		return false;
 	}
-	_size = data.size();
+	return loadFromData(data.data(), data.size());
+}
+
+bool SaveGame::loadFromData(const byte *data, uint32 size) {
+	_kind = kSaveUnknown;
+	_size = size;
+	_characters.clear();
+
+	if (size < 4)
 	if (_size < 4)
 		return false;
 
-	const uint16 tag = READ_LE_UINT16(data.data());
+	const uint16 tag = READ_LE_UINT16(data);
 	if (tag == 0x0A && _size >= kDosStateSize && (_size - kDosStateSize - kDosRandomSize) % kCharacterSize == 0)
-		return parseDos(data.data(), _size);
+		return parseDos(data, _size);
 
 	// Gold .SGM: 414-byte header + compressed 16*(1346+1740) payload + trailer.
 	if (_size > 414) {

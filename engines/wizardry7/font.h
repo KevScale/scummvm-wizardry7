@@ -44,6 +44,7 @@ public:
 	GameFont();
 
 	bool load(const Common::Path &path);
+	bool loadFromData(const byte *data, uint32 size);
 	bool isLoaded() const { return !_data.empty(); }
 
 	uint getWidth() const { return _width; }

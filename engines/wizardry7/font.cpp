@@ -38,21 +38,27 @@ GameFont::GameFont() :
 }
 
 bool GameFont::load(const Common::Path &path) {
-	_data.clear();
-
 	Common::File file;
 	if (!file.open(path)) {
 		warning("Wizardry7: cannot open font '%s'", path.toString().c_str());
 		return false;
 	}
 	const uint32 size = file.size();
+	Common::Array<byte> data;
+	data.resize(size);
+	if (file.read(data.data(), size) != size)
+		return false;
+	return loadFromData(data.data(), size);
+}
+
+bool GameFont::loadFromData(const byte *source, uint32 size) {
+	_data.clear();
 	if (size < kFontHeaderSize) {
-		warning("Wizardry7: font '%s' is too short", path.toString().c_str());
+		warning("Wizardry7: font data is too short");
 		return false;
 	}
 	_data.resize(size);
-	if (file.read(_data.data(), size) != size)
-		return false;
+	memcpy(_data.data(), source, size);
 
 	_width = _data[0];
 	_height = _data[1];
@@ -67,20 +73,20 @@ bool GameFont::load(const Common::Path &path) {
 	_secondBytesPerGlyph = READ_LE_UINT16(_data.data() + 14);
 
 	if (_glyphCount == 0 || _bytesPerGlyph == 0 || _width == 0 || _height == 0) {
-		warning("Wizardry7: font '%s' has invalid header values", path.toString().c_str());
+		warning("Wizardry7: font has invalid header values");
 		_data.clear();
 		return false;
 	}
 
 	const uint32 firstEnd = kFontHeaderSize + _glyphCount * _bytesPerGlyph;
 	if (firstEnd > size) {
-		warning("Wizardry7: font '%s' has a truncated glyph block", path.toString().c_str());
+		warning("Wizardry7: font has a truncated glyph block");
 		_data.clear();
 		return false;
 	}
 	if ((_flags & 4) && (_secondOffset < firstEnd || _secondBytesPerGlyph == 0 ||
 		_secondOffset + _glyphCount * _secondBytesPerGlyph > size)) {
-		warning("Wizardry7: font '%s' has an invalid second glyph block", path.toString().c_str());
+		warning("Wizardry7: font has an invalid second glyph block");
 		_data.clear();
 		return false;
 	}

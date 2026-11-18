@@ -61,35 +61,41 @@ VgaBundle::VgaBundle() : _recordCount(0), _recordTableOffset(0) {
 }
 
 bool VgaBundle::load(const Common::Path &path) {
-	_data.clear();
-	_entries.clear();
-	_recordCount = 0;
-
 	Common::File file;
 	if (!file.open(path)) {
 		warning("Wizardry7: cannot open VGA bundle '%s'", path.toString().c_str());
 		return false;
 	}
 	const uint32 size = file.size();
+	Common::Array<byte> data;
+	data.resize(size);
+	if (file.read(data.data(), size) != size)
+		return false;
+	return loadFromData(data.data(), size);
+}
+
+bool VgaBundle::loadFromData(const byte *source, uint32 size) {
+	_data.clear();
+	_entries.clear();
+	_recordCount = 0;
+
 	if (size < 4) {
-		warning("Wizardry7: VGA bundle '%s' is too short", path.toString().c_str());
+		warning("Wizardry7: VGA bundle data is too short");
 		return false;
 	}
-
 	_data.resize(size);
-	if (file.read(_data.data(), size) != size)
-		return false;
+	memcpy(_data.data(), source, size);
 
 	const uint16 chunkCount = READ_LE_UINT16(_data.data());
 	_recordCount = READ_LE_UINT16(_data.data() + 2);
 	if (chunkCount == 0) {
-		warning("Wizardry7: VGA bundle '%s' has no chunks", path.toString().c_str());
+		warning("Wizardry7: VGA bundle has no chunks");
 		return false;
 	}
 
 	const uint32 tableEnd = 4 + chunkCount * 6 + _recordCount * 5;
 	if (tableEnd > size) {
-		warning("Wizardry7: VGA bundle '%s' has a truncated table", path.toString().c_str());
+		warning("Wizardry7: VGA bundle has a truncated table");
 		return false;
 	}
 
@@ -107,8 +113,8 @@ bool VgaBundle::load(const Common::Path &path) {
 	}
 
 	if (_entries[0].offset != tableEnd) {
-		warning("Wizardry7: VGA bundle '%s' first chunk is at 0x%x, expected 0x%x",
-			path.toString().c_str(), _entries[0].offset, tableEnd);
+		warning("Wizardry7: VGA bundle first chunk is at 0x%x, expected 0x%x",
+			_entries[0].offset, tableEnd);
 		return false;
 	}
 
@@ -117,7 +123,7 @@ bool VgaBundle::load(const Common::Path &path) {
 		const Entry &chunk = _entries[i];
 		if (chunk.offset > next || next > size || chunk.stride == 0 || chunk.height == 0 ||
 			(uint32)chunk.stride * chunk.height != next - chunk.offset) {
-			warning("Wizardry7: invalid chunk %u in VGA bundle '%s'", i, path.toString().c_str());
+			warning("Wizardry7: invalid chunk %u in VGA bundle", i);
 			_entries.clear();
 			return false;
 		}

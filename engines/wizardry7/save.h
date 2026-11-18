@@ -65,6 +65,7 @@ public:
 	CharacterRoster();
 
 	bool load(const Common::Path &path);
+	bool loadFromData(const byte *data, uint32 size);
 	bool isLoaded() const { return !_characters.empty(); }
 	uint getSlotCount() const { return _characters.size(); }
 	bool isSlotUsed(uint slot) const { return slot < _used.size() && _used[slot]; }
@@ -80,6 +81,7 @@ public:
 	SaveGame();
 
 	bool load(const Common::Path &path);
+	bool loadFromData(const byte *data, uint32 size);
 
 	SaveKind getKind() const { return _kind; }
 	uint32 getSize() const { return _size; }

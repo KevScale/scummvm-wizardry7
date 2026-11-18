@@ -56,6 +56,7 @@ public:
 	VgaBundle();
 
 	bool load(const Common::Path &path);
+	bool loadFromData(const byte *data, uint32 size);
 	bool isLoaded() const { return !_entries.empty(); }
 
 	uint getChunkCount() const { return _entries.size(); }
