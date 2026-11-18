@@ -57,6 +57,11 @@ ifeq ($(ENABLE_TWINE), STATIC_PLUGIN)
 	TEST_LIBS += engines/twine/libtwine.a
 endif
 
+ifeq ($(ENABLE_WIZARDRY7), STATIC_PLUGIN)
+	TESTS += $(srcdir)/test/engines/wizardry7/*.h
+	TEST_LIBS += engines/wizardry7/libwizardry7.a
+endif
+
 #
 TEST_FLAGS   := --runner=StdioPrinter --no-std --no-eh
 TEST_CFLAGS  := $(CFLAGS) -I$(srcdir)/test/cxxtest
