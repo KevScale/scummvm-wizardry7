@@ -48,6 +48,17 @@ into this tree.
    must not be proposed upstream without a human maintainer taking ownership,
    reviewing, and being able to maintain it.
 
+## Owner decisions (Nov 2026)
+
+- Both builds are first-class (Gold + DOS); PSX later.
+- Gold reference screenshots are captured by a parallel effort into the RE
+  repo's central `data/ui-shots/` structure (`gold_*.png`), never here.
+- Copy protection is skipped entirely (matches the currently sold GOG
+  distribution; not reverse-engineered).
+- Audio: both digital and MIDI, but a secondary priority after gameplay.
+- Fork-first, upstream later. The official ScummVM inclusion requirements and
+  the implications are summarised in the RE repo's `reimpl/PLAN.md` §2.1.
+
 ## Current milestone
 
 Data-layer bring-up, not a playable game:
