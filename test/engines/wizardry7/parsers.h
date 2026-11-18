@@ -2,6 +2,7 @@
 #include "common/scummsys.h"
 #include "graphics/screen.h"
 
+#include "wizardry7/creation.h"
 #include "wizardry7/font.h"
 #include "wizardry7/gfx.h"
 #include "wizardry7/save.h"
@@ -140,5 +141,43 @@ public:
 		TS_ASSERT(!roster.isSlotUsed(1));
 		TS_ASSERT_EQUALS(roster.getCharacter(0).name, Common::String("AAA"));
 		TS_ASSERT_EQUALS(roster.getCharacter(1).name, Common::String("BBB"));
+	}
+
+	void testCreationEligibility() {
+		Wizardry7::CharacterCreation creation;
+		const byte humanStats[8] = { 7, 10, 8, 10, 9, 9, 9, 11 };
+		creation.setStats(humanStats);
+		creation.setBonusPoints(11);
+		creation.setSex(0); // male
+
+		// The reference profession list for this F-HUMAN state: Fighter, Mage,
+		// Priest, Thief, Ranger, Alchemist, Bard. Valkyrie is female-only.
+		TS_ASSERT_EQUALS(creation.getClassCost(0), 5);
+		TS_ASSERT_EQUALS(creation.getClassCost(3), 2);
+		TS_ASSERT_EQUALS(creation.getClassCost(8), -1);
+		Common::Array<uint> eligible = creation.getEligibleClasses();
+		TS_ASSERT_EQUALS(eligible.size(), 7u);
+		const uint expected[7] = { 0, 1, 2, 3, 4, 5, 6 };
+		for (uint i = 0; i < 7; ++i)
+			TS_ASSERT_EQUALS(eligible[i], expected[i]);
+
+		TS_ASSERT(creation.selectClass(0)); // Fighter: STR 7 -> 12
+		TS_ASSERT_EQUALS(creation.getStat(0), 12);
+		TS_ASSERT_EQUALS(creation.getBonusPoints(), 6);
+		TS_ASSERT_EQUALS(creation.getClassCost(0), 0);
+		TS_ASSERT(!creation.selectClass(7)); // needs more than the remaining pool
+
+		creation.setStats(humanStats);
+		creation.setBonusPoints(0);
+		creation.setSex(1); // female
+		TS_ASSERT_EQUALS(creation.getClassCost(8), 10);
+		creation.setStat(0, 10);
+		creation.setStat(2, 11);
+		creation.setStat(3, 11);
+		creation.setStat(4, 10);
+		creation.setStat(5, 11);
+		creation.setStat(6, 8);
+		TS_ASSERT_EQUALS(creation.getClassCost(8), 0);
+		TS_ASSERT(creation.isClassEligible(8));
 	}
 };
