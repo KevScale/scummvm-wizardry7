@@ -267,4 +267,22 @@ public:
 		TS_ASSERT(flow.removeBonusPoint(1));
 		TS_ASSERT_EQUALS(flow.getCharacter().getBonusPoints(), 2);
 	}
+
+	void testCreationRaceAndSexStats() {
+		Wizardry7::CharacterCreation creation;
+		const byte zero[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
+		creation.setStats(zero);
+		creation.applyRaceMinimums(0); // Human
+		const byte human[8] = { 9, 8, 8, 9, 9, 8, 8, 0 };
+		for (uint i = 0; i < 8; ++i)
+			TS_ASSERT_EQUALS(creation.getStat(i), human[i]);
+
+		creation.applySexModifiers(1); // Female: STR -2, PER +1, KAR +1
+		TS_ASSERT_EQUALS(creation.getStat(0), 7);
+		TS_ASSERT_EQUALS(creation.getStat(6), 9);
+		TS_ASSERT_EQUALS(creation.getStat(7), 1);
+
+		creation.applySexModifiers(0); // Male is a no-op
+		TS_ASSERT_EQUALS(creation.getStat(0), 7);
+	}
 };

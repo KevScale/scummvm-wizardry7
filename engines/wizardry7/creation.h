@@ -61,6 +61,11 @@ public:
 	int getBonusPoints() const { return _bonusPoints; }
 	void setSex(byte sex) { _sex = sex; }
 	byte getSex() const { return _sex; }
+
+	/** Raise the stats to the race's minimums (race 0..10). */
+	void applyRaceMinimums(uint8 race);
+	/** Female adjustment: STR -2, PER +1, KAR +1. */
+	void applySexModifiers(byte sex);
 	int getClass() const { return _classIndex; }
 
 	/** Bonus-point cost of raising the stats to this class's minimums, or -1. */

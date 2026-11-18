@@ -26,6 +26,21 @@
 
 namespace Wizardry7 {
 
+// Race minimums (see docs/engine/chargen-rules.md).
+static const byte kRaceMinimums[11][CharacterCreation::kStatCount] = {
+	{ 9, 8, 8, 9, 9, 8, 8, 0 }, // Human
+	{ 7, 10, 10, 7, 9, 9, 8, 0 }, // Elf
+	{ 11, 6, 10, 12, 7, 7, 7, 0 }, // Dwarf
+	{ 10, 7, 13, 10, 8, 6, 6, 0 }, // Gnome
+	{ 8, 7, 6, 9, 10, 7, 13, 0 }, // Hobbit
+	{ 5, 11, 6, 6, 10, 14, 12, 0 }, // Faerie
+	{ 12, 5, 5, 14, 8, 10, 3, 0 }, // Lizardman
+	{ 10, 7, 6, 12, 10, 8, 6, 0 }, // Dracon
+	{ 7, 10, 7, 7, 10, 12, 10, 0 }, // Felpurr
+	{ 8, 6, 12, 10, 8, 8, 10, 0 }, // Rawulf
+	{ 10, 10, 6, 10, 7, 7, 9, 0 } // Mook
+};
+
 // Minimum stats for each class (see docs/engine/chargen-rules.md).
 static const byte kClassMinimums[CharacterCreation::kClassCount][CharacterCreation::kStatCount] = {
 	{ 12, 0, 0, 0, 0, 0, 0, 0 }, // Fighter
@@ -55,6 +70,26 @@ void CharacterCreation::setStats(const byte *stats) {
 void CharacterCreation::setStat(uint index, byte value) {
 	if (index < kStatCount)
 		_stats[index] = value;
+}
+
+void CharacterCreation::applyRaceMinimums(uint8 race) {
+	if (race >= 11)
+		return;
+	for (uint i = 0; i < kStatCount; ++i) {
+		if (_stats[i] < kRaceMinimums[race][i])
+			_stats[i] = kRaceMinimums[race][i];
+	}
+}
+
+void CharacterCreation::applySexModifiers(byte sex) {
+	if (sex != 1)
+		return;
+	if (_stats[0] >= 2)
+		_stats[0] -= 2;
+	else
+		_stats[0] = 0;
+	++_stats[6];
+	++_stats[7];
 }
 
 int CharacterCreation::getClassCost(uint classIndex) const {
