@@ -76,6 +76,7 @@ Wizardry7Console::Wizardry7Console(Wizardry7Engine *vm) : GUI::Debugger(), _vm(v
 	registerCmd("mainmenu", WRAP_METHOD(Wizardry7Console, cmdMainMenu));
 	registerCmd("charactermenu", WRAP_METHOD(Wizardry7Console, cmdCharacterMenu));
 	registerCmd("addcharacter", WRAP_METHOD(Wizardry7Console, cmdAddCharacter));
+	registerCmd("chargen", WRAP_METHOD(Wizardry7Console, cmdCharGen));
 	registerCmd("screen", WRAP_METHOD(Wizardry7Console, cmdScreen));
 	registerCmd("screenshot", WRAP_METHOD(Wizardry7Console, cmdScreenshot));
 	registerCmd("bundle", WRAP_METHOD(Wizardry7Console, cmdBundle));
@@ -155,6 +156,8 @@ bool Wizardry7Console::runScript(const Common::Path &path) {
 			ok &= cmdCharacterMenu(count, argv);
 		else if (command == "addcharacter")
 			ok &= cmdAddCharacter(count, argv);
+		else if (command == "chargen")
+			ok &= cmdCharGen(count, argv);
 		else if (command == "screen")
 			ok &= cmdScreen(count, argv);
 		else if (command == "screenshot")
@@ -392,6 +395,19 @@ bool Wizardry7Console::cmdAddCharacter(int argc, const char **argv) {
 	}
 	print("Showing add-character roster%s%s\n", argc >= 2 ? " from " : "",
 		argc >= 2 ? argv[1] : "");
+	return true;
+}
+
+bool Wizardry7Console::cmdCharGen(int argc, const char **argv) {
+	if (argc != 2) {
+		print("Usage: chargen <sex|race|profession|name|bonus>\n");
+		return true;
+	}
+	if (!_vm->showCharacterCreation(argv[1])) {
+		print("Cannot show character-creation step '%s'\n", argv[1]);
+		return true;
+	}
+	print("Showing character-creation step '%s'\n", argv[1]);
 	return true;
 }
 

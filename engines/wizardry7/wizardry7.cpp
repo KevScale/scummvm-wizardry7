@@ -342,6 +342,113 @@ bool Wizardry7Engine::showAddCharacter(const Common::String &fontName, const Com
 	return true;
 }
 
+static void drawModalPanel(Graphics::Screen *screen, int x, int y, int width, int height) {
+	screen->fillRect(Common::Rect(x, y, x + width, y + height), 0);
+	screen->hLine(x + 1, y + 1, x + width - 2, 180);
+	screen->vLine(x + 1, y + 2, y + height - 3, 180);
+	screen->fillRect(Common::Rect(x + 2, y + 2, x + width - 1, y + height - 2), 194);
+	screen->hLine(x + 1, y + height - 2, x + width - 2, 197);
+	screen->vLine(x + width - 2, y + 1, y + height - 2, 197);
+	screen->setPixel(x + width - 2, y + 1, 180);
+	screen->setPixel(x + 1, y + height - 2, 180);
+}
+
+static void drawModalButton(Graphics::Screen *screen, GameFont &font, const char *text,
+		int x, int y, int width, int height, byte textColor, bool selected = false) {
+	const byte border = selected ? 22 : 0;
+	screen->fillRect(Common::Rect(x, y, x + width, y + height), border);
+	screen->fillRect(Common::Rect(x + 1, y + 1, x + width - 1, y + height - 1), 192);
+	screen->hLine(x + 2, y + 1, x + width - 3, 176);
+	screen->vLine(x + 1, y + 2, y + height - 3, 176);
+	screen->hLine(x + 1, y + height - 2, x + width - 2, 197);
+	screen->vLine(x + width - 2, y + 1, y + height - 2, 197);
+	screen->setPixel(x + 1, y + 1, 81);
+	screen->setPixel(x + width - 2, y + 1, 182);
+	screen->setPixel(x + 1, y + height - 2, 182);
+	screen->setPixel(x + width - 2, y + height - 2, 198);
+
+	int textWidth = 0;
+	for (const char *p = text; *p; ++p)
+		textWidth += font.getAdvance((byte)*p);
+	int tx = x + (width - textWidth) / 2 + 1;
+	for (const char *p = text; *p; ++p)
+		tx += font.drawChar((byte)*p, screen, tx, y + 3, textColor, false, 0);
+}
+
+static void drawChargenGrid(GameFont &font, Graphics::Screen *screen,
+		const char *const *labels, int count, int rows, int selected) {
+	static const int columns[3] = { 56, 126, 196 };
+	for (int i = 0; i < count; ++i) {
+		const int row = i / 3;
+		const int col = i % 3;
+		if (row >= rows)
+			break;
+		drawModalButton(screen, font, labels[i], columns[col], 133 + row * 12,
+			69, 11, 1, i == selected);
+	}
+}
+
+bool Wizardry7Engine::showCharacterCreation(const Common::String &step, const Common::String &fontName) {
+	if (!showScreen("PCVWSCRN"))
+		return false;
+
+	GameFont font;
+	if (!font.load(Common::Path(fontName)))
+		return false;
+
+	if (step.equalsIgnoreCase("sex")) {
+		drawModalPanel(_screen, 68, 113, 185, 37);
+		font.drawString("SELECT CHARACTER SEX", _screen, 100, 121, 1);
+		drawModalButton(_screen, font, "MALE", 73, 133, 69, 11, 1, true);
+		drawModalButton(_screen, font, "FEMALE", 179, 133, 69, 11, 1);
+	} else if (step.equalsIgnoreCase("race")) {
+		static const char *const races[] = {
+			"HUMAN", "HOBBIT", "FELPURR",
+			"ELF", "FAERIE", "RAWULF",
+			"DWARF", "LIZARDMAN", "MOOK",
+			"GNOME", "DRACON"
+		};
+		drawModalPanel(_screen, 51, 113, 219, 73);
+		font.drawString("SELECT CHARACTER RACE", _screen, 97, 121, 1);
+		drawChargenGrid(font, _screen, races, ARRAYSIZE(races), 4, 0);
+	} else if (step.equalsIgnoreCase("profession")) {
+		drawModalPanel(_screen, 51, 113, 219, 61);
+		font.drawString("SELECT CHARACTER PROFESSION", _screen, 79, 121, 1);
+		// The original list leaves gaps rather than filling row-major.
+		drawModalButton(_screen, font, "FIGHTER", 56, 133, 69, 11, 1, true);
+		drawModalButton(_screen, font, "THIEF", 126, 133, 69, 11, 1);
+		drawModalButton(_screen, font, "BARD", 196, 133, 69, 11, 1);
+		drawModalButton(_screen, font, "MAGE", 56, 145, 69, 11, 1);
+		drawModalButton(_screen, font, "RANGER", 126, 145, 69, 11, 1);
+		drawModalButton(_screen, font, "PRIEST", 56, 157, 69, 11, 1);
+		drawModalButton(_screen, font, "ALCHEMIST", 126, 157, 69, 11, 1);
+	} else if (step.equalsIgnoreCase("name")) {
+		drawModalPanel(_screen, 54, 142, 212, 57);
+		font.drawString("CREATE NEW CHARACTER", _screen, 100, 152, 1);
+		drawOutlinedButton(_screen, font, "OK", 62, 165, 75, 11, 85);
+		drawOutlinedButton(_screen, font, "CANCEL", 62, 181, 75, 11, 85);
+		font.drawString("CHARACTER NAME", _screen, 158, 165, 155);
+		// White name field with the initial text cursor.
+		_screen->hLine(147, 172, 254, 197);
+		_screen->vLine(146, 172, 182, 197);
+		_screen->fillRect(Common::Rect(147, 173, 254, 182), 0);
+		_screen->fillRect(Common::Rect(148, 174, 253, 181), 1);
+		_screen->fillRect(Common::Rect(150, 175, 155, 180), 0);
+		_screen->hLine(147, 182, 254, 180);
+		_screen->vLine(254, 173, 182, 180);
+	} else if (step.equalsIgnoreCase("bonus")) {
+		drawModalPanel(_screen, 63, 130, 195, 37);
+		font.drawString("ABILITY BONUS POINTS", _screen, 101, 138, 1);
+		drawModalButton(_screen, font, "CLICK HERE WHEN DONE", 87, 150, 147, 11, 26);
+	} else {
+		warning("Wizardry7: unknown character-creation step '%s'", step.c_str());
+		return false;
+	}
+
+	_screen->update();
+	return true;
+}
+
 bool Wizardry7Engine::saveScreenshot(const Common::Path &path) {
 	if (!_screen)
 		return false;

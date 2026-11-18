@@ -60,6 +60,7 @@ public:
 	bool showCharacterMenu(const Common::String &fontName = "VBFONT0.VGA");
 	bool showAddCharacter(const Common::String &fontName = "VBFONT0.VGA",
 		const Common::Path &rosterPath = Common::Path());
+	bool showCharacterCreation(const Common::String &step, const Common::String &fontName = "VBFONT0.VGA");
 	bool saveScreenshot(const Common::Path &path);
 	void showStatusScreen() { drawStatusScreen(); }
 
