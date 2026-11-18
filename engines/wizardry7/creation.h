@@ -71,7 +71,7 @@ public:
 
 	/** Raise the stats to the race's minimums (race 0..10). */
 	void applyRaceMinimums(uint8 race);
-	/** Female adjustment: STR -2, PER +1 (portrait byte handled separately). */
+	/** Female adjustment: STR -2, PER +1, trailing KAR/portrait byte +1. */
 	void applySexModifiers(byte sex);
 	int getClass() const { return _classIndex; }
 

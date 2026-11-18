@@ -102,8 +102,7 @@ void CharacterCreation::applySexModifiers(byte sex) {
 	else
 		_stats[0] = 0;
 	++_stats[6];
-	// +1 to the byte at 0x697EC7 is the portrait slot, not an attribute.
-	// The portrait roll is not implemented yet, so leave it zero.
+	++_stats[7]; // trailing byte: DOS calls it KAR, Gold uses it as portrait
 }
 
 int CharacterCreation::getClassCost(uint classIndex) const {
@@ -266,7 +265,7 @@ bool writeCharacterRecord(const CreatedCharacter &character, byte *record, uint 
 		record[i] = character.rolls.ac;
 	for (uint i = 0; i < 7; ++i)
 		record[0x170 + i] = character.stats[i];
-	record[0x177] = 0; // portrait index; rolled later
+	record[0x177] = character.stats[7]; // DOS KAR / Gold portrait; rolled later
 	record[0x240] = 1;
 	record[0x241] = 10;
 	record[0x243] = 1;

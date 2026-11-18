@@ -395,10 +395,10 @@ public:
 		for (uint i = 0; i < 8; ++i)
 			TS_ASSERT_EQUALS(creation.getStat(i), human[i]);
 
-		creation.applySexModifiers(1); // Female: STR -2, PER +1 (portrait byte separate)
+		creation.applySexModifiers(1); // Female: STR -2, PER +1, KAR/portrait +1
 		TS_ASSERT_EQUALS(creation.getStat(0), 7);
 		TS_ASSERT_EQUALS(creation.getStat(6), 9);
-		TS_ASSERT_EQUALS(creation.getStat(7), 0);
+		TS_ASSERT_EQUALS(creation.getStat(7), 1);
 
 		creation.applySexModifiers(0); // Male is a no-op
 		TS_ASSERT_EQUALS(creation.getStat(0), 7);
@@ -567,6 +567,7 @@ public:
 		TS_ASSERT_EQUALS(c.inventory[4], 141);
 		for (uint i = 0; i < 7; ++i)
 			TS_ASSERT_EQUALS(record[0x170 + i], created.stats[i]);
+		TS_ASSERT_EQUALS(record[0x177], created.stats[7]);
 		TS_ASSERT_EQUALS(record[0x1B9], created.rolls.ac);
 		TS_ASSERT_EQUALS(record[0x1BD], created.rolls.ac);
 		TS_ASSERT_EQUALS(record[0x240], 1);
@@ -581,11 +582,11 @@ public:
 			byte base[8], after[8];
 		};
 		static const Case cases[] = {
-			{ 0, 1, 0, 5, { 7, 8, 8, 9, 9, 8, 9, 0 }, { 12, 8, 8, 9, 9, 8, 9, 0 } },
+			{ 0, 1, 0, 5, { 7, 8, 8, 9, 9, 8, 9, 1 }, { 12, 8, 8, 9, 9, 8, 9, 1 } },
 			{ 1, 0, 1, 2, { 7, 10, 10, 7, 9, 9, 8, 0 }, { 7, 12, 10, 7, 9, 9, 8, 0 } },
-			{ 0, 1, 3, 3, { 7, 8, 8, 9, 9, 8, 9, 0 }, { 7, 8, 8, 12, 9, 8, 9, 0 } },
+			{ 0, 1, 3, 3, { 7, 8, 8, 9, 9, 8, 9, 1 }, { 7, 8, 8, 12, 9, 8, 9, 1 } },
 			{ 2, 0, 2, 3, { 11, 6, 10, 12, 7, 7, 7, 0 }, { 11, 6, 12, 12, 7, 7, 8, 0 } },
-			{ 4, 1, 6, 5, { 6, 7, 6, 9, 10, 7, 14, 0 }, { 6, 7, 10, 9, 10, 8, 14, 0 } },
+			{ 4, 1, 6, 5, { 6, 7, 6, 9, 10, 7, 14, 1 }, { 6, 7, 10, 9, 10, 8, 14, 1 } },
 			{ 6, 0, 0, 0, { 12, 5, 5, 14, 8, 10, 3, 0 }, { 12, 5, 5, 14, 8, 10, 3, 0 } }
 		};
 		for (uint i = 0; i < ARRAYSIZE(cases); ++i) {
