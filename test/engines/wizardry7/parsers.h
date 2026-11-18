@@ -144,6 +144,31 @@ public:
 		Wizardry7::SaveGame roundTrip;
 		TS_ASSERT(roundTrip.loadFromData(out.data(), out.size()));
 		TS_ASSERT_EQUALS(roundTrip.getCharacter(0).name, Common::String("NEW"));
+
+		Common::Array<byte> rosterData;
+		rosterData.resize(24 + 2 * 584);
+		memset(rosterData.data(), 0, rosterData.size());
+		rosterData[0] = 0x48;
+		rosterData[1] = 0x02;
+		rosterData[2] = 2;
+		rosterData[4] = 24;
+		rosterData[8] = 1;
+		rosterData[9] = 1;
+		memcpy(rosterData.data() + 24, "AAA", 3);
+		memcpy(rosterData.data() + 24 + 584, "BBB", 3);
+		Wizardry7::CharacterRoster roster;
+		TS_ASSERT(roster.loadFromData(rosterData.data(), rosterData.size()));
+		Wizardry7::Party party;
+		TS_ASSERT(party.addMember(1));
+		TS_ASSERT(party.addMember(0));
+		TS_ASSERT(save.setPartyFromRoster(roster, party));
+		TS_ASSERT_EQUALS(save.getCharacterCount(), 2u);
+		TS_ASSERT_EQUALS(save.getCharacter(0).name, Common::String("BBB"));
+		TS_ASSERT_EQUALS(save.getCharacter(1).name, Common::String("AAA"));
+		Common::Array<byte> partyData;
+		TS_ASSERT(save.writeToData(partyData));
+		TS_ASSERT_EQUALS(partyData.size(), 10820u + 2 * 584u);
+		TS_ASSERT_EQUALS(memcmp(partyData.data(), data.data(), 10820), 0);
 	}
 
 	void testRoster() {

@@ -25,6 +25,7 @@
 #include "common/textconsole.h"
 
 #include "wizardry7/save.h"
+#include "wizardry7/party.h"
 
 namespace Wizardry7 {
 
@@ -201,6 +202,34 @@ bool SaveGame::writeToData(Common::Array<byte> &out) const {
 	if (_raw.empty())
 		return false;
 	out = _raw;
+	return true;
+}
+
+bool SaveGame::setPartyFromRoster(const CharacterRoster &roster, const Party &party) {
+	if (_kind != kSaveDos || _raw.size() < kDosStateSize + kDosRandomSize ||
+		party.size() > 6)
+		return false;
+	for (uint i = 0; i < party.size(); ++i) {
+		if (!roster.isSlotUsed(party.getMember(i)))
+			return false;
+	}
+
+	Common::Array<byte> data;
+	data.resize(kDosStateSize + kDosRandomSize + party.size() * kCharacterSize);
+	memcpy(data.data(), _raw.data(), kDosStateSize + kDosRandomSize);
+	for (uint i = 0; i < party.size(); ++i) {
+		const byte *record = nullptr;
+		if (!roster.getRawRecord(party.getMember(i), record))
+			return false;
+		memcpy(data.data() + kDosStateSize + kDosRandomSize + i * kCharacterSize,
+			record, kCharacterSize);
+	}
+	_raw = data;
+	_size = data.size();
+	_characters.resize(party.size());
+	for (uint i = 0; i < party.size(); ++i)
+		parseCharacter(_raw.data() + kDosStateSize + kDosRandomSize + i * kCharacterSize,
+			_characters[i]);
 	return true;
 }
 

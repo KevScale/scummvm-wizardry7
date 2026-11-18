@@ -28,6 +28,8 @@
 
 namespace Wizardry7 {
 
+class Party;
+
 enum SaveKind {
 	kSaveUnknown,
 	kSaveDos,
@@ -79,6 +81,12 @@ public:
 	uint getSlotCount() const { return _characters.size(); }
 	bool isSlotUsed(uint slot) const { return slot < _used.size() && _used[slot]; }
 	const SaveCharacter &getCharacter(uint slot) const { return _characters[slot]; }
+	bool getRawRecord(uint slot, const byte *&record) const {
+		if (slot >= _used.size() || _headerSize + (slot + 1) * _stride > _raw.size())
+			return false;
+		record = _raw.data() + _headerSize + slot * _stride;
+		return true;
+	}
 
 	/** First unused slot, or -1 when the roster is full. */
 	int findFreeSlot() const;
@@ -106,6 +114,9 @@ public:
 	/** Replace one DOS character record (584 B); no-op for compressed Gold saves. */
 	bool setCharacterRecord(uint index, const byte *record, uint32 size);
 	bool writeToData(Common::Array<byte> &out) const;
+
+	/** Rewrite the DOS active-party records from roster slots, preserving state. */
+	bool setPartyFromRoster(const CharacterRoster &roster, const Party &party);
 
 	SaveKind getKind() const { return _kind; }
 	uint32 getSize() const { return _size; }

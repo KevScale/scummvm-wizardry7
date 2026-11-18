@@ -94,6 +94,7 @@ Wizardry7Console::Wizardry7Console(Wizardry7Engine *vm) : GUI::Debugger(), _vm(v
 	registerCmd("item", WRAP_METHOD(Wizardry7Console, cmdItem));
 	registerCmd("sheet", WRAP_METHOD(Wizardry7Console, cmdSheet));
 	registerCmd("review", WRAP_METHOD(Wizardry7Console, cmdReview));
+	registerCmd("saveparty", WRAP_METHOD(Wizardry7Console, cmdSaveParty));
 	registerCmd("script", WRAP_METHOD(Wizardry7Console, cmdScript));
 }
 
@@ -196,6 +197,8 @@ bool Wizardry7Console::runScript(const Common::Path &path) {
 			ok &= cmdSheet(count, argv);
 		else if (command == "review")
 			ok &= cmdReview(count, argv);
+		else if (command == "saveparty")
+			ok &= cmdSaveParty(count, argv);
 		else if (command == "script")
 			ok &= cmdScript(count, argv);
 		else {
@@ -438,6 +441,48 @@ bool Wizardry7Console::cmdCharGen(int argc, const char **argv) {
 
 bool Wizardry7Console::cmdCharGenUI(int argc, const char **argv) {
 	_vm->runCharacterCreationUI("VBFONT0.VGA", argc >= 2 ? Common::Path(argv[1]) : Common::Path());
+	return true;
+}
+
+bool Wizardry7Console::cmdSaveParty(int argc, const char **argv) {
+	if (argc != 5) {
+		print("Usage: saveparty <SAVEGAME> <ROSTER> <slot,slot,...> <OUT>\n");
+		return true;
+	}
+	SaveGame save;
+	if (!save.load(Common::Path(argv[1]))) {
+		print("Cannot read save '%s'\n", argv[1]);
+		return true;
+	}
+	CharacterRoster roster;
+	if (!roster.load(Common::Path(argv[2]))) {
+		print("Cannot read roster '%s'\n", argv[2]);
+		return true;
+	}
+	Party party;
+	Common::StringTokenizer tokenizer(argv[3], ",");
+	while (!tokenizer.empty()) {
+		const Common::String token = tokenizer.nextToken();
+		int slot = 0;
+		if (!parseInteger(token.c_str(), slot) || slot < 0 || slot >= (int)roster.getSlotCount() ||
+			!roster.isSlotUsed(slot)) {
+			print("Bad roster slot '%s'\n", token.c_str());
+			return true;
+		}
+		if (!party.addMember((uint8)slot)) {
+			print("Party is full or duplicate slot %d\n", slot);
+			return true;
+		}
+	}
+	if (party.size() == 0) {
+		print("Empty party\n");
+		return true;
+	}
+	if (!save.setPartyFromRoster(roster, party) || !save.save(Common::Path(argv[4]))) {
+		print("Cannot write party save '%s'\n", argv[4]);
+		return true;
+	}
+	print("Wrote %u party members to '%s'\n", party.size(), argv[4]);
 	return true;
 }
 

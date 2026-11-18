@@ -55,6 +55,7 @@ private:
 	bool cmdItem(int argc, const char **argv);
 	bool cmdSheet(int argc, const char **argv);
 	bool cmdReview(int argc, const char **argv);
+	bool cmdSaveParty(int argc, const char **argv);
 	bool cmdCreate(int argc, const char **argv);
 	bool cmdParty(int argc, const char **argv);
 	bool cmdScreen(int argc, const char **argv);
