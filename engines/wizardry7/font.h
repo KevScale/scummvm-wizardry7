@@ -61,6 +61,9 @@ public:
 	/** Draw one character; returns the advance in pixels (0 if unmapped). */
 	uint drawChar(byte character, Graphics::Screen *screen, int x, int y, byte color, bool opaque, byte background) const;
 
+	/** Draw a NUL-terminated string; returns the total advance. */
+	uint drawString(const char *text, Graphics::Screen *screen, int x, int y, byte color, bool opaque = false, byte background = 0) const;
+
 	/** Draw a glyph by index (for icon/portrait fonts). */
 	uint drawGlyph(uint index, Graphics::Screen *screen, int x, int y, byte color, bool opaque, byte background) const;
 	uint getGlyphAdvance(uint index) const;

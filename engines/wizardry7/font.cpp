@@ -125,6 +125,17 @@ uint GameFont::drawChar(byte character, Graphics::Screen *screen, int x, int y, 
 	return advance;
 }
 
+uint GameFont::drawString(const char *text, Graphics::Screen *screen, int x, int y, byte color, bool opaque, byte background) const {
+	uint total = 0;
+	for (const char *p = text; *p; ++p) {
+		const uint advance = drawChar((byte)*p, screen, x + total, y, color, opaque, background);
+		if (advance == 0)
+			break;
+		total += advance;
+	}
+	return total;
+}
+
 uint GameFont::drawGlyph(uint index, Graphics::Screen *screen, int x, int y, byte color, bool opaque, byte background) const {
 	const byte *pixels = glyphData(index);
 	if (!pixels || !screen)

@@ -34,6 +34,7 @@
 
 #include "wizardry7/console.h"
 #include "wizardry7/font.h"
+#include "wizardry7/save.h"
 #include "wizardry7/wizardry7.h"
 
 namespace Wizardry7 {
@@ -174,7 +175,7 @@ bool Wizardry7Engine::showMainMenu(const Common::String &fontName, int selected)
 	};
 	const int barX = 106;
 	const int barY = 44;
-	const int barWidth = 106;
+	const int barWidth = 107;
 	const int barHeight = 7;
 	const int barStep = 13;
 
@@ -199,6 +200,144 @@ bool Wizardry7Engine::showCharacterMenu(const Common::String &fontName) {
 	_screen->fillRect(Common::Rect(3, 187, 314, 198), 0);
 	for (uint i = 0; i < ARRAYSIZE(items); ++i)
 		drawButton(_screen, font, items[i], 5 + i * 52, 189, 47, 7, 1, i == 0);
+	_screen->update();
+	return true;
+}
+
+static const char *getClassAbbreviation(uint8 klass) {
+	static const char *const abbrevs[] = {
+		"FIG", "MAG", "PRI", "THI", "RAN", "ALC", "BAR",
+		"PSN", "VAL", "LOR", "BIS", "MON", "SAM", "NIN"
+	};
+	return klass < ARRAYSIZE(abbrevs) ? abbrevs[klass] : "???";
+}
+
+/** A raised button with a black outline and a light bottom/right edge. */
+static void drawOutlinedButton(Graphics::Screen *screen, GameFont &font, const char *text,
+		int x, int y, int width, int height, byte textColor = 85) {
+	// Drop shadow, black outline, inset bevel and a light bottom/right edge.
+	screen->hLine(x, y - 1, x + width, 197);
+	screen->vLine(x - 1, y, y + height, 197);
+	screen->setPixel(x - 1, y - 1, 197);
+	screen->setPixel(x + width, y, 180);
+	screen->fillRect(Common::Rect(x, y, x + width, y + height), 0);
+	screen->fillRect(Common::Rect(x + 1, y + 1, x + width - 1, y + height - 1), 192);
+	screen->hLine(x + 2, y + 1, x + width - 3, 176);
+	screen->vLine(x + 1, y + 2, y + height - 3, 176);
+	screen->hLine(x + 1, y + height - 2, x + width - 2, 197);
+	screen->vLine(x + width - 2, y + 1, y + height - 2, 197);
+	screen->setPixel(x + 1, y + 1, 81);
+	screen->setPixel(x + width - 2, y + 1, 182);
+	screen->setPixel(x + 1, y + height - 2, 182);
+	screen->setPixel(x + width - 2, y + height - 2, 198);
+	screen->hLine(x, y + height, x + width, 180);
+	screen->vLine(x + width, y + 1, y + height, 180);
+
+	int textWidth = 0;
+	for (const char *p = text; *p; ++p)
+		textWidth += font.getAdvance((byte)*p);
+	int tx = x + (width - textWidth) / 2 + 1;
+	for (const char *p = text; *p; ++p)
+		tx += font.drawChar((byte)*p, screen, tx, y + 3, textColor, false, 0);
+}
+
+static void drawVerticalArrow(Graphics::Screen *screen, int x, int y, bool up, byte color) {
+	static const int upWidths[5] = { 1, 3, 5, 3, 3 };
+	static const int downWidths[5] = { 3, 3, 5, 3, 1 };
+	for (int row = 0; row < 5; ++row) {
+		const int len = up ? upWidths[row] : downWidths[row];
+		const int start = x + (5 - len) / 2;
+		screen->hLine(start, y + row, start + len - 1, color);
+	}
+}
+
+bool Wizardry7Engine::showAddCharacter(const Common::String &fontName, const Common::Path &rosterPath) {
+	if (!showMainMenu(fontName, 1))
+		return false;
+
+	GameFont font;
+	if (!font.load(Common::Path(fontName)))
+		return false;
+
+	CharacterRoster roster;
+	const Common::Path path = rosterPath.empty()
+		? Common::Path(isGold() ? "PCFILE.GLD" : "PCFILE.DBS") : rosterPath;
+	if (!roster.load(path))
+		return false;
+
+	// Gold panel (same raised style as the other castle menus).
+	_screen->fillRect(Common::Rect(54, 142, 266, 199), 0);
+	_screen->fillRect(Common::Rect(56, 144, 264, 197), 194);
+	_screen->hLine(55, 143, 264, 180);
+	_screen->vLine(55, 143, 197, 180);
+	_screen->hLine(56, 197, 263, 197);
+	_screen->vLine(264, 144, 197, 197);
+
+	font.drawString("ADD CHARACTER", _screen, 61, 152, 1);
+	drawOutlinedButton(_screen, font, "OK", 62, 165, 75, 11);
+	drawOutlinedButton(_screen, font, "CANCEL", 62, 181, 75, 11);
+
+	// Roster list well.
+	_screen->hLine(146, 147, 242, 197);
+	_screen->vLine(146, 147, 193, 197);
+	_screen->fillRect(Common::Rect(147, 148, 242, 193), 0);
+	_screen->fillRect(Common::Rect(148, 149, 241, 192), 195);
+	_screen->hLine(147, 193, 242, 180);
+	_screen->vLine(242, 148, 193, 180);
+
+	const int rows = MIN<int>(6, roster.getSlotCount());
+	int drawn = 0;
+	for (uint i = 0; i < roster.getSlotCount() && drawn < rows; ++i) {
+		if (!roster.isSlotUsed(i))
+			continue;
+		const SaveCharacter &c = roster.getCharacter(i);
+		const Common::String klass = Common::String::format("%c-%s", c.gender ? 'F' : 'M',
+			getClassAbbreviation(c.klass));
+		font.drawString(c.name.c_str(), _screen, 150, 150 + drawn * 6, 180);
+		font.drawString(klass.c_str(), _screen, 210, 150 + drawn * 6, 180);
+		++drawn;
+	}
+
+	// Scroll bar: up/down buttons, a top thumb, and the dark track.
+	_screen->hLine(246, 147, 258, 197);
+	_screen->vLine(246, 147, 193, 197);
+	_screen->fillRect(Common::Rect(247, 148, 258, 157), 0);
+	_screen->fillRect(Common::Rect(248, 150, 257, 156), 192);
+	_screen->hLine(249, 149, 255, 176);
+	_screen->vLine(248, 150, 155, 176);
+	_screen->hLine(249, 155, 256, 197);
+	_screen->vLine(256, 150, 155, 197);
+	_screen->setPixel(248, 149, 81);
+	_screen->setPixel(256, 149, 182);
+	_screen->setPixel(248, 155, 182);
+	_screen->setPixel(256, 155, 198);
+	_screen->fillRect(Common::Rect(247, 157, 258, 162), 0);
+	_screen->fillRect(Common::Rect(248, 158, 257, 162), 192);
+	_screen->hLine(249, 157, 255, 176);
+	_screen->vLine(248, 158, 160, 176);
+	_screen->hLine(249, 161, 256, 197);
+	_screen->vLine(256, 158, 161, 197);
+	_screen->setPixel(248, 157, 81);
+	_screen->setPixel(256, 157, 182);
+	_screen->setPixel(248, 161, 182);
+	_screen->setPixel(256, 161, 198);
+	_screen->fillRect(Common::Rect(247, 162, 258, 184), 0);
+	_screen->fillRect(Common::Rect(248, 163, 257, 184), 195);
+	_screen->fillRect(Common::Rect(247, 184, 258, 193), 0);
+	_screen->fillRect(Common::Rect(248, 186, 257, 192), 192);
+	_screen->hLine(249, 185, 255, 176);
+	_screen->vLine(248, 186, 190, 176);
+	_screen->hLine(249, 191, 256, 197);
+	_screen->vLine(256, 186, 191, 197);
+	_screen->setPixel(248, 185, 81);
+	_screen->setPixel(256, 185, 182);
+	_screen->setPixel(248, 191, 182);
+	_screen->setPixel(256, 191, 198);
+	_screen->hLine(247, 193, 258, 180);
+	_screen->vLine(258, 148, 193, 180);
+	drawVerticalArrow(_screen, 250, 150, true, 0);
+	drawVerticalArrow(_screen, 250, 186, false, 0);
+
 	_screen->update();
 	return true;
 }

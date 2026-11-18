@@ -49,9 +49,9 @@ static void parseCharacter(const byte *record, SaveCharacter &character) {
 	character.ac = READ_LE_UINT16(record + 0x40);
 	character.knack = record[0x236];
 	character.race = record[0x237];
-	character.gender = record[0x1F8]; // stats block +6 (0x1F2 + 6)
-	character.alignment = record[0x238];
+	character.gender = record[0x238]; // 0 = male, 1 = female
 	character.klass = record[0x239];
+	character.alignment = record[0x23A];
 }
 
 static bool readWholeFile(const Common::Path &path, Common::Array<byte> &data) {

@@ -98,8 +98,9 @@ public:
 		record[0x40] = 7;   // ac
 		record[0x236] = 4;
 		record[0x237] = 3;
-		record[0x238] = 1;
-		record[0x239] = 2;
+		record[0x238] = 1; // female
+		record[0x239] = 2; // priest
+		record[0x23A] = 3; // alignment
 
 		Wizardry7::SaveGame save;
 		TS_ASSERT(save.loadFromData(data.data(), data.size()));
@@ -114,7 +115,9 @@ public:
 		TS_ASSERT_EQUALS(c.stamina, 30u);
 		TS_ASSERT_EQUALS(c.ac, 7u);
 		TS_ASSERT_EQUALS(c.race, 3);
+		TS_ASSERT_EQUALS(c.gender, 1);
 		TS_ASSERT_EQUALS(c.klass, 2);
+		TS_ASSERT_EQUALS(c.alignment, 3);
 	}
 
 	void testRoster() {
