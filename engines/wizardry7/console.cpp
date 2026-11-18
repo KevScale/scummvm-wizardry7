@@ -74,6 +74,7 @@ Wizardry7Console::Wizardry7Console(Wizardry7Engine *vm) : GUI::Debugger(), _vm(v
 	registerCmd("rngseed", WRAP_METHOD(Wizardry7Console, cmdSeed));
 	registerCmd("status", WRAP_METHOD(Wizardry7Console, cmdStatus));
 	registerCmd("mainmenu", WRAP_METHOD(Wizardry7Console, cmdMainMenu));
+	registerCmd("charactermenu", WRAP_METHOD(Wizardry7Console, cmdCharacterMenu));
 	registerCmd("screen", WRAP_METHOD(Wizardry7Console, cmdScreen));
 	registerCmd("screenshot", WRAP_METHOD(Wizardry7Console, cmdScreenshot));
 	registerCmd("bundle", WRAP_METHOD(Wizardry7Console, cmdBundle));
@@ -149,6 +150,8 @@ bool Wizardry7Console::runScript(const Common::Path &path) {
 			ok &= cmdStatus(count, argv);
 		else if (command == "mainmenu")
 			ok &= cmdMainMenu(count, argv);
+		else if (command == "charactermenu")
+			ok &= cmdCharacterMenu(count, argv);
 		else if (command == "screen")
 			ok &= cmdScreen(count, argv);
 		else if (command == "screenshot")
@@ -362,6 +365,16 @@ bool Wizardry7Console::cmdMainMenu(int argc, const char **argv) {
 		return true;
 	}
 	print("Showing main menu with '%s'\n", font.c_str());
+	return true;
+}
+
+bool Wizardry7Console::cmdCharacterMenu(int argc, const char **argv) {
+	const Common::String font = argc >= 2 ? argv[1] : "VBFONT0.VGA";
+	if (!_vm->showCharacterMenu(font)) {
+		print("Cannot draw the character menu with '%s'\n", font.c_str());
+		return true;
+	}
+	print("Showing character menu with '%s'\n", font.c_str());
 	return true;
 }
 

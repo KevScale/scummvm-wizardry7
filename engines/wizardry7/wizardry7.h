@@ -57,6 +57,7 @@ public:
 
 	bool showScreen(const Common::String &name);
 	bool showMainMenu(const Common::String &fontName = "VBFONT0.VGA");
+	bool showCharacterMenu(const Common::String &fontName = "VBFONT0.VGA");
 	bool saveScreenshot(const Common::Path &path);
 	void showStatusScreen() { drawStatusScreen(); }
 

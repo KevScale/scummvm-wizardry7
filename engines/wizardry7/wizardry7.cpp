@@ -133,6 +133,33 @@ bool Wizardry7Engine::showScreen(const Common::String &name) {
 	return true;
 }
 
+static void drawButton(Graphics::Screen *screen, GameFont &font, const char *text,
+		int x, int y, int width, int height, byte textColor = 1, bool selected = false) {
+	if (selected) {
+		screen->hLine(x - 2, y - 2, x + width + 1, 22);
+		screen->hLine(x - 2, y + height + 1, x + width + 1, 22);
+		screen->vLine(x - 2, y - 2, y + height + 1, 22);
+		screen->vLine(x + width + 1, y - 2, y + height + 1, 22);
+	}
+	screen->fillRect(Common::Rect(x, y, x + width, y + height), 192);
+	screen->hLine(x, y - 1, x + width - 1, 176);
+	screen->vLine(x - 1, y, y + height - 1, 176);
+	screen->hLine(x, y + height, x + width - 1, 197);
+	screen->vLine(x + width, y, y + height - 1, 197);
+	screen->setPixel(x - 1, y - 1, 81);
+	screen->setPixel(x + width, y - 1, 182);
+	screen->setPixel(x - 1, y + height, 182);
+	screen->setPixel(x + width, y + height, 198);
+
+	int textWidth = 0;
+	for (const char *p = text; *p; ++p)
+		textWidth += font.getAdvance((byte)*p);
+	int tx = x + (width - textWidth) / 2 + 1;
+	const int ty = y + 1;
+	for (const char *p = text; *p; ++p)
+		tx += font.drawChar((byte)*p, screen, tx, ty, textColor, false, 0);
+}
+
 bool Wizardry7Engine::showMainMenu(const Common::String &fontName) {
 	if (!showScreen("MAINSCRN"))
 		return false;
@@ -151,28 +178,26 @@ bool Wizardry7Engine::showMainMenu(const Common::String &fontName) {
 	const int barHeight = 7;
 	const int barStep = 13;
 
-	for (uint i = 0; i < ARRAYSIZE(items); ++i) {
-		const int y = barY + i * barStep;
-		// Fill plus the original bevel: bright top/left, dark bottom/right.
-		_screen->fillRect(Common::Rect(barX, y, barX + barWidth, y + barHeight), 192);
-		_screen->hLine(barX, y - 1, barX + barWidth - 1, 176);
-		_screen->vLine(barX - 1, y, y + barHeight - 1, 176);
-		_screen->hLine(barX, y + barHeight, barX + barWidth - 1, 197);
-		_screen->vLine(barX + barWidth, y, y + barHeight - 1, 197);
-		_screen->setPixel(barX - 1, y - 1, 176);
-		_screen->setPixel(barX + barWidth, y - 1, 182);
-		_screen->setPixel(barX - 1, y + barHeight, 182);
-		_screen->setPixel(barX + barWidth, y + barHeight, 198);
+	for (uint i = 0; i < ARRAYSIZE(items); ++i)
+		drawButton(_screen, font, items[i], barX, barY + i * barStep, barWidth, barHeight);
+	_screen->update();
+	return true;
+}
 
-		const char *text = items[i];
-		int textWidth = 0;
-		for (const char *p = text; *p; ++p)
-			textWidth += font.getAdvance((byte)*p);
-		int x = barX + (barWidth - textWidth) / 2 + 1;
-		const int textY = y + (barHeight - (int)font.getHeight()) / 2 + 1;
-		for (const char *p = text; *p; ++p)
-			x += font.drawChar((byte)*p, _screen, x, textY, 1, false, 0);
-	}
+bool Wizardry7Engine::showCharacterMenu(const Common::String &fontName) {
+	if (!showScreen("PCVWSCRN"))
+		return false;
+
+	GameFont font;
+	if (!font.load(Common::Path(fontName)))
+		return false;
+
+	static const char *const items[] = {
+		"CREATE", "REVIEW", "DELETE", "RENAME", "PICTURE", "EXIT"
+	};
+	_screen->fillRect(Common::Rect(3, 187, 314, 198), 0);
+	for (uint i = 0; i < ARRAYSIZE(items); ++i)
+		drawButton(_screen, font, items[i], 5 + i * 52, 189, 47, 7, 1, i == 0);
 	_screen->update();
 	return true;
 }

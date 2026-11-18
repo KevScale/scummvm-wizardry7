@@ -48,6 +48,7 @@ private:
 	bool cmdSeed(int argc, const char **argv);
 	bool cmdStatus(int argc, const char **argv);
 	bool cmdMainMenu(int argc, const char **argv);
+	bool cmdCharacterMenu(int argc, const char **argv);
 	bool cmdScreen(int argc, const char **argv);
 	bool cmdScreenshot(int argc, const char **argv);
 	bool cmdBundle(int argc, const char **argv);
