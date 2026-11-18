@@ -360,11 +360,14 @@ bool Wizardry7Console::cmdStatus(int argc, const char **argv) {
 
 bool Wizardry7Console::cmdMainMenu(int argc, const char **argv) {
 	const Common::String font = argc >= 2 ? argv[1] : "VBFONT0.VGA";
-	if (!_vm->showMainMenu(font)) {
+	int selected = -1;
+	if (argc >= 3 && !parseInteger(argv[2], selected))
+		return true;
+	if (!_vm->showMainMenu(font, selected)) {
 		print("Cannot draw the main menu with '%s'\n", font.c_str());
 		return true;
 	}
-	print("Showing main menu with '%s'\n", font.c_str());
+	print("Showing main menu with '%s' (selected %d)\n", font.c_str(), selected);
 	return true;
 }
 
@@ -642,9 +645,9 @@ bool Wizardry7Console::cmdRoster(int argc, const char **argv) {
 			continue;
 		}
 		const SaveCharacter &c = roster.getCharacter(i);
-		print("  %2u  %-8s age %u hp %u/%u st %u/%u ac %u gold %u race %u class %u align %u\n",
+		print("  %2u  %-8s age %u hp %u/%u st %u/%u ac %u gold %u race %u gender %u class %u align %u\n",
 			i, c.name.c_str(), c.age, c.hp, c.hpMax, c.stamina, c.staminaMax,
-			c.ac, c.gold, c.race, c.klass, c.alignment);
+			c.ac, c.gold, c.race, c.gender, c.klass, c.alignment);
 	}
 	return true;
 }

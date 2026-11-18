@@ -160,7 +160,7 @@ static void drawButton(Graphics::Screen *screen, GameFont &font, const char *tex
 		tx += font.drawChar((byte)*p, screen, tx, ty, textColor, false, 0);
 }
 
-bool Wizardry7Engine::showMainMenu(const Common::String &fontName) {
+bool Wizardry7Engine::showMainMenu(const Common::String &fontName, int selected) {
 	if (!showScreen("MAINSCRN"))
 		return false;
 
@@ -179,7 +179,8 @@ bool Wizardry7Engine::showMainMenu(const Common::String &fontName) {
 	const int barStep = 13;
 
 	for (uint i = 0; i < ARRAYSIZE(items); ++i)
-		drawButton(_screen, font, items[i], barX, barY + i * barStep, barWidth, barHeight);
+		drawButton(_screen, font, items[i], barX, barY + i * barStep, barWidth, barHeight,
+			i == (uint)selected ? 26 : 1);
 	_screen->update();
 	return true;
 }

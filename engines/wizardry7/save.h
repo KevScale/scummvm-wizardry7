@@ -36,7 +36,7 @@ enum SaveKind {
 
 struct SaveCharacter {
 	SaveCharacter() : age(0), xp(0), hp(0), hpMax(0), stamina(0), staminaMax(0),
-		weight(0), gold(0), ac(0), race(0), alignment(0), klass(0), knack(0) {}
+		weight(0), gold(0), ac(0), race(0), gender(0), alignment(0), klass(0), knack(0) {}
 
 	Common::String name;
 	uint32 age;
@@ -49,6 +49,7 @@ struct SaveCharacter {
 	uint16 gold;
 	uint16 ac;
 	uint8 race;
+	uint8 gender;
 	uint8 alignment;
 	uint8 klass;
 	uint8 knack;
