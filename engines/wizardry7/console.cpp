@@ -81,6 +81,7 @@ Wizardry7Console::Wizardry7Console(Wizardry7Engine *vm) : GUI::Debugger(), _vm(v
 	registerCmd("glyph", WRAP_METHOD(Wizardry7Console, cmdGlyph));
 	registerCmd("saveinfo", WRAP_METHOD(Wizardry7Console, cmdSaveInfo));
 	registerCmd("text", WRAP_METHOD(Wizardry7Console, cmdText));
+	registerCmd("roster", WRAP_METHOD(Wizardry7Console, cmdRoster));
 	registerCmd("script", WRAP_METHOD(Wizardry7Console, cmdScript));
 }
 
@@ -161,6 +162,8 @@ bool Wizardry7Console::runScript(const Common::Path &path) {
 			ok &= cmdSaveInfo(count, argv);
 		else if (command == "text")
 			ok &= cmdText(count, argv);
+		else if (command == "roster")
+			ok &= cmdRoster(count, argv);
 		else if (command == "script")
 			ok &= cmdScript(count, argv);
 		else {
@@ -592,6 +595,31 @@ bool Wizardry7Console::cmdText(int argc, const char **argv) {
 	}
 	screen->update();
 	print("Drew %u character(s) of message %d with '%s'\n", drawn, id, argv[1]);
+	return true;
+}
+
+bool Wizardry7Console::cmdRoster(int argc, const char **argv) {
+	if (argc != 2) {
+		print("Usage: roster <PCFILE.GLD | PCFILE.DBS>\n");
+		return true;
+	}
+	CharacterRoster roster;
+	if (!roster.load(Common::Path(argv[1]))) {
+		print("Cannot read roster '%s'\n", argv[1]);
+		return true;
+	}
+
+	print("'%s': %u slots\n", argv[1], roster.getSlotCount());
+	for (uint i = 0; i < roster.getSlotCount(); ++i) {
+		if (!roster.isSlotUsed(i)) {
+			print("  %2u  (empty)\n", i);
+			continue;
+		}
+		const SaveCharacter &c = roster.getCharacter(i);
+		print("  %2u  %-8s age %u hp %u/%u st %u/%u ac %u gold %u race %u class %u align %u\n",
+			i, c.name.c_str(), c.age, c.hp, c.hpMax, c.stamina, c.staminaMax,
+			c.ac, c.gold, c.race, c.klass, c.alignment);
+	}
 	return true;
 }
 

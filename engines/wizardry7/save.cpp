@@ -31,11 +31,29 @@ namespace Wizardry7 {
 static const uint32 kDosStateSize = 10720;
 static const uint32 kDosRandomSize = 100;
 static const uint32 kCharacterSize = 584;
+static const uint32 kRosterHeaderSize = 24;
 
-SaveGame::SaveGame() : _kind(kSaveUnknown), _size(0) {
+static void parseCharacter(const byte *record, SaveCharacter &character) {
+	char name[9];
+	memcpy(name, record, 8);
+	name[8] = 0;
+	character.name = name;
+	character.age = READ_LE_UINT32(record + 0x08);
+	character.xp = READ_LE_UINT32(record + 0x0C);
+	character.hp = READ_LE_UINT16(record + 0x18);
+	character.hpMax = READ_LE_UINT16(record + 0x1A);
+	character.stamina = READ_LE_UINT16(record + 0x1C);
+	character.staminaMax = READ_LE_UINT16(record + 0x1E);
+	character.weight = READ_LE_UINT16(record + 0x20);
+	character.gold = READ_LE_UINT16(record + 0x22);
+	character.ac = READ_LE_UINT16(record + 0x40);
+	character.knack = record[0x236];
+	character.race = record[0x237];
+	character.alignment = record[0x238];
+	character.klass = record[0x239];
 }
 
-bool SaveGame::readFile(const Common::Path &path, Common::Array<byte> &data) const {
+static bool readWholeFile(const Common::Path &path, Common::Array<byte> &data) {
 	Common::File file;
 	if (file.open(path)) {
 		data.resize(file.size());
@@ -43,16 +61,52 @@ bool SaveGame::readFile(const Common::Path &path, Common::Array<byte> &data) con
 	}
 
 	Common::FSNode node(path);
-	if (node.exists() && !node.isDirectory()) {
-		Common::SeekableReadStream *stream = node.createReadStream();
-		if (!stream)
-			return false;
-		data.resize(stream->size());
-		const bool ok = stream->read(data.data(), data.size()) == data.size();
-		delete stream;
-		return ok;
+	if (!node.exists() || node.isDirectory())
+		return false;
+	Common::SeekableReadStream *stream = node.createReadStream();
+	if (!stream)
+		return false;
+	data.resize(stream->size());
+	const bool ok = stream->read(data.data(), data.size()) == data.size();
+	delete stream;
+	return ok;
+}
+
+CharacterRoster::CharacterRoster() {
+}
+
+bool CharacterRoster::load(const Common::Path &path) {
+	_characters.clear();
+	_used.clear();
+
+	Common::Array<byte> data;
+	if (!readWholeFile(path, data))
+		return false;
+
+	if (data.size() < kRosterHeaderSize)
+		return false;
+	const uint16 stride = READ_LE_UINT16(data.data());
+	const uint16 slots = READ_LE_UINT16(data.data() + 2);
+	const uint16 headerSize = READ_LE_UINT16(data.data() + 4);
+	if (stride != kCharacterSize || slots == 0 || slots > 16 ||
+		headerSize < kRosterHeaderSize ||
+		data.size() < headerSize + (uint32)slots * stride)
+		return false;
+
+	_characters.resize(slots);
+	_used.resize(slots);
+	for (uint i = 0; i < slots; ++i) {
+		_used[i] = data[8 + i] != 0;
+		parseCharacter(data.data() + headerSize + i * stride, _characters[i]);
 	}
-	return false;
+	return true;
+}
+
+SaveGame::SaveGame() : _kind(kSaveUnknown), _size(0) {
+}
+
+bool SaveGame::readFile(const Common::Path &path, Common::Array<byte> &data) const {
+	return readWholeFile(path, data);
 }
 
 bool SaveGame::load(const Common::Path &path) {
@@ -92,25 +146,7 @@ bool SaveGame::parseDos(const byte *data, uint32 size) {
 	_characters.resize(count);
 	for (uint i = 0; i < count; ++i) {
 		const byte *record = data + kDosStateSize + kDosRandomSize + i * kCharacterSize;
-		SaveCharacter &character = _characters[i];
-
-		char name[9];
-		memcpy(name, record, 8);
-		name[8] = 0;
-		character.name = name;
-		character.age = READ_LE_UINT32(record + 0x08);
-		character.xp = READ_LE_UINT32(record + 0x0C);
-		character.hp = READ_LE_UINT16(record + 0x18);
-		character.hpMax = READ_LE_UINT16(record + 0x1A);
-		character.stamina = READ_LE_UINT16(record + 0x1C);
-		character.staminaMax = READ_LE_UINT16(record + 0x1E);
-		character.weight = READ_LE_UINT16(record + 0x20);
-		character.gold = READ_LE_UINT16(record + 0x22);
-		character.ac = READ_LE_UINT16(record + 0x40);
-		character.knack = record[0x236];
-		character.race = record[0x237];
-		character.alignment = record[0x238];
-		character.klass = record[0x239];
+		parseCharacter(record, _characters[i]);
 	}
 	return true;
 }

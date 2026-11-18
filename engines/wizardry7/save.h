@@ -59,6 +59,22 @@ struct SaveCharacter {
  * Huffman-compressed and its runtime-built table is not in the shipped files,
  * so Gold saves are recognised but not decoded yet.
  */
+/** PCFILE.GLD/.DBS castle roster: 24-byte header + up to 16 characters. */
+class CharacterRoster {
+public:
+	CharacterRoster();
+
+	bool load(const Common::Path &path);
+	bool isLoaded() const { return !_characters.empty(); }
+	uint getSlotCount() const { return _characters.size(); }
+	bool isSlotUsed(uint slot) const { return slot < _used.size() && _used[slot]; }
+	const SaveCharacter &getCharacter(uint slot) const { return _characters[slot]; }
+
+private:
+	Common::Array<SaveCharacter> _characters;
+	Common::Array<bool> _used;
+};
+
 class SaveGame {
 public:
 	SaveGame();
