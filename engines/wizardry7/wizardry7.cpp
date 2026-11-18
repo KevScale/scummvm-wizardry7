@@ -21,6 +21,7 @@
 
 #include "common/config-manager.h"
 #include "common/events.h"
+#include "common/events.h"
 #include "common/file.h"
 #include "common/file.h"
 #include "common/system.h"
@@ -343,6 +344,38 @@ bool Wizardry7Engine::showAddCharacter(const Common::String &fontName, const Com
 	return true;
 }
 
+static const char *chargenRaceName(int race) {
+	static const char *const names[] = {
+		"HUMAN", "HOBBIT", "FELPURR", "ELF", "FAERIE", "RAWULF",
+		"DWARF", "LIZARDMAN", "MOOK", "GNOME", "DRACON"
+	};
+	return race >= 0 && race < (int)ARRAYSIZE(names) ? names[race] : "?";
+}
+
+static void drawCreationStats(GameFont &font, Graphics::Screen *screen,
+		const CharacterCreationFlow &flow) {
+	if (flow.getStep() == CharacterCreationFlow::kStepSex)
+		return;
+
+	const CharacterCreation &character = flow.getCharacter();
+	font.drawString(Common::String::format("%c-%s", character.getSex() ? 'F' : 'M',
+		chargenRaceName(flow.getRace())).c_str(), screen, 105, 16, 1);
+	if (character.getClass() >= 0)
+		font.drawString(CharacterCreation::getClassName(character.getClass()), screen, 105, 24, 1);
+	static const char *const statNames[CharacterCreation::kStatCount] = {
+		"STR", "INT", "PIE", "VIT", "DEX", "SPD", "PER", "KAR"
+	};
+	for (int i = 0; i < CharacterCreation::kStatCount; ++i) {
+		const int y = 38 + i * 6;
+		font.drawString(statNames[i], screen, 112, y, 1);
+		font.drawString(Common::String::format("%u", character.getStat(i)).c_str(),
+			screen, 138, y, 1);
+	}
+	font.drawString("BONUS", screen, 98, 88, 26);
+	font.drawString(Common::String::format("%d", character.getBonusPoints()).c_str(),
+		screen, 136, 88, 1);
+}
+
 static void drawModalPanel(Graphics::Screen *screen, int x, int y, int width, int height) {
 	screen->fillRect(Common::Rect(x, y, x + width, y + height), 0);
 	screen->hLine(x + 1, y + 1, x + width - 2, 180);
@@ -389,7 +422,8 @@ static void drawChargenGrid(GameFont &font, Graphics::Screen *screen,
 	}
 }
 
-bool Wizardry7Engine::showCharacterCreation(const Common::String &step, const Common::String &fontName, int selection) {
+bool Wizardry7Engine::showCharacterCreation(const Common::String &step, const Common::String &fontName, int selection,
+		const Common::String &name) {
 	if (!showScreen("PCVWSCRN"))
 		return false;
 
@@ -436,7 +470,13 @@ bool Wizardry7Engine::showCharacterCreation(const Common::String &step, const Co
 		_screen->vLine(146, 172, 182, 197);
 		_screen->fillRect(Common::Rect(147, 173, 254, 182), 0);
 		_screen->fillRect(Common::Rect(148, 174, 253, 181), 1);
-		_screen->fillRect(Common::Rect(150, 175, 155, 180), 0);
+		int cursorX = 150;
+		if (!name.empty()) {
+			font.drawString(name.c_str(), _screen, 150, 175, 0);
+			for (uint i = 0; i < name.size(); ++i)
+				cursorX += font.getAdvance((byte)name[i]);
+		}
+		_screen->fillRect(Common::Rect(cursorX, 175, cursorX + 5, 180), 0);
 		_screen->hLine(147, 182, 254, 180);
 		_screen->vLine(254, 173, 182, 180);
 	} else if (step.equalsIgnoreCase("bonus")) {
@@ -448,7 +488,199 @@ bool Wizardry7Engine::showCharacterCreation(const Common::String &step, const Co
 		return false;
 	}
 
+	if (_creationStarted)
+		drawCreationStats(font, _screen, _creation);
+	_screen->makeAllDirty();
 	_screen->update();
+	return true;
+}
+
+bool Wizardry7Engine::showProfessionChoices(const Common::Array<uint> &classes,
+		const Common::String &fontName, int selection) {
+	if (!showScreen("PCVWSCRN"))
+		return false;
+	GameFont font;
+	if (!font.load(Common::Path(fontName)))
+		return false;
+
+	const int count = MIN<int>(classes.size(), CharacterCreation::kClassCount);
+	const int rows = (count + 2) / 3;
+	const int height = 24 + rows * 12 + 1;
+	drawModalPanel(_screen, 51, 113, 219, height);
+	font.drawString("SELECT CHARACTER PROFESSION", _screen, 79, 121, 1);
+	static const int columns[3] = { 56, 126, 196 };
+	for (int i = 0; i < count; ++i) {
+		const int row = i / 3;
+		const int col = i % 3;
+		drawModalButton(_screen, font, CharacterCreation::getClassName(classes[i]),
+			columns[col], 133 + row * 12, 69, 11, 1, (int)classes[i] == selection);
+	}
+	_screen->makeAllDirty();
+	_screen->update();
+	return true;
+}
+
+bool Wizardry7Engine::runCharacterCreationUI(const Common::String &fontName) {
+	if (!startCreation())
+		return false;
+
+	int selection = 0;
+	Common::String name;
+	bool done = false;
+	while (!done && !shouldQuit()) {
+		const CharacterCreationFlow::Step step = _creation.getStep();
+		if (step == CharacterCreationFlow::kStepProfession) {
+			Common::Array<uint> classes = _creation.getCharacter().getEligibleClasses();
+			selection = CLIP<int>(selection, 0, MAX<int>(0, (int)classes.size() - 1));
+			if (!showProfessionChoices(classes, fontName,
+					classes.empty() ? -1 : classes[selection]))
+				return false;
+		} else {
+			switch (step) {
+			case CharacterCreationFlow::kStepSex:
+			case CharacterCreationFlow::kStepRace:
+				selection = CLIP<int>(selection, 0, step == CharacterCreationFlow::kStepSex ? 1 : 10);
+				if (!showCharacterCreation(step == CharacterCreationFlow::kStepSex ? "sex" : "race",
+						fontName, selection))
+					return false;
+				break;
+			case CharacterCreationFlow::kStepName:
+				if (!showCharacterCreation("name", fontName, 0, name))
+					return false;
+				break;
+			case CharacterCreationFlow::kStepBonus:
+				if (!showCharacterCreation("bonus", fontName, 0))
+					return false;
+				break;
+			default:
+				done = true;
+				continue;
+			}
+		}
+
+		Common::Event event;
+		bool gotEvent = false;
+		while (!gotEvent && !shouldQuit()) {
+			while (g_system->getEventManager()->pollEvent(event)) {
+				if (event.type == Common::EVENT_QUIT) {
+					shouldQuit();
+					return true;
+				}
+				if (event.type == Common::EVENT_KEYDOWN || event.type == Common::EVENT_LBUTTONDOWN) {
+					gotEvent = true;
+					break;
+				}
+			}
+			g_system->delayMillis(10);
+		}
+		if (!gotEvent)
+			break;
+
+		if (event.type == Common::EVENT_KEYDOWN) {
+			const Common::KeyCode key = event.kbd.keycode;
+			if (key == Common::KEYCODE_ESCAPE)
+				break;
+			switch (step) {
+			case CharacterCreationFlow::kStepSex:
+				if (key == Common::KEYCODE_LEFT || key == Common::KEYCODE_RIGHT)
+					selection ^= 1;
+				else if (key == Common::KEYCODE_RETURN || key == Common::KEYCODE_SPACE)
+					creationChooseSex(selection);
+				break;
+			case CharacterCreationFlow::kStepRace:
+				if (key == Common::KEYCODE_UP) selection = MAX(0, selection - 3);
+				else if (key == Common::KEYCODE_DOWN) selection = MIN(10, selection + 3);
+				else if (key == Common::KEYCODE_LEFT) selection = MAX(0, selection - 1);
+				else if (key == Common::KEYCODE_RIGHT) selection = MIN(10, selection + 1);
+				else if (key == Common::KEYCODE_RETURN || key == Common::KEYCODE_SPACE)
+					creationChooseRace(selection);
+				break;
+			case CharacterCreationFlow::kStepProfession: {
+				Common::Array<uint> classes = _creation.getCharacter().getEligibleClasses();
+				if (key == Common::KEYCODE_UP) selection = MAX(0, selection - 3);
+				else if (key == Common::KEYCODE_DOWN) selection = MIN<int>((int)classes.size() - 1, selection + 3);
+				else if (key == Common::KEYCODE_LEFT) selection = MAX(0, selection - 1);
+				else if (key == Common::KEYCODE_RIGHT) selection = MIN<int>((int)classes.size() - 1, selection + 1);
+				else if ((key == Common::KEYCODE_RETURN || key == Common::KEYCODE_SPACE) && !classes.empty())
+					creationChooseProfession(classes[selection]);
+				break;
+			}
+			case CharacterCreationFlow::kStepName:
+				if (key == Common::KEYCODE_RETURN) {
+					creationSetName(name);
+					if (_creation.getStep() == CharacterCreationFlow::kStepName)
+						_creation.finishName();
+				} else if (key == Common::KEYCODE_BACKSPACE && !name.empty()) {
+					name.deleteLastChar();
+				} else if (event.kbd.ascii >= 32 && event.kbd.ascii < 127 && name.size() < 8) {
+					name += (char)event.kbd.ascii;
+				}
+				break;
+			case CharacterCreationFlow::kStepBonus:
+				if (key >= Common::KEYCODE_1 && key <= Common::KEYCODE_8)
+					creationAddBonus((uint)(key - Common::KEYCODE_1));
+				else if (key == Common::KEYCODE_RETURN || key == Common::KEYCODE_SPACE) {
+					if (creationFinish(_creationResult))
+						done = true;
+				}
+				break;
+			default:
+				done = true;
+				break;
+			}
+		} else {
+			const int mx = event.mouse.x;
+			const int my = event.mouse.y;
+			switch (step) {
+			case CharacterCreationFlow::kStepSex:
+				if (my >= 133 && my < 145) {
+					if (mx >= 73 && mx < 142) creationChooseSex(0);
+					else if (mx >= 179 && mx < 248) creationChooseSex(1);
+				}
+				break;
+			case CharacterCreationFlow::kStepRace:
+			case CharacterCreationFlow::kStepProfession: {
+				if (my >= 133) {
+					const int row = (my - 133) / 12;
+					const int col = (mx >= 196) ? 2 : (mx >= 126) ? 1 : (mx >= 56) ? 0 : -1;
+					if (col >= 0 && my - 133 - row * 12 < 11) {
+						const int index = row * 3 + col;
+						if (step == CharacterCreationFlow::kStepRace && index < 11)
+							creationChooseRace(index);
+						else if (step == CharacterCreationFlow::kStepProfession) {
+							Common::Array<uint> classes = _creation.getCharacter().getEligibleClasses();
+							if (index < (int)classes.size())
+								creationChooseProfession(classes[index]);
+						}
+					}
+				}
+				break;
+			}
+			case CharacterCreationFlow::kStepName:
+				if (mx >= 62 && mx < 137) {
+					if (my >= 165 && my < 176) {
+						creationSetName(name);
+						if (_creation.getStep() == CharacterCreationFlow::kStepName)
+							_creation.finishName();
+					} else if (my >= 181 && my < 192) {
+						done = true;
+					}
+				}
+				break;
+			case CharacterCreationFlow::kStepBonus:
+				if (mx >= 87 && mx < 234 && my >= 150 && my < 162) {
+					if (creationFinish(_creationResult)) {
+						debug("Wizardry7: created %s (%u/%u/%u)", _creationResult.name.c_str(),
+							_creationResult.race, _creationResult.sex, _creationResult.classIndex);
+						done = true;
+					}
+				}
+				break;
+			default:
+				break;
+			}
+		}
+	}
 	return true;
 }
 

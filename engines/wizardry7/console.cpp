@@ -78,6 +78,7 @@ Wizardry7Console::Wizardry7Console(Wizardry7Engine *vm) : GUI::Debugger(), _vm(v
 	registerCmd("charactermenu", WRAP_METHOD(Wizardry7Console, cmdCharacterMenu));
 	registerCmd("addcharacter", WRAP_METHOD(Wizardry7Console, cmdAddCharacter));
 	registerCmd("chargen", WRAP_METHOD(Wizardry7Console, cmdCharGen));
+	registerCmd("chargenui", WRAP_METHOD(Wizardry7Console, cmdCharGenUI));
 	registerCmd("create", WRAP_METHOD(Wizardry7Console, cmdCreate));
 	registerCmd("party", WRAP_METHOD(Wizardry7Console, cmdParty));
 	registerCmd("screen", WRAP_METHOD(Wizardry7Console, cmdScreen));
@@ -161,6 +162,8 @@ bool Wizardry7Console::runScript(const Common::Path &path) {
 			ok &= cmdAddCharacter(count, argv);
 		else if (command == "chargen")
 			ok &= cmdCharGen(count, argv);
+		else if (command == "chargenui")
+			ok &= cmdCharGenUI(count, argv);
 		else if (command == "create")
 			ok &= cmdCreate(count, argv);
 		else if (command == "party")
@@ -420,6 +423,11 @@ bool Wizardry7Console::cmdCharGen(int argc, const char **argv) {
 		return true;
 	}
 	print("Showing character-creation step '%s'\n", argv[1]);
+	return true;
+}
+
+bool Wizardry7Console::cmdCharGenUI(int argc, const char **argv) {
+	_vm->runCharacterCreationUI();
 	return true;
 }
 

@@ -61,7 +61,13 @@ public:
 	bool showCharacterMenu(const Common::String &fontName = "VBFONT0.VGA");
 	bool showAddCharacter(const Common::String &fontName = "VBFONT0.VGA",
 		const Common::Path &rosterPath = Common::Path());
-	bool showCharacterCreation(const Common::String &step, const Common::String &fontName = "VBFONT0.VGA", int selection = 0);
+	bool showCharacterCreation(const Common::String &step, const Common::String &fontName = "VBFONT0.VGA",
+		int selection = 0, const Common::String &name = Common::String());
+	bool showProfessionChoices(const Common::Array<uint> &classes,
+		const Common::String &fontName = "VBFONT0.VGA", int selection = 0);
+
+	/** Interactive DOS-style creation dialogs (mouse/keyboard). */
+	bool runCharacterCreationUI(const Common::String &fontName = "VBFONT0.VGA");
 
 	// Headless creation driver used by the debug console/CI scripts.
 	bool startCreation();
