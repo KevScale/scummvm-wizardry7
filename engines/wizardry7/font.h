@@ -57,11 +57,15 @@ public:
 	uint getAdvance(byte character) const;
 	uint getBytesPerGlyph() const { return _bytesPerGlyph; }
 
-	/** Draw one character; returns the advance in pixels. */
+	/** Draw one character; returns the advance in pixels (0 if unmapped). */
 	uint drawChar(byte character, Graphics::Screen *screen, int x, int y, byte color, bool opaque, byte background) const;
 
+	/** Draw a glyph by index (for icon/portrait fonts). */
+	uint drawGlyph(uint index, Graphics::Screen *screen, int x, int y, byte color, bool opaque, byte background) const;
+	uint getGlyphAdvance(uint index) const;
+
 private:
-	const byte *glyphData(byte character) const;
+	const byte *glyphData(uint index) const;
 
 	Common::Array<byte> _data;
 	uint _width;

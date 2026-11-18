@@ -445,7 +445,7 @@ bool Wizardry7Console::cmdFontInfo(int argc, const char **argv) {
 
 bool Wizardry7Console::cmdGlyphs(int argc, const char **argv) {
 	if (argc < 2 || argc > 4) {
-		print("Usage: glyphs <font.VGA> [first] [last]\n");
+		print("Usage: glyphs <font.VGA> [firstGlyph] [lastGlyph]\n");
 		return true;
 	}
 	GameFont font;
@@ -453,13 +453,13 @@ bool Wizardry7Console::cmdGlyphs(int argc, const char **argv) {
 		print("Cannot load font '%s'\n", argv[1]);
 		return true;
 	}
-	int first = 32, last = 127;
+	int first = 0, last = font.getGlyphCount() - 1;
 	if (argc >= 3 && !parseInteger(argv[2], first))
 		return true;
 	if (argc == 4 && !parseInteger(argv[3], last))
 		return true;
-	if (first < 0 || last > 127 || first > last) {
-		print("Range must be within 0..127\n");
+	if (first < 0 || last < 0 || first > last || (uint)last >= font.getGlyphCount()) {
+		print("Glyph range must be within 0..%u\n", font.getGlyphCount() - 1);
 		return true;
 	}
 
@@ -471,15 +471,15 @@ bool Wizardry7Console::cmdGlyphs(int argc, const char **argv) {
 		_vm->getPalette()->apply(screen);
 
 	int x = 2, y = 2;
-	for (int c = first; c <= last; ++c) {
-		const uint advance = font.getAdvance(c);
+	for (int glyph = first; glyph <= last; ++glyph) {
+		const uint advance = font.getGlyphAdvance(glyph);
 		if (x + (int)advance >= screen->w) {
 			x = 2;
 			y += font.getHeight() + 2;
 		}
 		if (y + (int)font.getHeight() >= screen->h)
 			break;
-		font.drawChar(c, screen, x, y, 15, true, 0);
+		font.drawGlyph(glyph, screen, x, y, 15, true, 0);
 		x += advance + 1;
 	}
 	screen->update();
@@ -489,7 +489,7 @@ bool Wizardry7Console::cmdGlyphs(int argc, const char **argv) {
 
 bool Wizardry7Console::cmdGlyph(int argc, const char **argv) {
 	if (argc < 3 || argc > 5) {
-		print("Usage: glyph <font.VGA> <code> [x] [y]\n");
+		print("Usage: glyph <font.VGA> <glyphIndex> [x] [y]\n");
 		return true;
 	}
 	GameFont font;
@@ -497,8 +497,8 @@ bool Wizardry7Console::cmdGlyph(int argc, const char **argv) {
 		print("Cannot load font '%s'\n", argv[1]);
 		return true;
 	}
-	int code = 0, x = 0, y = 0;
-	if (!parseInteger(argv[2], code) || code < 0 || code > 127)
+	int glyph = 0, x = 0, y = 0;
+	if (!parseInteger(argv[2], glyph) || glyph < 0 || (uint)glyph >= font.getGlyphCount())
 		return true;
 	if (argc >= 4 && !parseInteger(argv[3], x))
 		return true;
@@ -509,9 +509,9 @@ bool Wizardry7Console::cmdGlyph(int argc, const char **argv) {
 		return true;
 	if (_vm->getPalette()->isLoaded())
 		_vm->getPalette()->apply(screen);
-	const uint advance = font.drawChar(code, screen, x, y, 15, true, 0);
+	const uint advance = font.drawGlyph(glyph, screen, x, y, 15, true, 0);
 	screen->update();
-	print("Glyph %d advance %u\n", code, advance);
+	print("Glyph %d advance %u\n", glyph, advance);
 	return true;
 }
 

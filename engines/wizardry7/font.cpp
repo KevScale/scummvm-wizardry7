@@ -95,22 +95,34 @@ uint GameFont::getAdvance(byte character) const {
 	return advance > 0 ? advance : 0;
 }
 
-const byte *GameFont::glyphData(byte character) const {
-	if (character >= 128)
-		return nullptr;
-	// Text fonts map character -> glyph through the table. Icon/portrait fonts
-	// (e.g. VBFONT1, VCPORT0) may have more table entries than bitmaps; the
-	// renderer then indexes the bitmap with (character % glyphCount).
-	uint index = _data[0x10 + character * 2];
+const byte *GameFont::glyphData(uint index) const {
 	if (index >= _glyphCount)
-		index = character % _glyphCount;
+		return nullptr;
 	return _data.data() + kFontHeaderSize + index * _bytesPerGlyph;
 }
 
+uint GameFont::getGlyphAdvance(uint index) const {
+	if (index >= _glyphCount)
+		return 0;
+	const int advance = _baseAdvance + _data[0x11 + index * 2];
+	return advance > 0 ? advance : 0;
+}
+
 uint GameFont::drawChar(byte character, Graphics::Screen *screen, int x, int y, byte color, bool opaque, byte background) const {
-	const byte *pixels = glyphData(character);
+	if (character >= 128)
+		return 0;
+	const uint index = _data[0x10 + character * 2];
+	if (index >= _glyphCount)
+		return 0;
+	const uint advance = getAdvance(character);
+	drawGlyph(index, screen, x, y, color, opaque, background);
+	return advance;
+}
+
+uint GameFont::drawGlyph(uint index, Graphics::Screen *screen, int x, int y, byte color, bool opaque, byte background) const {
+	const byte *pixels = glyphData(index);
 	if (!pixels || !screen)
-		return getAdvance(character);
+		return 0;
 
 	for (uint row = 0; row < _height; ++row) {
 		const int py = y + row;
@@ -136,7 +148,7 @@ uint GameFont::drawChar(byte character, Graphics::Screen *screen, int x, int y, 
 		}
 	}
 
-	return getAdvance(character);
+	return getGlyphAdvance(index);
 }
 
 } // End of namespace Wizardry7
