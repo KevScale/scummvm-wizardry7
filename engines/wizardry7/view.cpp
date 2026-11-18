@@ -50,8 +50,8 @@ Common::Array<ViewPiece> ViewObjectList::draw(uint columns) const {
 		for (int layer = 0xFF; layer >= 0xFB; --layer) {
 			for (int i = (int)_objects.size() - 1; i >= 0; --i) {
 				const ViewObject &o = _objects[i];
-				if (o.column != column || o.layer != layer)
-					continue;
+				if (o.column != column || o.layer != layer || o.slot > 9)
+					continue; // slot > 9 is a stale entry from a previous frame
 				if (o.pieceA != 0xFFFF)
 					out.push_back({o.slot, o.pieceA, o.selA, o.writemodeA});
 				if (o.pieceB != 0xFFFF)
@@ -61,7 +61,7 @@ Common::Array<ViewPiece> ViewObjectList::draw(uint columns) const {
 				const uint8 group = layer == 0xFF ? 0 : 1;
 				for (int i = (int)_objects.size() - 1; i >= 0; --i) {
 					const ViewObject &o = _objects[i];
-					if (o.column != column || o.layer >= 0xFA || o.group != group)
+					if (o.column != column || o.layer >= 0xFA || o.group != group || o.slot > 9)
 						continue;
 					if (o.pieceA != 0xFFFF)
 						out.push_back({o.slot, o.pieceA, o.selA, o.writemodeA});

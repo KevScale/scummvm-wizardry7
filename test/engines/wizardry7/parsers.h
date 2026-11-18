@@ -910,5 +910,9 @@ public:
 		TS_ASSERT_EQUALS(drawn.size(), 2u);
 		TS_ASSERT_EQUALS(drawn[0].piece, 6); // reversed object order
 		TS_ASSERT_EQUALS(drawn[1].piece, 5);
+		Wizardry7::ViewObject stale = { 7, 8, 0xFFFF, 0xFFFF, 2, 0, 0, 0, 0xFD, 1, 76, 0, 0 };
+		TS_ASSERT(objects.spawn(stale));
+		drawn = objects.draw(2);
+		TS_ASSERT_EQUALS(drawn.size(), 2u); // slot 76 is stale and must be skipped
 	}
 };
