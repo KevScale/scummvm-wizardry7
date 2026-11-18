@@ -61,7 +61,7 @@ public:
 	bool showCharacterMenu(const Common::String &fontName = "VBFONT0.VGA");
 	bool showAddCharacter(const Common::String &fontName = "VBFONT0.VGA",
 		const Common::Path &rosterPath = Common::Path());
-	bool showCharacterCreation(const Common::String &step, const Common::String &fontName = "VBFONT0.VGA");
+	bool showCharacterCreation(const Common::String &step, const Common::String &fontName = "VBFONT0.VGA", int selection = 0);
 
 	// Headless creation driver used by the debug console/CI scripts.
 	bool startCreation();
@@ -71,6 +71,7 @@ public:
 	bool creationSetName(const Common::String &name);
 	bool creationAddBonus(uint statIndex);
 	bool creationFinish(CreatedCharacter &out);
+	bool saveCreationRecord(const Common::Path &path);
 	CharacterCreationFlow &getCreation() { return _creation; }
 	const CharacterCreationFlow &getCreation() const { return _creation; }
 	bool isCreationStarted() const { return _creationStarted; }
@@ -88,7 +89,9 @@ private:
 	GamePalette _palette;
 	Graphics::Screen *_screen;
 	CharacterCreationFlow _creation;
+	CreatedCharacter _creationResult;
 	bool _creationStarted;
+	bool _hasCreationResult;
 	bool _messagesLoaded;
 	bool _scenarioLoaded;
 };

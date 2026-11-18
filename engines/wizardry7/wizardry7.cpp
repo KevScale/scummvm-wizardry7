@@ -50,7 +50,8 @@ static void drawLine(Graphics::Screen *screen, const Graphics::Font *font, int &
 
 Wizardry7Engine::Wizardry7Engine(OSystem *syst, const Wizardry7GameDescription *gameDesc) :
 	Engine(syst), _gameDescription(gameDesc), _screen(nullptr),
-	_creationStarted(false), _messagesLoaded(false), _scenarioLoaded(false) {
+	_creationStarted(false), _hasCreationResult(false), _messagesLoaded(false),
+	_scenarioLoaded(false) {
 
 	setDebugger(new Wizardry7Console(this));
 }
@@ -388,7 +389,7 @@ static void drawChargenGrid(GameFont &font, Graphics::Screen *screen,
 	}
 }
 
-bool Wizardry7Engine::showCharacterCreation(const Common::String &step, const Common::String &fontName) {
+bool Wizardry7Engine::showCharacterCreation(const Common::String &step, const Common::String &fontName, int selection) {
 	if (!showScreen("PCVWSCRN"))
 		return false;
 
@@ -399,8 +400,8 @@ bool Wizardry7Engine::showCharacterCreation(const Common::String &step, const Co
 	if (step.equalsIgnoreCase("sex")) {
 		drawModalPanel(_screen, 68, 113, 185, 37);
 		font.drawString("SELECT CHARACTER SEX", _screen, 100, 121, 1);
-		drawModalButton(_screen, font, "MALE", 73, 133, 69, 11, 1, true);
-		drawModalButton(_screen, font, "FEMALE", 179, 133, 69, 11, 1);
+		drawModalButton(_screen, font, "MALE", 73, 133, 69, 11, 1, selection == 0);
+		drawModalButton(_screen, font, "FEMALE", 179, 133, 69, 11, 1, selection == 1);
 	} else if (step.equalsIgnoreCase("race")) {
 		static const char *const races[] = {
 			"HUMAN", "HOBBIT", "FELPURR",
@@ -410,18 +411,20 @@ bool Wizardry7Engine::showCharacterCreation(const Common::String &step, const Co
 		};
 		drawModalPanel(_screen, 51, 113, 219, 73);
 		font.drawString("SELECT CHARACTER RACE", _screen, 97, 121, 1);
-		drawChargenGrid(font, _screen, races, ARRAYSIZE(races), 4, 0);
+		drawChargenGrid(font, _screen, races, ARRAYSIZE(races), 4, selection);
 	} else if (step.equalsIgnoreCase("profession")) {
 		drawModalPanel(_screen, 51, 113, 219, 61);
 		font.drawString("SELECT CHARACTER PROFESSION", _screen, 79, 121, 1);
 		// The original list leaves gaps rather than filling row-major.
-		drawModalButton(_screen, font, "FIGHTER", 56, 133, 69, 11, 1, true);
-		drawModalButton(_screen, font, "THIEF", 126, 133, 69, 11, 1);
-		drawModalButton(_screen, font, "BARD", 196, 133, 69, 11, 1);
-		drawModalButton(_screen, font, "MAGE", 56, 145, 69, 11, 1);
-		drawModalButton(_screen, font, "RANGER", 126, 145, 69, 11, 1);
-		drawModalButton(_screen, font, "PRIEST", 56, 157, 69, 11, 1);
-		drawModalButton(_screen, font, "ALCHEMIST", 126, 157, 69, 11, 1);
+		static const char *const names[7] = {
+			"FIGHTER", "THIEF", "BARD", "MAGE", "RANGER", "PRIEST", "ALCHEMIST"
+		};
+		static const uint classIds[7] = { 0, 3, 6, 1, 4, 2, 5 };
+		static const int xs[7] = { 56, 126, 196, 56, 126, 56, 126 };
+		static const int ys[7] = { 133, 133, 133, 145, 145, 157, 157 };
+		for (uint i = 0; i < 7; ++i)
+			drawModalButton(_screen, font, names[i], xs[i], ys[i], 69, 11, 1,
+				(int)classIds[i] == selection);
 	} else if (step.equalsIgnoreCase("name")) {
 		drawModalPanel(_screen, 54, 142, 212, 57);
 		font.drawString("CREATE NEW CHARACTER", _screen, 100, 152, 1);
@@ -453,6 +456,7 @@ bool Wizardry7Engine::startCreation() {
 	byte zero[CharacterCreation::kStatCount] = { 0 };
 	_creation.begin(zero, 0);
 	_creationStarted = true;
+	_hasCreationResult = false;
 	return true;
 }
 
@@ -489,7 +493,25 @@ bool Wizardry7Engine::creationFinish(CreatedCharacter &out) {
 		return false;
 	if (_creation.getStep() == CharacterCreationFlow::kStepName && !_creation.finishName())
 		return false;
-	return _creation.buildCharacter(_rng, out);
+	if (!_creation.buildCharacter(_rng, out))
+		return false;
+	_creationResult = out;
+	_hasCreationResult = true;
+	return true;
+}
+
+bool Wizardry7Engine::saveCreationRecord(const Common::Path &path) {
+	if (!_hasCreationResult)
+		return false;
+	byte record[kCharacterRecordSize];
+	if (!writeCharacterRecord(_creationResult, record, sizeof(record)))
+		return false;
+	Common::DumpFile out;
+	if (!out.open(path))
+		return false;
+	const bool ok = out.write(record, sizeof(record)) == sizeof(record);
+	out.close();
+	return ok;
 }
 
 bool Wizardry7Engine::saveScreenshot(const Common::Path &path) {

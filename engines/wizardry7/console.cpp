@@ -35,6 +35,7 @@
 #include "wizardry7/gfx.h"
 #include "wizardry7/save.h"
 #include "wizardry7/msg.h"
+#include "wizardry7/party.h"
 #include "wizardry7/rng.h"
 #include "wizardry7/scenario.h"
 #include "wizardry7/wizardry7.h"
@@ -78,6 +79,7 @@ Wizardry7Console::Wizardry7Console(Wizardry7Engine *vm) : GUI::Debugger(), _vm(v
 	registerCmd("addcharacter", WRAP_METHOD(Wizardry7Console, cmdAddCharacter));
 	registerCmd("chargen", WRAP_METHOD(Wizardry7Console, cmdCharGen));
 	registerCmd("create", WRAP_METHOD(Wizardry7Console, cmdCreate));
+	registerCmd("party", WRAP_METHOD(Wizardry7Console, cmdParty));
 	registerCmd("screen", WRAP_METHOD(Wizardry7Console, cmdScreen));
 	registerCmd("screenshot", WRAP_METHOD(Wizardry7Console, cmdScreenshot));
 	registerCmd("bundle", WRAP_METHOD(Wizardry7Console, cmdBundle));
@@ -161,6 +163,8 @@ bool Wizardry7Console::runScript(const Common::Path &path) {
 			ok &= cmdCharGen(count, argv);
 		else if (command == "create")
 			ok &= cmdCreate(count, argv);
+		else if (command == "party")
+			ok &= cmdParty(count, argv);
 		else if (command == "screen")
 			ok &= cmdScreen(count, argv);
 		else if (command == "screenshot")
@@ -406,7 +410,12 @@ bool Wizardry7Console::cmdCharGen(int argc, const char **argv) {
 		print("Usage: chargen <sex|race|profession|name|bonus>\n");
 		return true;
 	}
-	if (!_vm->showCharacterCreation(argv[1])) {
+	int selection = 0;
+	if (argc >= 3 && !parseInteger(argv[2], selection)) {
+		print("Bad selection '%s'\n", argv[2]);
+		return true;
+	}
+	if (!_vm->showCharacterCreation(argv[1], "VBFONT0.VGA", selection)) {
 		print("Cannot show character-creation step '%s'\n", argv[1]);
 		return true;
 	}
@@ -465,6 +474,18 @@ bool Wizardry7Console::cmdCreate(int argc, const char **argv) {
 		print("name: %s\n", _vm->creationSetName(argv[2]) ? "ok" : "rejected");
 		return true;
 	}
+	if (action == "record") {
+		if (argc != 3) {
+			print("Usage: create record FILE\n");
+			return true;
+		}
+		if (!_vm->saveCreationRecord(Common::Path(argv[2]))) {
+			print("No completed creation result (run finish first)\n");
+			return true;
+		}
+		print("Wrote partial record to '%s'\n", argv[2]);
+		return true;
+	}
 	if (action == "finish") {
 		Wizardry7::CreatedCharacter result;
 		if (!_vm->creationFinish(result)) {
@@ -493,6 +514,28 @@ bool Wizardry7Console::cmdCreate(int argc, const char **argv) {
 		return true;
 	}
 	print("Unknown create action '%s'\n", action.c_str());
+	return true;
+}
+
+bool Wizardry7Console::cmdParty(int argc, const char **argv) {
+	if (argc != 2) {
+		print("Usage: party <PCFILE.GLD | PCFILE.DBS>\n");
+		return true;
+	}
+	CharacterRoster roster;
+	if (!roster.load(Common::Path(argv[1]))) {
+		print("Cannot read roster '%s'\n", argv[1]);
+		return true;
+	}
+	Party party;
+	party.loadFromRoster(roster);
+	print("Party (%u member(s))\n", party.size());
+	for (uint i = 0; i < party.size(); ++i) {
+		const uint8 slot = party.getMember(i);
+		const SaveCharacter &c = roster.getCharacter(slot);
+		print("  %u: slot %u %-8s race %u sex %u class %u\n", i + 1, slot,
+			c.name.c_str(), c.race, c.gender, c.klass);
+	}
 	return true;
 }
 
