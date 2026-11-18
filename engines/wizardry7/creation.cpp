@@ -22,6 +22,7 @@
 
 #include "wizardry7/rng.h"
 
+#include "common/endian.h"
 #include "common/util.h"
 
 namespace Wizardry7 {
@@ -192,6 +193,23 @@ Common::Array<uint> CharacterCreation::getEligibleClasses() const {
 			classes.push_back(i);
 	}
 	return classes;
+}
+
+bool writeCharacterRecord(const CreatedCharacter &character, byte *record, uint size) {
+	if (!record || size < kCharacterRecordSize || character.name.size() > 8)
+		return false;
+	memset(record, 0, kCharacterRecordSize);
+	memcpy(record, character.name.c_str(), character.name.size());
+	WRITE_LE_UINT32(record + 0x08, character.rolls.ageDays);
+	WRITE_LE_UINT16(record + 0x18, character.rolls.hpMax);
+	WRITE_LE_UINT16(record + 0x1A, character.rolls.hpMax);
+	WRITE_LE_UINT16(record + 0x1C, character.rolls.staminaMax);
+	WRITE_LE_UINT16(record + 0x1E, character.rolls.staminaMax);
+	record[0x237] = character.race;
+	record[0x238] = character.sex;
+	record[0x239] = character.classIndex;
+	// 0x236 knack, 0x23A alignment, inventory and skills remain unwritten.
+	return true;
 }
 
 CharacterCreationFlow::CharacterCreationFlow() : _step(kStepSex), _race(0) {

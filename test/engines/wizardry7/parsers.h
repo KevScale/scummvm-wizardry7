@@ -405,4 +405,45 @@ public:
 		TS_ASSERT_EQUALS(result.itemCount, 5u);
 		TS_ASSERT_EQUALS(result.items[0].itemId, 8);
 	}
+
+	void testCreatedCharacterRecord() {
+		Wizardry7::CharacterCreationFlow flow;
+		const byte stats[8] = { 7, 10, 8, 10, 9, 9, 9, 11 };
+		flow.begin(stats, 11);
+		TS_ASSERT(flow.chooseSex(0));
+		TS_ASSERT(flow.chooseRace(0));
+		TS_ASSERT(flow.chooseProfession(0));
+		TS_ASSERT(flow.setName("TESTY"));
+		TS_ASSERT(flow.finishName());
+		while (flow.getCharacter().getBonusPoints() > 0)
+			TS_ASSERT(flow.addBonusPoint(0));
+		Wizardry7::CreatedCharacter created;
+		Wizardry7::WizardryRNG rng;
+		rng.reset();
+		TS_ASSERT(flow.buildCharacter(rng, created));
+
+		byte record[Wizardry7::kCharacterRecordSize];
+		TS_ASSERT(Wizardry7::writeCharacterRecord(created, record, sizeof(record)));
+		TS_ASSERT_EQUALS(memcmp(record, "TESTY", 5), 0);
+		TS_ASSERT_EQUALS(record[0x237], 0);
+		TS_ASSERT_EQUALS(record[0x238], 0);
+		TS_ASSERT_EQUALS(record[0x239], 0);
+
+		Common::Array<byte> roster;
+		roster.resize(24 + sizeof(record));
+		memset(roster.data(), 0, roster.size());
+		roster[0] = 0x48;
+		roster[1] = 0x02;
+		roster[2] = 1;
+		roster[4] = 24;
+		roster[8] = 1;
+		memcpy(roster.data() + 24, record, sizeof(record));
+		Wizardry7::CharacterRoster parsed;
+		TS_ASSERT(parsed.loadFromData(roster.data(), roster.size()));
+		const Wizardry7::SaveCharacter &c = parsed.getCharacter(0);
+		TS_ASSERT_EQUALS(c.name, Common::String("TESTY"));
+		TS_ASSERT_EQUALS(c.age, created.rolls.ageDays);
+		TS_ASSERT_EQUALS(c.hp, created.rolls.hpMax);
+		TS_ASSERT_EQUALS(c.stamina, created.rolls.staminaMax);
+	}
 };

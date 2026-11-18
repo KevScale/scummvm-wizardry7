@@ -107,6 +107,15 @@ struct CreatedCharacter {
 	uint itemCount;
 };
 
+enum { kCharacterRecordSize = 584 };
+
+/**
+ * Write the fields the engine currently understands into a PCFILE/.SGM
+ * character record. Inventory, skills, AC and portrait are not written yet;
+ * callers must treat this as a partial record.
+ */
+bool writeCharacterRecord(const CreatedCharacter &character, byte *record, uint size);
+
 /** Step/selection state for the DOS character-creation dialogs. */
 class CharacterCreationFlow {
 public:
