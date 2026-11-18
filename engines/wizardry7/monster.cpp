@@ -22,6 +22,7 @@
 #include "common/endian.h"
 
 #include "wizardry7/monster.h"
+#include "wizardry7/rng.h"
 #include "wizardry7/scenario.h"
 
 namespace Wizardry7 {
@@ -59,6 +60,16 @@ bool parseMonsterRecord(const byte *record, uint32 size, MonsterInfo &info) {
 	info.pictureId = record[0xD7];
 	info.flags = record[0xE2];
 	return true;
+}
+
+uint16 selectMonsterVariant(uint16 baseId, const MonsterInfo &info, WizardryRNG &rng) {
+	uint16 chosen = baseId;
+	for (uint i = 0; i < 2; ++i) {
+		const uint32 roll = rng.getRandom(100);
+		if (info.variantChance[i] > roll)
+			chosen = info.variantId[i];
+	}
+	return chosen;
 }
 
 bool loadMonster(const ScenarioDatabase &scenario, uint16 monsterId, MonsterInfo &info) {

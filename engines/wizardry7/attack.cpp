@@ -22,6 +22,7 @@
 #include "common/endian.h"
 
 #include "wizardry7/attack.h"
+#include "wizardry7/rng.h"
 #include "wizardry7/scenario.h"
 
 namespace Wizardry7 {
@@ -85,6 +86,15 @@ uint8 AttackAnimation::getSeverityBase(uint special) const {
 uint8 AttackAnimation::getSeverityRandom(uint special) const {
 	const uint offset = 0xA5 + special * 4 + 3;
 	return offset < _raw.size() ? _raw[offset] : 0;
+}
+
+AttackRoll AttackAnimation::rollAttack(uint attack, WizardryRNG &rng) const {
+	AttackRoll roll;
+	roll.damageIndex = getBaseDamage(attack) + rng.getRandom(getRandomDamage(attack));
+	roll.specialIndex = getSpecialIndex(roll.damageIndex);
+	roll.severity = getSeverityBase(roll.specialIndex) + 1 +
+		rng.getRandom(getSeverityRandom(roll.specialIndex));
+	return roll;
 }
 
 uint16 AttackAnimation::getPairA() const {

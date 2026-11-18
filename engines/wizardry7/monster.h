@@ -29,6 +29,7 @@
 namespace Wizardry7 {
 
 class ScenarioDatabase;
+class WizardryRNG;
 
 /** One SCENARIO type-4 monster record (232 bytes). */
 struct MonsterInfo {
@@ -49,6 +50,9 @@ struct MonsterInfo {
 };
 
 bool parseMonsterRecord(const byte *record, uint32 size, MonsterInfo &info);
+
+/** Two-entry family substitution: chance% > rand(100), last success wins. */
+uint16 selectMonsterVariant(uint16 baseId, const MonsterInfo &info, WizardryRNG &rng);
 bool loadMonster(const ScenarioDatabase &scenario, uint16 monsterId, MonsterInfo &info);
 
 class MonsterDatabase {

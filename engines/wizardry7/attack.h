@@ -28,6 +28,14 @@
 namespace Wizardry7 {
 
 class ScenarioDatabase;
+class WizardryRNG;
+
+/** One resolved step of the type-8 attack roll. */
+struct AttackRoll {
+	uint8 damageIndex;
+	uint8 specialIndex;
+	uint8 severity;
+};
 
 /**
  * One SCENARIO type-8 per-picture attack/animation record (350 bytes).
@@ -60,6 +68,13 @@ public:
 	uint16 getPairB() const;
 	uint8 getOverrideA() const { return _raw[0x15B]; }
 	uint8 getOverrideB() const { return _raw[0x15C]; }
+
+	/**
+	 * Roll one attack: damage = base + rand(random); special = table[damage];
+	 * severity = base + 1 + rand(random). The +0x30 bonus roll is applied only
+	 * by the caller when the +0x15B override is active.
+	 */
+	AttackRoll rollAttack(uint attack, WizardryRNG &rng) const;
 
 private:
 	Common::Array<byte> _raw;

@@ -753,6 +753,15 @@ public:
 		TS_ASSERT_EQUALS(info.bodyType, 3);
 		TS_ASSERT_EQUALS(info.pictureId, 26);
 		TS_ASSERT_EQUALS(info.flags, 1);
+		info.variantChance[0] = info.variantChance[1] = 100;
+		info.variantId[0] = 7;
+		info.variantId[1] = 0; // last successful entry wins
+		Wizardry7::WizardryRNG rng;
+		rng.reset();
+		TS_ASSERT_EQUALS(Wizardry7::selectMonsterVariant(9, info, rng), 0u);
+		info.variantChance[0] = info.variantChance[1] = 0;
+		rng.reset();
+		TS_ASSERT_EQUALS(Wizardry7::selectMonsterVariant(9, info, rng), 9u);
 	}
 
 	void testAttackAnimation() {
@@ -789,5 +798,17 @@ public:
 		TS_ASSERT_EQUALS(anim.getPairB(), 0x5678);
 		TS_ASSERT_EQUALS(anim.getOverrideA(), 0xFE);
 		TS_ASSERT_EQUALS(anim.getOverrideB(), 0xFD);
+		data[0x08] = 5;   // base damage
+		data[0x12] = 0;   // no random damage
+		data[0x26 + 5] = 3;
+		data[0xA5 + 3 * 4 + 2] = 2;
+		data[0xA5 + 3 * 4 + 3] = 0;
+		TS_ASSERT(anim.loadFromData(data.data(), data.size()));
+		Wizardry7::WizardryRNG rng;
+		rng.reset();
+		const Wizardry7::AttackRoll roll = anim.rollAttack(0, rng);
+		TS_ASSERT_EQUALS(roll.damageIndex, 5);
+		TS_ASSERT_EQUALS(roll.specialIndex, 3);
+		TS_ASSERT_EQUALS(roll.severity, 3);
 	}
 };
