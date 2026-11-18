@@ -63,13 +63,19 @@ into this tree.
 
 ## Current milestone
 
-Data-layer bring-up, not a playable game:
+M1 asset/test bring-up, not a playable game:
 
 - scenario record database (MASTER.HDR + DISK.HDR + SCENARIO.GLD/.DBS)
 - message database (Gold plain pool + DOS Huffman pool via MISC.HDR)
 - Wichmann-Hill RNG (exact 16-bit behaviour)
-- debug console: `msg`, `msginfo`, `records`, `record`, `rng`, `rngseed`
-- status screen; no graphics/audio/game loop yet
+- `PALETTE.DEF`, raw 320×200 screen dumps, VGA image bundles, bitmap fonts
+- debug console: `msg`, `msginfo`, `records`, `record`, `rng`, `rngseed`,
+  `status`, `screen`, `screenshot`, `bundle`, `fontinfo`, `glyph`, `glyphs`,
+  `script`
+- headless scenario runner via the target config key `wizardry7_script`
+  (plus `enable_unsupported_game_warning=false`); use
+  `tools/run_scenario.py <data-dir> <script>` from the RE repo
+- status/title screens and pixel-exact BMP screenshots; no game loop yet
 
 ## Integration points (only these touch upstream files)
 
@@ -100,5 +106,6 @@ make -j$(nproc)
 ./scummvm --path=<dos-data-dir> wizardry7
 ```
 
-Open the debug console (Ctrl+Alt+D) and try `msg 100` (Gold: "HUMAN",
-DOS: "HUMAN"), `records`, `record 1 1`, `rng 10`.
+Open the debug console (Ctrl+Alt+D) and try `msg 100`, `records`,
+`record 1 1`, `rng 10`, `screen TIT1SCRN`, `bundle MAZEDATA.VGA`,
+`fontinfo VBFONT0.VGA`, `glyphs VBFONT0.VGA 32 95`, `screenshot out.bmp`.

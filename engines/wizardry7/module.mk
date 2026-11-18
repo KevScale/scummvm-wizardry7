@@ -2,6 +2,8 @@ MODULE := engines/wizardry7
 
 MODULE_OBJS := \
 	console.o \
+	font.o \
+	gfx.o \
 	metaengine.o \
 	msg.o \
 	rng.o \

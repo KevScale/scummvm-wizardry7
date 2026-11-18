@@ -22,6 +22,8 @@
 #ifndef WIZARDRY7_CONSOLE_H
 #define WIZARDRY7_CONSOLE_H
 
+#include "common/path.h"
+
 #include "gui/debugger.h"
 
 namespace Wizardry7 {
@@ -33,6 +35,10 @@ public:
 	explicit Wizardry7Console(Wizardry7Engine *vm);
 	~Wizardry7Console() override;
 
+	int print(const char *format, ...) GCC_PRINTF(2, 3);
+	void setScriptMode(bool enabled) { _scriptMode = enabled; }
+	bool runScript(const Common::Path &path);
+
 private:
 	bool cmdMessage(int argc, const char **argv);
 	bool cmdMessageInfo(int argc, const char **argv);
@@ -40,8 +46,17 @@ private:
 	bool cmdRecord(int argc, const char **argv);
 	bool cmdRng(int argc, const char **argv);
 	bool cmdSeed(int argc, const char **argv);
+	bool cmdStatus(int argc, const char **argv);
+	bool cmdScreen(int argc, const char **argv);
+	bool cmdScreenshot(int argc, const char **argv);
+	bool cmdBundle(int argc, const char **argv);
+	bool cmdFontInfo(int argc, const char **argv);
+	bool cmdGlyphs(int argc, const char **argv);
+	bool cmdGlyph(int argc, const char **argv);
+	bool cmdScript(int argc, const char **argv);
 
 	Wizardry7Engine *_vm;
+	bool _scriptMode;
 };
 
 } // End of namespace Wizardry7

@@ -27,6 +27,7 @@
 #include "engines/engine.h"
 
 #include "wizardry7/detection.h"
+#include "wizardry7/gfx.h"
 #include "wizardry7/msg.h"
 #include "wizardry7/rng.h"
 #include "wizardry7/scenario.h"
@@ -51,6 +52,12 @@ public:
 	WizardryRNG *getRNG() { return &_rng; }
 	MessageDatabase *getMessages() { return &_messages; }
 	ScenarioDatabase *getScenario() { return &_scenario; }
+	GamePalette *getPalette() { return &_palette; }
+	Graphics::Screen *getScreen() { return _screen; }
+
+	bool showScreen(const Common::String &name);
+	bool saveScreenshot(const Common::Path &path);
+	void showStatusScreen() { drawStatusScreen(); }
 
 private:
 	bool loadGameData();
@@ -60,6 +67,7 @@ private:
 	WizardryRNG _rng;
 	MessageDatabase _messages;
 	ScenarioDatabase _scenario;
+	GamePalette _palette;
 	Graphics::Screen *_screen;
 	bool _messagesLoaded;
 	bool _scenarioLoaded;

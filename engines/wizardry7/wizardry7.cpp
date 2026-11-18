@@ -19,7 +19,9 @@
  *
  */
 
+#include "common/config-manager.h"
 #include "common/events.h"
+#include "common/file.h"
 #include "common/file.h"
 #include "common/system.h"
 #include "common/textconsole.h"
@@ -28,14 +30,15 @@
 #include "graphics/font.h"
 #include "graphics/fontman.h"
 #include "graphics/screen.h"
+#include "image/bmp.h"
 
 #include "wizardry7/console.h"
 #include "wizardry7/wizardry7.h"
 
 namespace Wizardry7 {
 
-static const int kScreenWidth = 640;
-static const int kScreenHeight = 480;
+static const int kScreenWidth = 320;
+static const int kScreenHeight = 200;
 static const uint32 kTextColor = 200;
 
 static void drawLine(Graphics::Screen *screen, const Graphics::Font *font, int &y, const Common::String &text) {
@@ -56,6 +59,7 @@ Wizardry7Engine::~Wizardry7Engine() {
 
 bool Wizardry7Engine::loadGameData() {
 	const bool gold = isGold();
+	_palette.load(Common::Path("PALETTE.DEF"));
 	_messagesLoaded = _messages.load(Common::Path("MSG.HDR"),
 		Common::Path(gold ? "MSG.GLD" : "MSG.DBS"),
 		gold ? Common::Path() : Common::Path("MISC.HDR"));
@@ -82,6 +86,14 @@ Common::Error Wizardry7Engine::run() {
 
 	drawStatusScreen();
 
+	const Common::String scriptPath = ConfMan.get("wizardry7_script");
+	if (!scriptPath.empty()) {
+		Wizardry7Console *console = (Wizardry7Console *)getDebugger();
+		console->setScriptMode(true);
+		const bool ok = console->runScript(Common::Path(scriptPath));
+		return ok ? Common::kNoError : Common::kUnknownError;
+	}
+
 	Common::Event event;
 	while (!shouldQuit()) {
 		while (_system->getEventManager()->pollEvent(event)) {
@@ -94,7 +106,58 @@ Common::Error Wizardry7Engine::run() {
 	return Common::kNoError;
 }
 
+bool Wizardry7Engine::showScreen(const Common::String &name) {
+	if (!_screen)
+		return false;
+
+	Common::String fileName(name);
+	if (!fileName.hasSuffixIgnoreCase(".VGA"))
+		fileName += ".VGA";
+	const Common::Path path(fileName);
+
+	Common::Array<byte> pixels;
+	uint width = 0, height = 0;
+	if (!loadScreen(path, pixels, width, height))
+		return false;
+	if (width > (uint)_screen->w || height > (uint)_screen->h) {
+		warning("Wizardry7: screen '%s' does not fit the framebuffer", name.c_str());
+		return false;
+	}
+
+	_screen->fillRect(Common::Rect(_screen->w, _screen->h), 0);
+	_screen->copyRectToSurface(pixels.data(), width, 0, 0, width, height);
+	if (_palette.isLoaded())
+		_palette.apply(_screen);
+	_screen->update();
+	return true;
+}
+
+bool Wizardry7Engine::saveScreenshot(const Common::Path &path) {
+	if (!_screen)
+		return false;
+
+	Common::DumpFile out;
+	if (!out.open(path)) {
+		warning("Wizardry7: cannot write screenshot '%s'", path.toString().c_str());
+		return false;
+	}
+
+	byte palette[768];
+	_screen->getPalette(palette);
+	const bool ok = Image::writeBMP(out, *_screen, palette);
+	out.close();
+	return ok;
+}
+
 void Wizardry7Engine::drawStatusScreen() {
+	byte palette[256 * 3];
+	for (uint i = 0; i < 256; ++i) {
+		palette[i * 3 + 0] = i;
+		palette[i * 3 + 1] = i;
+		palette[i * 3 + 2] = i;
+	}
+	_screen->setPalette(palette, 0, 256);
+
 	_screen->fillRect(Common::Rect(_screen->w, _screen->h), 0);
 	const Graphics::Font *font = FontMan.getFontByUsage(Graphics::FontManager::kConsoleFont);
 	int y = 16;
