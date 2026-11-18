@@ -9,6 +9,7 @@
 #include "wizardry7/gfx.h"
 #include "wizardry7/items.h"
 #include "wizardry7/party.h"
+#include "wizardry7/xp.h"
 #include "wizardry7/save.h"
 
 #include <cxxtest/TestSuite.h>
@@ -657,5 +658,31 @@ public:
 		TS_ASSERT_EQUALS(info.subtype, 2);
 		TS_ASSERT_EQUALS(info.rank, 10);
 		TS_ASSERT_EQUALS(info.acBonus, 2);
+	}
+
+	void testExperienceTable() {
+		byte record[64];
+		memset(record, 0, sizeof(record));
+		const uint32 values[16] = {
+			1000, 2000, 4000, 8000, 16000, 32000, 64000, 128000,
+			256000, 512000, 768000, 1168000, 1568000, 1968000, 2368000, 2968000
+		};
+		for (uint i = 0; i < 16; ++i)
+			WRITE_LE_UINT32(record + i * 4, values[i]);
+		Wizardry7::ExperienceTable table;
+		TS_ASSERT(table.parseRecord(record, sizeof(record), 0));
+		TS_ASSERT_EQUALS(table.getThreshold(0, 1), 0u);
+		TS_ASSERT_EQUALS(table.getThreshold(0, 2), 1000u);
+		TS_ASSERT_EQUALS(table.getThreshold(0, 16), 2368000u);
+		TS_ASSERT_EQUALS(table.getThreshold(0, 17), 2968000u);
+		TS_ASSERT_EQUALS(table.getThreshold(0, 18), 3568000u);
+		TS_ASSERT_EQUALS(table.getLevel(0, 0), 1);
+		TS_ASSERT_EQUALS(table.getLevel(0, 999), 1);
+		TS_ASSERT_EQUALS(table.getLevel(0, 1000), 2);
+		TS_ASSERT_EQUALS(table.getLevel(0, 2368000), 16);
+		TS_ASSERT_EQUALS(table.getLevel(0, 2968000), 17);
+		TS_ASSERT_EQUALS(Wizardry7::ExperienceTable::getRank(1), 0);
+		TS_ASSERT_EQUALS(Wizardry7::ExperienceTable::getRank(2), 1);
+		TS_ASSERT_EQUALS(Wizardry7::ExperienceTable::getRank(24), 7);
 	}
 };

@@ -13,7 +13,8 @@ MODULE_OBJS := \
 	rng.o \
 	save.o \
 	scenario.o \
-	wizardry7.o
+	wizardry7.o \
+	xp.o
 
 # This module can be built as a plugin
 ifeq ($(ENABLE_WIZARDRY7), DYNAMIC_PLUGIN)

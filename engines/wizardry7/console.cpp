@@ -30,6 +30,7 @@
 
 #include "wizardry7/console.h"
 #include "wizardry7/items.h"
+#include "wizardry7/xp.h"
 #include "graphics/screen.h"
 
 #include "wizardry7/font.h"
@@ -95,6 +96,7 @@ Wizardry7Console::Wizardry7Console(Wizardry7Engine *vm) : GUI::Debugger(), _vm(v
 	registerCmd("sheet", WRAP_METHOD(Wizardry7Console, cmdSheet));
 	registerCmd("review", WRAP_METHOD(Wizardry7Console, cmdReview));
 	registerCmd("saveparty", WRAP_METHOD(Wizardry7Console, cmdSaveParty));
+	registerCmd("xp", WRAP_METHOD(Wizardry7Console, cmdXp));
 	registerCmd("script", WRAP_METHOD(Wizardry7Console, cmdScript));
 }
 
@@ -199,6 +201,8 @@ bool Wizardry7Console::runScript(const Common::Path &path) {
 			ok &= cmdReview(count, argv);
 		else if (command == "saveparty")
 			ok &= cmdSaveParty(count, argv);
+		else if (command == "xp")
+			ok &= cmdXp(count, argv);
 		else if (command == "script")
 			ok &= cmdScript(count, argv);
 		else {
@@ -441,6 +445,29 @@ bool Wizardry7Console::cmdCharGen(int argc, const char **argv) {
 
 bool Wizardry7Console::cmdCharGenUI(int argc, const char **argv) {
 	_vm->runCharacterCreationUI("VBFONT0.VGA", argc >= 2 ? Common::Path(argv[1]) : Common::Path());
+	return true;
+}
+
+bool Wizardry7Console::cmdXp(int argc, const char **argv) {
+	if (argc != 3) {
+		print("Usage: xp <class> <xp>\n");
+		return true;
+	}
+	int classIndex = 0, xp = 0;
+	if (!parseInteger(argv[1], classIndex) || classIndex < 0 || classIndex >= 14 ||
+		!parseInteger(argv[2], xp) || xp < 0) {
+		print("Bad class/xp\n");
+		return true;
+	}
+	Wizardry7::ExperienceTable table;
+	if (!table.load(*_vm->getScenario())) {
+		print("Cannot load XP table\n");
+		return true;
+	}
+	const uint8 level = table.getLevel((uint8)classIndex, (uint32)xp);
+	print("class %d xp %d -> level %u rank %u; next %u\n", classIndex, xp,
+		level, Wizardry7::ExperienceTable::getRank(level),
+		table.getThreshold((uint8)classIndex, level + 1));
 	return true;
 }
 
