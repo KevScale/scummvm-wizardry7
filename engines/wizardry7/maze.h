@@ -64,7 +64,8 @@ public:
 	static uint cellFace(uint cell, uint z, uint x) {
 		return cell * 0x40 + z * 8 + x;
 	}
-	/** View kind from the hazard planes: plane C (+0x930) -> 3, plane A (+0x9B0) -> 2. */
+	/** Plane-derived kind candidate: plane C (+0x930) -> 3, plane A (+0x9B0) -> 2.
+	 *  The game only writes a non-zero kind when the depth walk succeeds. */
 	uint8 getViewKind(uint cell, uint z, uint x) const;
 	/** Step one local cell across the 16-cell graph. dz/dx follow the Gold axes. */
 	bool stepCell(uint &cell, uint &localZ, uint &localX, int dz, int dx) const;
