@@ -81,11 +81,11 @@ need the original executables to play.
 
 ```sh
 cd <re-repo>/scummvm
-./configure --disable-all-engines --enable-wizardry7
+./configure --disable-all-engines --enable-engine=wizardry7
 make -j$(nproc)
 ./scummvm --path=<gold-root> wizardry7
 ./scummvm --path=<dos-data-dir> wizardry7
 ```
 
-Open the debug console (Ctrl+Shift+D) and try `msg 100` (Gold: "HUMAN",
+Open the debug console (Ctrl+Alt+D) and try `msg 100` (Gold: "HUMAN",
 DOS: "HUMAN"), `records`, `record 1 1`, `rng 10`.
