@@ -69,6 +69,7 @@ public:
 		const Common::String &fontName = "VBFONT0.VGA");
 	bool showPlacement(const Common::Path &bundlePath, uint record, int dx = 0, int dy = 0);
 	bool showViewFixed(uint mode, bool mirror);
+	bool showViewPainter(const byte kinds[5][5], bool mirror);
 
 	/** Interactive DOS-style creation dialogs (mouse/keyboard). */
 	bool runCharacterCreationUI(const Common::String &fontName = "VBFONT0.VGA",

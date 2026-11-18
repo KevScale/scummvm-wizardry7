@@ -107,6 +107,7 @@ Wizardry7Console::Wizardry7Console(Wizardry7Engine *vm) : GUI::Debugger(), _vm(v
 	registerCmd("placement", WRAP_METHOD(Wizardry7Console, cmdPlacement));
 	registerCmd("placeview", WRAP_METHOD(Wizardry7Console, cmdPlaceView));
 	registerCmd("viewfixed", WRAP_METHOD(Wizardry7Console, cmdViewFixed));
+	registerCmd("viewpaint", WRAP_METHOD(Wizardry7Console, cmdViewPaint));
 	registerCmd("script", WRAP_METHOD(Wizardry7Console, cmdScript));
 }
 
@@ -227,6 +228,8 @@ bool Wizardry7Console::runScript(const Common::Path &path) {
 			ok &= cmdPlaceView(count, argv);
 		else if (command == "viewfixed")
 			ok &= cmdViewFixed(count, argv);
+		else if (command == "viewpaint")
+			ok &= cmdViewPaint(count, argv);
 		else if (command == "script")
 			ok &= cmdScript(count, argv);
 		else {
@@ -469,6 +472,32 @@ bool Wizardry7Console::cmdCharGen(int argc, const char **argv) {
 
 bool Wizardry7Console::cmdCharGenUI(int argc, const char **argv) {
 	_vm->runCharacterCreationUI("VBFONT0.VGA", argc >= 2 ? Common::Path(argv[1]) : Common::Path());
+	return true;
+}
+
+bool Wizardry7Console::cmdViewPaint(int argc, const char **argv) {
+	if (argc < 2 || argc > 3 || strlen(argv[1]) != 25) {
+		print("Usage: viewpaint <25 kind digits, column-major> [mirror]\n");
+		return true;
+	}
+	byte kinds[5][5];
+	for (uint i = 0; i < 25; ++i) {
+		if (argv[1][i] < '0' || argv[1][i] > '3') {
+			print("Kinds must be digits 0..3\n");
+			return true;
+		}
+		kinds[i / 5][i % 5] = argv[1][i] - '0';
+	}
+	int mirror = 0;
+	if (argc == 3 && !parseInteger(argv[2], mirror)) {
+		print("Bad mirror\n");
+		return true;
+	}
+	if (!_vm->showViewPainter(kinds, mirror != 0)) {
+		print("Cannot render painter pieces\n");
+		return true;
+	}
+	print("Rendered painter pieces (mirror %d)\n", mirror != 0);
 	return true;
 }
 

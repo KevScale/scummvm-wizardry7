@@ -64,6 +64,7 @@ private:
 	bool cmdPlacement(int argc, const char **argv);
 	bool cmdPlaceView(int argc, const char **argv);
 	bool cmdViewFixed(int argc, const char **argv);
+	bool cmdViewPaint(int argc, const char **argv);
 	bool cmdCreate(int argc, const char **argv);
 	bool cmdParty(int argc, const char **argv);
 	bool cmdScreen(int argc, const char **argv);

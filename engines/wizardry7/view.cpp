@@ -65,6 +65,83 @@ Common::Array<ViewPiece> ViewCompositor::fixedPieces(uint mode, bool mirror) {
 	return pieces;
 }
 
+// FUN_0044B3BB's 32 arguments, indexed [depth][param-1]; extracted from
+// docs/formats/maze-and-monsters.md §View assembly pipeline.
+static const uint16 kPainterArgs[5][32] = {
+	{
+		0, 0, 0, 1, 2, 4, 2, 4, 5, 6, 10, 20, 47, 57, 4, 4, 0, 0, 16, 20, 8, 12,
+		10, 20, 10, 20, 10, 20, 182, 182, 206, 211
+	},
+	{
+		0, 1, 0, 1, 2, 4, 2, 4, 5, 6, 5, 15, 42, 52, 4, 4, 0, 0, 16, 20, 8, 12,
+		5, 15, 5, 15, 5, 15, 178, 178, 196, 201
+	},
+	{
+		0, 2, 0, 1, 2, 4, 2, 4, 5, 6, 0, 0, 37, 37, 4, 4, 0, 0, 16, 20, 8, 12,
+		0, 0, 0, 0, 0, 0, 174, 174, 0xFFFF, 0xFFFF
+	},
+	{
+		0, 3, 0, 1, 2, 4, 2, 4, 5, 6, 15, 5, 52, 42, 4, 4, 0, 0, 16, 20, 8, 12,
+		15, 5, 15, 5, 15, 5, 186, 186, 201, 196
+	},
+	{
+		0, 4, 0, 1, 2, 4, 2, 4, 5, 6, 20, 10, 57, 47, 4, 4, 0, 0, 16, 20, 8, 12,
+		20, 10, 20, 10, 20, 10, 190, 190, 211, 206
+	}
+};
+
+static uint16 painterArg(uint depth, uint param) {
+	return kPainterArgs[depth][param - 1];
+}
+
+bool ViewCompositor::painterDirect(uint kind, uint depth, uint column, bool mirror,
+		ViewPiece &piece) {
+	if (depth >= 5)
+		return false;
+	if (kind == 1) {
+		if (!mirror) {
+			piece = { (uint8)painterArg(depth, 4), (uint16)(column + painterArg(depth, 13)), 0xFFFF, 2 };
+		} else {
+			piece = { (uint8)painterArg(depth, 4), (uint16)(column + painterArg(depth, 14)),
+				(uint16)(column + painterArg(depth, 13)), 2 };
+		}
+		return true;
+	}
+	if (kind == 2) {
+		if (!mirror) {
+			piece = { (uint8)painterArg(depth, 10), (uint16)(column + painterArg(depth, 23)), 0xFFFF, 2 };
+		} else {
+			piece = { (uint8)painterArg(depth, 10), (uint16)(column + painterArg(depth, 24)),
+				(uint16)(column + painterArg(depth, 23)), 2 };
+		}
+		return true;
+	}
+	if (kind == 3) {
+		if (mirror) {
+			piece = { (uint8)painterArg(depth, 9), (uint16)(column + painterArg(depth, 25)), 0xFFFF, 2 };
+		} else {
+			piece = { (uint8)painterArg(depth, 9), (uint16)(column + painterArg(depth, 26)),
+				(uint16)(column + painterArg(depth, 25)), 2 };
+		}
+		return true;
+	}
+	return false;
+}
+
+Common::Array<ViewPiece> ViewCompositor::painterPieces(const byte kinds[5][5], bool mirror) {
+	static const uint kDepthOrder[5] = { 2, 1, 0, 3, 4 };
+	Common::Array<ViewPiece> out;
+	for (uint column = 0; column < 5; ++column) {
+		for (uint i = 0; i < 5; ++i) {
+			const uint depth = kDepthOrder[i];
+			ViewPiece piece;
+			if (kinds[column][depth] && painterDirect(kinds[column][depth], depth, column, mirror, piece))
+				out.push_back(piece);
+		}
+	}
+	return out;
+}
+
 bool ViewCompositor::loadBundles() {
 	for (uint i = 0; i < 7; ++i) {
 		if (_bundles[i])

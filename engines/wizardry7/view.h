@@ -50,6 +50,13 @@ public:
 
 	static Common::Array<ViewPiece> fixedPieces(uint mode, bool mirror);
 
+	/** Painter direct draw for one (column, depth) and kind 0..3. */
+	static bool painterDirect(uint kind, uint depth, uint column, bool mirror,
+		ViewPiece &piece);
+
+	/** All painter draws: columns 0..4, depth slots in order 2,1,0,3,4. */
+	static Common::Array<ViewPiece> painterPieces(const byte kinds[5][5], bool mirror);
+
 	bool loadBundles();
 	bool drawPiece(Graphics::Screen *screen, const ViewPiece &piece) const;
 

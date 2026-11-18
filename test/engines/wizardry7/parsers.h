@@ -863,5 +863,21 @@ public:
 		TS_ASSERT_EQUALS(noMirror[0].sel, 0xFFFF);
 		TS_ASSERT_EQUALS(Wizardry7::ViewCompositor::fixedPieces(1, true).size(), 2u);
 		TS_ASSERT_EQUALS(Wizardry7::ViewCompositor::fixedPieces(5, true).size(), 1u);
+
+		Wizardry7::ViewPiece piece;
+		TS_ASSERT(Wizardry7::ViewCompositor::painterDirect(1, 2, 0, true, piece));
+		TS_ASSERT_EQUALS(piece.slot, 1);
+		TS_ASSERT_EQUALS(piece.piece, 37);
+		TS_ASSERT_EQUALS(piece.sel, 37);
+		TS_ASSERT(Wizardry7::ViewCompositor::painterDirect(2, 2, 0, true, piece));
+		TS_ASSERT_EQUALS(piece.slot, 6);
+		TS_ASSERT(Wizardry7::ViewCompositor::painterDirect(3, 2, 0, true, piece));
+		TS_ASSERT_EQUALS(piece.slot, 5);
+		TS_ASSERT_EQUALS(piece.sel, 0xFFFF);
+		byte kinds[5][5];
+		memset(kinds, 0, sizeof(kinds));
+		kinds[0][0] = 1;
+		kinds[1][1] = 2;
+		TS_ASSERT_EQUALS(Wizardry7::ViewCompositor::painterPieces(kinds, true).size(), 2u);
 	}
 };

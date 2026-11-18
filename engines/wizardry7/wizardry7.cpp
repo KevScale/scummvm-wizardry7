@@ -551,6 +551,19 @@ bool Wizardry7Engine::showViewFixed(uint mode, bool mirror) {
 	return true;
 }
 
+bool Wizardry7Engine::showViewPainter(const byte kinds[5][5], bool mirror) {
+	if (!showScreen("PCVWSCRN"))
+		return false;
+	ViewCompositor compositor;
+	compositor.loadBundles();
+	const Common::Array<ViewPiece> pieces = ViewCompositor::painterPieces(kinds, mirror);
+	for (uint i = 0; i < pieces.size(); ++i)
+		compositor.drawPiece(_screen, pieces[i]);
+	_screen->makeAllDirty();
+	_screen->update();
+	return true;
+}
+
 bool Wizardry7Engine::showCharacterReview(const Common::Path &rosterPath, uint slot,
 		const Common::String &fontName) {
 	CharacterRoster roster;
