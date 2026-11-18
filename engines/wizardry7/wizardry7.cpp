@@ -509,9 +509,10 @@ bool Wizardry7Engine::showProfessionChoices(const Common::Array<uint> &classes,
 	drawModalPanel(_screen, 51, 113, 219, height);
 	font.drawString("SELECT CHARACTER PROFESSION", _screen, 79, 121, 1);
 	static const int columns[3] = { 56, 126, 196 };
+	// The game fills the profession grid column-major, three rows per column.
 	for (int i = 0; i < count; ++i) {
-		const int row = i / 3;
-		const int col = i % 3;
+		uint row, col;
+		CharacterCreation::getProfessionGridPosition(i, count, row, col);
 		drawModalButton(_screen, font, CharacterCreation::getClassName(classes[i]),
 			columns[col], 133 + row * 12, 69, 11, 1, (int)classes[i] == selection);
 	}
@@ -650,11 +651,16 @@ bool Wizardry7Engine::runCharacterCreationUI(const Common::String &fontName,
 					const int row = (my - 133) / 12;
 					const int col = (mx >= 196) ? 2 : (mx >= 126) ? 1 : (mx >= 56) ? 0 : -1;
 					if (col >= 0 && my - 133 - row * 12 < 11) {
-						const int index = row * 3 + col;
-						if (step == CharacterCreationFlow::kStepRace && index < 11)
-							creationChooseRace(index);
-						else if (step == CharacterCreationFlow::kStepProfession) {
+						if (step == CharacterCreationFlow::kStepRace) {
+							const int index = row * 3 + col;
+							if (index < 11)
+								creationChooseRace(index);
+						} else {
 							Common::Array<uint> classes = _creation.getCharacter().getEligibleClasses();
+							uint profRow, profCol;
+							CharacterCreation::getProfessionGridPosition(0, classes.size(), profRow, profCol);
+							const int profRows = (classes.size() + 2) / 3;
+							const int index = col * profRows + row;
 							if (index < (int)classes.size())
 								creationChooseProfession(classes[index]);
 						}

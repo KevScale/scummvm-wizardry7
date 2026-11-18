@@ -102,7 +102,8 @@ void CharacterCreation::applySexModifiers(byte sex) {
 	else
 		_stats[0] = 0;
 	++_stats[6];
-	++_stats[7];
+	// +1 to the byte at 0x697EC7 is the portrait slot, not an attribute.
+	// The portrait roll is not implemented yet, so leave it zero.
 }
 
 int CharacterCreation::getClassCost(uint classIndex) const {
@@ -195,6 +196,12 @@ CreationRolls CharacterCreation::rollDerived(uint8 raceIndex, WizardryRNG &rng) 
 	return rolls;
 }
 
+void CharacterCreation::getProfessionGridPosition(uint index, uint count, uint &row, uint &col) {
+	const uint rows = (count + 2) / 3;
+	col = rows ? index / rows : 0;
+	row = rows ? index % rows : 0;
+}
+
 Common::Array<uint> CharacterCreation::getEligibleClasses() const {
 	Common::Array<uint> classes;
 	for (uint i = 0; i < kClassCount; ++i) {
@@ -257,6 +264,9 @@ bool writeCharacterRecord(const CreatedCharacter &character, byte *record, uint 
 	WRITE_LE_UINT16(record + 0x1B6, character.rolls.ac);
 	for (uint i = 0x1B9; i <= 0x1BD; ++i)
 		record[i] = character.rolls.ac;
+	for (uint i = 0; i < 7; ++i)
+		record[0x170 + i] = character.stats[i];
+	record[0x177] = 0; // portrait index; rolled later
 	record[0x240] = 1;
 	record[0x241] = 10;
 	record[0x243] = 1;

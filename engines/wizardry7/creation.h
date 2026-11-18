@@ -71,7 +71,7 @@ public:
 
 	/** Raise the stats to the race's minimums (race 0..10). */
 	void applyRaceMinimums(uint8 race);
-	/** Female adjustment: STR -2, PER +1, KAR +1. */
+	/** Female adjustment: STR -2, PER +1 (portrait byte handled separately). */
 	void applySexModifiers(byte sex);
 	int getClass() const { return _classIndex; }
 
@@ -89,6 +89,9 @@ public:
 	Common::Array<uint> getEligibleClasses() const;
 
 	static const char *getClassName(uint classIndex);
+
+	/** Column-major profession-grid cell (3 columns; rows=(count+2)/3). */
+	static void getProfessionGridPosition(uint index, uint count, uint &row, uint &col);
 
 private:
 	byte _stats[kStatCount];
