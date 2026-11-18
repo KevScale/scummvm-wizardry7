@@ -214,6 +214,11 @@ bool writeCharacterRecord(const CreatedCharacter &character, byte *record, uint 
 	WRITE_LE_UINT16(record + 0x1C, character.rolls.staminaMax);
 	WRITE_LE_UINT16(record + 0x1E, character.rolls.staminaMax);
 	WRITE_LE_UINT16(record + 0x1B6, character.rolls.ac);
+	for (uint i = 0; i < character.itemCount && i < 5; ++i) {
+		const uint32 slot = 0x40 + i * 12;
+		WRITE_LE_UINT16(record + slot, character.items[i].itemId);
+		record[slot + 7] = 0x80; // known/identified starting item
+	}
 	record[0x237] = character.race;
 	record[0x238] = character.sex;
 	record[0x239] = character.classIndex;

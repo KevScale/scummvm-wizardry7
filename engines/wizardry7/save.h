@@ -53,6 +53,7 @@ struct SaveCharacter {
 	uint8 alignment;
 	uint8 klass;
 	uint8 knack;
+	uint16 inventory[5]; // starting-kit slots at record +0x40, 12-byte stride
 };
 
 /**

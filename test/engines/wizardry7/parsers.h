@@ -448,6 +448,9 @@ public:
 		TS_ASSERT_EQUALS(c.hp, created.rolls.hpMax);
 		TS_ASSERT_EQUALS(c.stamina, created.rolls.staminaMax);
 		TS_ASSERT_EQUALS(c.ac, created.rolls.ac);
+		TS_ASSERT_EQUALS(c.inventory[0], 8);
+		TS_ASSERT_EQUALS(c.inventory[1], 135);
+		TS_ASSERT_EQUALS(c.inventory[4], 141);
 	}
 
 	void testCreationValidationCases() {
