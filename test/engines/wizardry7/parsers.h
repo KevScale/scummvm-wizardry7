@@ -8,6 +8,7 @@
 #include "wizardry7/font.h"
 #include "wizardry7/gfx.h"
 #include "wizardry7/items.h"
+#include "wizardry7/maze.h"
 #include "wizardry7/party.h"
 #include "wizardry7/xp.h"
 #include "wizardry7/save.h"
@@ -684,5 +685,33 @@ public:
 		TS_ASSERT_EQUALS(Wizardry7::ExperienceTable::getRank(1), 0);
 		TS_ASSERT_EQUALS(Wizardry7::ExperienceTable::getRank(2), 1);
 		TS_ASSERT_EQUALS(Wizardry7::ExperienceTable::getRank(24), 7);
+	}
+
+	void testMazeRecord() {
+		Common::Array<byte> data;
+		data.resize(Wizardry7::MazeRecord::kRecordSize);
+		memset(data.data(), 0, data.size());
+		data[0] = 0x12; // header row0/group0/band0
+		data[0x090] = 0x53; // tile A face0=3, face1=5
+		data[0x291] = 0x06; // tile B face2=6
+		data[0x4B0] = (0x2A & 3) << 6; // special face1=0x2A, bits 6..11
+		data[0x4B1] = 0x2A >> 2;
+		data[0x7B0] = 2 << 6; // flags face3=2
+		data[0x8B0 + 1] = 2; // hazard layer0 face9
+		data[0xAB0] = 0x43; // encounter slot0 common=3, uncommon=4
+		data[0xAC0] = 65;
+		Wizardry7::MazeRecord maze;
+		TS_ASSERT(maze.loadFromData(data.data(), data.size()));
+		TS_ASSERT_EQUALS(maze.getMonster(0, 0, 0), 0x12);
+		TS_ASSERT_EQUALS(maze.getTileA(0), 3);
+		TS_ASSERT_EQUALS(maze.getTileA(1), 5);
+		TS_ASSERT_EQUALS(maze.getTileB(2), 6);
+		TS_ASSERT_EQUALS(maze.getSpecial(1), 0x2A);
+		TS_ASSERT_EQUALS(maze.getFlags(3), 2);
+		TS_ASSERT(maze.getHazard(0, 9));
+		TS_ASSERT(!maze.getHazard(1, 9));
+		TS_ASSERT_EQUALS(maze.getEncounterGroup(0, false), 3);
+		TS_ASSERT_EQUALS(maze.getEncounterGroup(0, true), 4);
+		TS_ASSERT_EQUALS(maze.getEncounterChance(0), 65);
 	}
 };

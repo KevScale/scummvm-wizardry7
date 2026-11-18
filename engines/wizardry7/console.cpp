@@ -30,6 +30,7 @@
 
 #include "wizardry7/console.h"
 #include "wizardry7/items.h"
+#include "wizardry7/maze.h"
 #include "wizardry7/xp.h"
 #include "graphics/screen.h"
 
@@ -97,6 +98,7 @@ Wizardry7Console::Wizardry7Console(Wizardry7Engine *vm) : GUI::Debugger(), _vm(v
 	registerCmd("review", WRAP_METHOD(Wizardry7Console, cmdReview));
 	registerCmd("saveparty", WRAP_METHOD(Wizardry7Console, cmdSaveParty));
 	registerCmd("xp", WRAP_METHOD(Wizardry7Console, cmdXp));
+	registerCmd("maze", WRAP_METHOD(Wizardry7Console, cmdMaze));
 	registerCmd("script", WRAP_METHOD(Wizardry7Console, cmdScript));
 }
 
@@ -203,6 +205,8 @@ bool Wizardry7Console::runScript(const Common::Path &path) {
 			ok &= cmdSaveParty(count, argv);
 		else if (command == "xp")
 			ok &= cmdXp(count, argv);
+		else if (command == "maze")
+			ok &= cmdMaze(count, argv);
 		else if (command == "script")
 			ok &= cmdScript(count, argv);
 		else {
@@ -445,6 +449,44 @@ bool Wizardry7Console::cmdCharGen(int argc, const char **argv) {
 
 bool Wizardry7Console::cmdCharGenUI(int argc, const char **argv) {
 	_vm->runCharacterCreationUI("VBFONT0.VGA", argc >= 2 ? Common::Path(argv[1]) : Common::Path());
+	return true;
+}
+
+bool Wizardry7Console::cmdMaze(int argc, const char **argv) {
+	if (argc != 2 && argc != 5) {
+		print("Usage: maze <id> [x y facing]\n");
+		return true;
+	}
+	int mazeId = 0;
+	if (!parseInteger(argv[1], mazeId) || mazeId < 0 || mazeId >= 32) {
+		print("Bad maze id '%s'\n", argv[1]);
+		return true;
+	}
+	Wizardry7::MazeRecord maze;
+	if (!maze.load(*_vm->getScenario(), (uint)mazeId)) {
+		print("Cannot load maze %d\n", mazeId);
+		return true;
+	}
+	if (argc == 2) {
+		print("maze %d loaded; encounter slots:\n", mazeId);
+		for (int i = 0; i < Wizardry7::MazeRecord::kEncounterSlots; ++i)
+			print("  %2d chance %3u common %2u uncommon %2u\n", i,
+				maze.getEncounterChance(i), maze.getEncounterGroup(i, false),
+				maze.getEncounterGroup(i, true));
+		return true;
+	}
+	int x = 0, y = 0, facing = 0;
+	if (!parseInteger(argv[2], x) || !parseInteger(argv[3], y) ||
+		!parseInteger(argv[4], facing) || x < 0 || y < 0 || facing < 0 ||
+		x > 7 || y > 7 || facing > 7) {
+		print("Bad face coordinates\n");
+		return true;
+	}
+	const uint face = Wizardry7::MazeRecord::faceIndex(x, y, facing);
+	print("maze %d face %u (x%d y%d f%d): tileA %u tileB %u special %u flags %u hazards %u%u%u\n",
+		mazeId, face, x, y, facing, maze.getTileA(face), maze.getTileB(face),
+		maze.getSpecial(face), maze.getFlags(face), maze.getHazard(0, face),
+		maze.getHazard(1, face), maze.getHazard(2, face));
 	return true;
 }
 

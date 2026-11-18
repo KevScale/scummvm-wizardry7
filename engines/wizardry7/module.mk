@@ -7,6 +7,7 @@ MODULE_OBJS := \
 	font.o \
 	gfx.o \
 	items.o \
+	maze.o \
 	metaengine.o \
 	msg.o \
 	party.o \
