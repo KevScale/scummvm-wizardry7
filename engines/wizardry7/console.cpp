@@ -489,7 +489,7 @@ bool Wizardry7Console::cmdCharGenUI(int argc, const char **argv) {
 
 bool Wizardry7Console::cmdCellRay(int argc, const char **argv) {
 	if (argc != 7) {
-		print("Usage: cellray <maze> <cell> <lx> <ly> <dx> <dy>\n");
+		print("Usage: cellray <maze> <cell> <z> <x> <dz> <dx>\n");
 		return true;
 	}
 	int mazeId = 0, cell = 0, lx = 0, ly = 0, dx = 0, dy = 0;
@@ -573,7 +573,7 @@ bool Wizardry7Console::cmdViewKind(int argc, const char **argv) {
 		return true;
 	}
 	const uint face = Wizardry7::MazeRecord::cellFace((uint)cell, (uint)column, (uint)row);
-	print("maze %d cell %d col %d row %d: face %u A %u C %u B %u -> kind %u\n",
+	print("maze %d cell %d z %d x %d: face %u A %u C %u B %u -> kind %u\n",
 		mazeId, cell, column, row, face, maze.getHazard(2, face), maze.getHazard(1, face),
 		maze.getHazard(0, face), maze.getViewKind((uint)cell, (uint)column, (uint)row));
 	return true;

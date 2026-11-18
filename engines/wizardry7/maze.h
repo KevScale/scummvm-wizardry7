@@ -60,24 +60,25 @@ public:
 	byte getSpecial(uint face) const;
 	byte getFlags(uint face) const;
 	bool getHazard(uint layer, uint face) const; // 0..2 => +0x8B0/+0x930/+0x9B0
-	/** Packed face key used by the view assembly: cell*64 + column*8 + row. */
-	static uint cellFace(uint cell, uint column, uint row) {
-		return cell * 0x40 + column * 8 + row;
+	/** Packed face key: cell*64 + z*8 + x (Gold axis mapping). */
+	static uint cellFace(uint cell, uint z, uint x) {
+		return cell * 0x40 + z * 8 + x;
 	}
-	/** View kind from the three hazard planes: C -> 3, A -> 2, else 0. */
-	uint8 getViewKind(uint cell, uint column, uint row) const;
-	/** Step one local cell (wrapping across the 16-cell graph). */
-	bool stepCell(uint &cell, uint &localX, uint &localY, int dx, int dy) const;
-	/** Five depth kinds along a ray; false if the ray leaves the cell graph. */
-	bool getKindRay(uint cell, uint localX, uint localY, int dx, int dy, uint8 kinds[5]) const;
+	/** View kind from the hazard planes: plane C (+0x930) -> 3, plane A (+0x9B0) -> 2. */
+	uint8 getViewKind(uint cell, uint z, uint x) const;
+	/** Step one local cell across the 16-cell graph. dz/dx follow the Gold axes. */
+	bool stepCell(uint &cell, uint &localZ, uint &localX, int dz, int dx) const;
+	/** Five depth kinds along a ray; false if the ray leaves the cell graph.
+	 *  This is a diagnostic: the final per-column start/step is still open. */
+	bool getKindRay(uint cell, uint localZ, uint localX, int dz, int dx, uint8 kinds[5]) const;
 	byte getEncounterGroup(uint slot, bool uncommon) const;
 	byte getEncounterChance(uint slot) const;
 	byte getMonster(uint row, uint columnGroup, uint band) const;
 
-	/** Cell origin tables at +0x490/+0x4A0 (16 cells, 8x8 each). */
-	void getCellOrigin(uint cell, uint &originX, uint &originY) const;
-	/** Resolve absolute x/y to a cell and local (0..7) coordinates. */
-	bool findCell(int x, int y, uint &cell, uint &localX, uint &localY) const;
+	/** Cell origin tables at +0x490 (z) / +0x4A0 (x), 16 cells of 8x8. */
+	void getCellOrigin(uint cell, uint &originZ, uint &originX) const;
+	/** Resolve absolute (z,x) to a cell and local z/x coordinates. */
+	bool findCell(int z, int x, uint &cell, uint &localZ, uint &localX) const;
 
 	/**
 	 * Encounter roll for one of the 16 slots. Returns -1 when the chance check
