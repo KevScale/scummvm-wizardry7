@@ -3,6 +3,7 @@
 #include "graphics/screen.h"
 
 #include "wizardry7/creation.h"
+#include "wizardry7/rng.h"
 #include "wizardry7/font.h"
 #include "wizardry7/gfx.h"
 #include "wizardry7/save.h"
@@ -210,5 +211,38 @@ public:
 			TS_ASSERT(flow.addBonusPoint(0));
 		TS_ASSERT(flow.finish());
 		TS_ASSERT_EQUALS(flow.getStep(), Wizardry7::CharacterCreationFlow::kStepDone);
+	}
+
+	void testCreationRolls() {
+		Wizardry7::CharacterCreation creation;
+		const byte stats[8] = { 12, 10, 10, 15, 10, 10, 10, 0 };
+		creation.setStats(stats);
+		creation.setBonusPoints(0);
+		creation.setSex(0);
+		TS_ASSERT(creation.selectClass(0)); // Fighter
+
+		Wizardry7::WizardryRNG rng;
+		rng.reset();
+		const Wizardry7::CreationRolls rolls = creation.rollDerived(0, rng);
+		TS_ASSERT(rolls.ageDays >= 6570 && rolls.ageDays < 7570);
+		TS_ASSERT(rolls.hpMax >= 10 && rolls.hpMax <= 14);
+		TS_ASSERT_EQUALS(rolls.staminaMax, 126); // (STR + VIT*2) * 3
+		TS_ASSERT_EQUALS(rolls.carryingCapacity, 1755); // (VIT + STR*2) * 3 * 15
+
+		// Faerie starting gold is reduced to two-thirds.
+		rng.reset();
+		const Wizardry7::CreationRolls faerie = creation.rollDerived(5, rng);
+		TS_ASSERT_EQUALS(faerie.carryingCapacity, 1170);
+
+		// VIT above 15/17 adds VIT to ST and HP, STR above 15/17 adds STR to gold.
+		const byte strongStats[8] = { 18, 10, 10, 18, 10, 10, 10, 0 };
+		creation.setStats(strongStats);
+		creation.setBonusPoints(0);
+		TS_ASSERT(creation.selectClass(0));
+		rng.reset();
+		const Wizardry7::CreationRolls strong = creation.rollDerived(0, rng);
+		TS_ASSERT(strong.hpMax >= 12 && strong.hpMax <= 16);
+		TS_ASSERT_EQUALS(strong.staminaMax, 198);
+		TS_ASSERT_EQUALS(strong.carryingCapacity, 2970);
 	}
 };

@@ -27,6 +27,16 @@
 
 namespace Wizardry7 {
 
+class WizardryRNG;
+
+/** Fields rolled when a class is finalized (before starting equipment). */
+struct CreationRolls {
+	uint32 ageDays;
+	uint16 hpMax;
+	uint16 staminaMax;
+	uint16 carryingCapacity; // stored value for 0x697D72 (display divides by 10)
+};
+
 /**
  * Character-creation class eligibility.
  *
@@ -51,6 +61,7 @@ public:
 	int getBonusPoints() const { return _bonusPoints; }
 	void setSex(byte sex) { _sex = sex; }
 	byte getSex() const { return _sex; }
+	int getClass() const { return _classIndex; }
 
 	/** Bonus-point cost of raising the stats to this class's minimums, or -1. */
 	int getClassCost(uint classIndex) const;
@@ -58,6 +69,9 @@ public:
 
 	/** Spend bonus points and raise the stats to the class minimums. */
 	bool selectClass(uint classIndex);
+
+	/** Roll age, HP, ST and starting gold for the selected class. */
+	CreationRolls rollDerived(uint8 raceIndex, WizardryRNG &rng) const;
 
 	/** Eligible classes in original class-id order. */
 	Common::Array<uint> getEligibleClasses() const;
@@ -68,6 +82,7 @@ private:
 	byte _stats[kStatCount];
 	int _bonusPoints;
 	byte _sex;
+	int _classIndex;
 };
 
 /** Step/selection state for the DOS character-creation dialogs. */

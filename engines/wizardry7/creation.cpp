@@ -20,6 +20,8 @@
 
 #include "wizardry7/creation.h"
 
+#include "wizardry7/rng.h"
+
 #include "common/util.h"
 
 namespace Wizardry7 {
@@ -42,7 +44,7 @@ static const byte kClassMinimums[CharacterCreation::kClassCount][CharacterCreati
 	{ 12, 10, 10, 12, 12, 12, 0, 0 } // Ninja
 };
 
-CharacterCreation::CharacterCreation() : _bonusPoints(0), _sex(0) {
+CharacterCreation::CharacterCreation() : _bonusPoints(0), _sex(0), _classIndex(-1) {
 	memset(_stats, 0, sizeof(_stats));
 }
 
@@ -84,7 +86,57 @@ bool CharacterCreation::selectClass(uint classIndex) {
 			_stats[i] = kClassMinimums[classIndex][i];
 	}
 	_bonusPoints -= cost;
+	_classIndex = classIndex;
 	return true;
+}
+
+CreationRolls CharacterCreation::rollDerived(uint8 raceIndex, WizardryRNG &rng) const {
+	CreationRolls rolls;
+	rolls.ageDays = rng.getRandom(1000) + 6570;
+
+	int classRoll = 0;
+	switch (_classIndex) {
+	case 0:  classRoll = rng.getRandom(5) + 6; break; // Fighter
+	case 1:  classRoll = rng.getRandom(3) + 2; break; // Mage
+	case 2:  classRoll = rng.getRandom(4) + 4; break; // Priest
+	case 3:  classRoll = rng.getRandom(4) + 3; break; // Thief
+	case 4:  classRoll = rng.getRandom(4) + rng.getRandom(4) + 6; break; // Ranger
+	case 5:  classRoll = rng.getRandom(4) + 3; break; // Alchemist
+	case 6:  classRoll = rng.getRandom(4) + 2; break; // Bard
+	case 7:  classRoll = rng.getRandom(3) + 3; break; // Psionic
+	case 8:  classRoll = rng.getRandom(5) + 5; break; // Valkyrie
+	case 9:  classRoll = rng.getRandom(4) + 3; break; // Bishop
+	case 10: classRoll = rng.getRandom(7) + 8; break; // Lord
+	case 11: classRoll = rng.getRandom(4) + rng.getRandom(4) + 6; break; // Samurai
+	case 12: classRoll = rng.getRandom(4) + 4; break; // Monk
+	case 13: classRoll = rng.getRandom(5) + 4; break; // Ninja
+	default: break;
+	}
+
+	const byte str = _stats[0];
+	const byte vit = _stats[3];
+	rolls.hpMax = classRoll + (vit < 8 ? 3 : 4);
+	if (vit > 15)
+		++rolls.hpMax;
+	if (vit > 17)
+		++rolls.hpMax;
+
+	rolls.staminaMax = (str + vit * 2) * 3;
+	if (vit > 15)
+		rolls.staminaMax += vit;
+	if (vit > 17)
+		rolls.staminaMax += vit;
+
+	int goldBase = (vit + str * 2) * 3;
+	if (str > 15)
+		goldBase += str;
+	if (str > 17)
+		goldBase += str;
+	rolls.carryingCapacity = goldBase * 15;
+	if (raceIndex == 5) // FAERIE
+		rolls.carryingCapacity = rolls.carryingCapacity * 2 / 3;
+
+	return rolls;
 }
 
 Common::Array<uint> CharacterCreation::getEligibleClasses() const {
