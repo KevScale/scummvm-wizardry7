@@ -46,7 +46,7 @@ static void parseCharacter(const byte *record, SaveCharacter &character) {
 	character.staminaMax = READ_LE_UINT16(record + 0x1E);
 	character.weight = READ_LE_UINT16(record + 0x20);
 	character.gold = READ_LE_UINT16(record + 0x22);
-	character.ac = READ_LE_UINT16(record + 0x40);
+	character.ac = READ_LE_UINT16(record + 0x1B6);
 	character.knack = record[0x236];
 	character.race = record[0x237];
 	character.gender = record[0x238]; // 0 = male, 1 = female

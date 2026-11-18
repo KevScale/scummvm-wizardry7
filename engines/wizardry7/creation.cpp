@@ -213,7 +213,7 @@ bool writeCharacterRecord(const CreatedCharacter &character, byte *record, uint 
 	WRITE_LE_UINT16(record + 0x1A, character.rolls.hpMax);
 	WRITE_LE_UINT16(record + 0x1C, character.rolls.staminaMax);
 	WRITE_LE_UINT16(record + 0x1E, character.rolls.staminaMax);
-	WRITE_LE_UINT16(record + 0x40, character.rolls.ac);
+	WRITE_LE_UINT16(record + 0x1B6, character.rolls.ac);
 	record[0x237] = character.race;
 	record[0x238] = character.sex;
 	record[0x239] = character.classIndex;

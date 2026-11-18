@@ -99,7 +99,7 @@ public:
 		record[0x1E] = 40;  // stamina max
 		record[0x20] = 100; // weight
 		record[0x22] = 50;  // gold
-		record[0x40] = 7;   // ac
+		record[0x1B6] = 7;  // ac
 		record[0x236] = 4;
 		record[0x237] = 3;
 		record[0x238] = 1; // female
