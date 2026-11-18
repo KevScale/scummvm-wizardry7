@@ -32,16 +32,16 @@ ItemInfo::ItemInfo() : price(0), weight(0), specialMsg(0), classMask(0),
 	subtype(0), rank(0), acBonus(0) {
 }
 
-Common::String decodeItemName(const byte *field, uint maxLen) {
+static Common::String decodeItemLine(const byte *field, uint len) {
 	Common::String out;
-	for (uint i = 0; i < maxLen; ++i) {
+	for (uint i = 0; i < len; ++i) {
 		const byte c = field[i];
 		if (c == 0)
 			break;
 		if (c == '=') {
 			out += "OF ";
-		} else if (c == '/') {
-			// two-line name separator; the display text drops it
+			if (i + 1 < len && field[i + 1] == '/')
+				++i;
 		} else if (c == '_') {
 			out += ' ';
 		} else {
@@ -51,6 +51,28 @@ Common::String decodeItemName(const byte *field, uint maxLen) {
 	while (!out.empty() && out.lastChar() == ' ')
 		out.deleteLastChar();
 	return out;
+}
+
+void decodeItemNameLines(const byte *field, uint maxLen, Common::String &line1,
+		Common::String &line2) {
+	uint split = maxLen;
+	for (uint i = 0; i < maxLen; ++i) {
+		if (field[i] == 0 || field[i] == '/') {
+			split = i;
+			break;
+		}
+	}
+	line1 = decodeItemLine(field, split);
+	if (split < maxLen && field[split] == '/')
+		line2 = decodeItemLine(field + split + 1, maxLen - split - 1);
+	else
+		line2.clear();
+}
+
+Common::String decodeItemName(const byte *field, uint maxLen) {
+	Common::String line1, line2;
+	decodeItemNameLines(field, maxLen, line1, line2);
+	return line2.empty() ? line1 : line1 + " " + line2;
 }
 
 bool parseItemRecord(const byte *record, uint32 size, ItemInfo &info) {

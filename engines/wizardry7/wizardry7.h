@@ -65,6 +65,8 @@ public:
 		int selection = 0, const Common::String &name = Common::String());
 	bool showProfessionChoices(const Common::Array<uint> &classes,
 		const Common::String &fontName = "VBFONT0.VGA", int selection = 0);
+	bool showCharacterReview(const Common::Path &rosterPath, uint slot,
+		const Common::String &fontName = "VBFONT0.VGA");
 
 	/** Interactive DOS-style creation dialogs (mouse/keyboard). */
 	bool runCharacterCreationUI(const Common::String &fontName = "VBFONT0.VGA",

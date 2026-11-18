@@ -21,8 +21,6 @@
 
 #include "common/config-manager.h"
 #include "common/events.h"
-#include "common/events.h"
-#include "common/file.h"
 #include "common/file.h"
 #include "common/system.h"
 #include "common/textconsole.h"
@@ -35,6 +33,7 @@
 
 #include "wizardry7/console.h"
 #include "wizardry7/font.h"
+#include "wizardry7/items.h"
 #include "wizardry7/save.h"
 #include "wizardry7/wizardry7.h"
 
@@ -515,6 +514,56 @@ bool Wizardry7Engine::showProfessionChoices(const Common::Array<uint> &classes,
 		CharacterCreation::getProfessionGridPosition(i, count, row, col);
 		drawModalButton(_screen, font, CharacterCreation::getClassName(classes[i]),
 			columns[col], 133 + row * 12, 69, 11, 1, (int)classes[i] == selection);
+	}
+	_screen->makeAllDirty();
+	_screen->update();
+	return true;
+}
+
+bool Wizardry7Engine::showCharacterReview(const Common::Path &rosterPath, uint slot,
+		const Common::String &fontName) {
+	CharacterRoster roster;
+	if (!roster.load(rosterPath) || slot >= roster.getSlotCount() || !roster.isSlotUsed(slot))
+		return false;
+	const SaveCharacter &c = roster.getCharacter(slot);
+	if (!showScreen("PCVWSCRN"))
+		return false;
+	GameFont font;
+	if (!font.load(Common::Path(fontName)))
+		return false;
+
+	static const char *const races[] = {
+		"HUMAN", "HOBBIT", "FELPURR", "ELF", "FAERIE", "RAWULF",
+		"DWARF", "LIZARDMAN", "MOOK", "GNOME", "DRACON"
+	};
+	static const char *const statNames[7] = { "STR", "INT", "PIE", "VIT", "DEX", "SPD", "PER" };
+	font.drawString(Common::String::format("%c-%s", c.gender ? 'F' : 'M',
+		c.race < 11 ? races[c.race] : "?").c_str(), _screen, 105, 16, 1);
+	font.drawString(CharacterCreation::getClassName(c.klass), _screen, 105, 24, 1);
+	for (uint i = 0; i < 7; ++i) {
+		const int y = 40 + i * 6;
+		font.drawString(statNames[i], _screen, 118, y, 1);
+		font.drawString(Common::String::format("%u", c.stats[i]).c_str(), _screen, 146, y, 1);
+	}
+	// DOS review labels the trailing byte KAR; Gold treats it as the portrait index.
+	font.drawString("KAR", _screen, 118, 82, 1);
+	font.drawString(Common::String::format("%u", c.portrait).c_str(), _screen, 146, 82, 1);
+	font.drawString(Common::String::format("HP %u/%u", c.hp, c.hpMax).c_str(), _screen, 8, 96, 1);
+	font.drawString(Common::String::format("ST %u/%u", c.stamina, c.staminaMax).c_str(), _screen, 8, 104, 1);
+	font.drawString(Common::String::format("GP %u", c.gold).c_str(), _screen, 104, 96, 1);
+	font.drawString(Common::String::format("AC %u", c.ac).c_str(), _screen, 228, 40, 1);
+	font.drawString(c.name.c_str(), _screen, 20, 112, 1);
+	for (uint i = 0; i < 5; ++i) {
+		if (!c.inventory[i])
+			continue;
+		ItemInfo info;
+		if (!loadItem(_scenario, c.inventory[i], info))
+			continue;
+		Common::String line1, line2;
+		decodeItemNameLines((const byte *)info.name.c_str(), 22, line1, line2);
+		font.drawString(line1.c_str(), _screen, 16, 128 + i * 12, 1);
+		if (!line2.empty())
+			font.drawString(line2.c_str(), _screen, 16, 134 + i * 12, 1);
 	}
 	_screen->makeAllDirty();
 	_screen->update();

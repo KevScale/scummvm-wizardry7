@@ -93,6 +93,7 @@ Wizardry7Console::Wizardry7Console(Wizardry7Engine *vm) : GUI::Debugger(), _vm(v
 	registerCmd("roster", WRAP_METHOD(Wizardry7Console, cmdRoster));
 	registerCmd("item", WRAP_METHOD(Wizardry7Console, cmdItem));
 	registerCmd("sheet", WRAP_METHOD(Wizardry7Console, cmdSheet));
+	registerCmd("review", WRAP_METHOD(Wizardry7Console, cmdReview));
 	registerCmd("script", WRAP_METHOD(Wizardry7Console, cmdScript));
 }
 
@@ -193,6 +194,8 @@ bool Wizardry7Console::runScript(const Common::Path &path) {
 			ok &= cmdItem(count, argv);
 		else if (command == "sheet")
 			ok &= cmdSheet(count, argv);
+		else if (command == "review")
+			ok &= cmdReview(count, argv);
 		else if (command == "script")
 			ok &= cmdScript(count, argv);
 		else {
@@ -435,6 +438,24 @@ bool Wizardry7Console::cmdCharGen(int argc, const char **argv) {
 
 bool Wizardry7Console::cmdCharGenUI(int argc, const char **argv) {
 	_vm->runCharacterCreationUI("VBFONT0.VGA", argc >= 2 ? Common::Path(argv[1]) : Common::Path());
+	return true;
+}
+
+bool Wizardry7Console::cmdReview(int argc, const char **argv) {
+	if (argc != 3) {
+		print("Usage: review <PCFILE> <slot>\n");
+		return true;
+	}
+	int slot = 0;
+	if (!parseInteger(argv[2], slot) || slot < 0) {
+		print("Bad slot '%s'\n", argv[2]);
+		return true;
+	}
+	if (!_vm->showCharacterReview(Common::Path(argv[1]), (uint)slot)) {
+		print("Cannot review roster slot %d\n", slot);
+		return true;
+	}
+	print("Showing character review for slot %d\n", slot);
 	return true;
 }
 

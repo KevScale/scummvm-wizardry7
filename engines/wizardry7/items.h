@@ -62,6 +62,10 @@ struct ItemInfo {
 /** Decode the raw 22-byte name field into the display string. */
 Common::String decodeItemName(const byte *field, uint maxLen);
 
+/** Split the raw name at the UI's two-line '/' separator, then decode each. */
+void decodeItemNameLines(const byte *field, uint maxLen,
+	Common::String &line1, Common::String &line2);
+
 /** Parse one 72-byte SCENARIO type-1 record. */
 bool parseItemRecord(const byte *record, uint32 size, ItemInfo &info);
 

@@ -601,6 +601,10 @@ public:
 		Wizardry7::ItemInfo info;
 		TS_ASSERT(Wizardry7::parseItemRecord(record, sizeof(record), info));
 		TS_ASSERT_EQUALS(info.displayName, Common::String("SWORD OF FIRE"));
+		Common::String line1, line2;
+		Wizardry7::decodeItemNameLines(record, 22, line1, line2);
+		TS_ASSERT_EQUALS(line1, Common::String("SWORD OF"));
+		TS_ASSERT_EQUALS(line2, Common::String("FIRE"));
 		TS_ASSERT_EQUALS(info.price, 0x1234);
 		TS_ASSERT_EQUALS(info.weight, 0x012C);
 		TS_ASSERT_EQUALS(info.getDefaultCharges(), 14);
