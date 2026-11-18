@@ -39,10 +39,11 @@ into this tree.
    branch, following ScummVM commit conventions (`wizardry7: summary`, imperative
    mood, one logical change). Build (or at least compile the engine) before
    committing. No drive-by edits to unrelated engines.
-8. **Visual fidelity.** The RE repo has DOS reference screenshots under
-   `data/ui-shots/` (menus, character generation, in-game, combat). Use them as
-   the target for layout/colour work and cite the screenshot index when matching
-   a screen; do not ship the screenshots here.
+8. **Visual fidelity.** The RE repo's central capture structure is `screens/`
+   (`screens/README.md`; canonical names `01_char_menu` … `12_town_shop`, Gold in
+   `screens/gold/`); the older granular DOS set is `data/ui-shots/`. Use them as
+   the target for layout/colour work and cite the screen name when matching a
+   frame; do not ship screenshots here.
 9. **ScummVM rules apply.** Read `../../AI-GUIDELINES.md`. The human submitter is
    the author; do not add AI co-author trailers. This branch is experimental and
    must not be proposed upstream without a human maintainer taking ownership,
@@ -52,7 +53,8 @@ into this tree.
 
 - Both builds are first-class (Gold + DOS); PSX later.
 - Gold reference screenshots are captured by a parallel effort into the RE
-  repo's central `data/ui-shots/` structure (`gold_*.png`), never here.
+  repo's central `screens/` structure (`screens/README.md`, `screens/gold/`),
+  never here. The older DOS set lives in `data/ui-shots/`.
 - Copy protection is skipped entirely (matches the currently sold GOG
   distribution; not reverse-engineered).
 - Audio: both digital and MIDI, but a secondary priority after gameplay.
