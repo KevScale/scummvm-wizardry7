@@ -32,6 +32,7 @@
 #include "wizardry7/items.h"
 #include "wizardry7/maze.h"
 #include "wizardry7/monster.h"
+#include "wizardry7/attack.h"
 #include "wizardry7/xp.h"
 #include "graphics/screen.h"
 
@@ -101,6 +102,7 @@ Wizardry7Console::Wizardry7Console(Wizardry7Engine *vm) : GUI::Debugger(), _vm(v
 	registerCmd("xp", WRAP_METHOD(Wizardry7Console, cmdXp));
 	registerCmd("maze", WRAP_METHOD(Wizardry7Console, cmdMaze));
 	registerCmd("monster", WRAP_METHOD(Wizardry7Console, cmdMonster));
+	registerCmd("anim", WRAP_METHOD(Wizardry7Console, cmdAnim));
 	registerCmd("script", WRAP_METHOD(Wizardry7Console, cmdScript));
 }
 
@@ -211,6 +213,8 @@ bool Wizardry7Console::runScript(const Common::Path &path) {
 			ok &= cmdMaze(count, argv);
 		else if (command == "monster")
 			ok &= cmdMonster(count, argv);
+		else if (command == "anim")
+			ok &= cmdAnim(count, argv);
 		else if (command == "script")
 			ok &= cmdScript(count, argv);
 		else {
@@ -453,6 +457,30 @@ bool Wizardry7Console::cmdCharGen(int argc, const char **argv) {
 
 bool Wizardry7Console::cmdCharGenUI(int argc, const char **argv) {
 	_vm->runCharacterCreationUI("VBFONT0.VGA", argc >= 2 ? Common::Path(argv[1]) : Common::Path());
+	return true;
+}
+
+bool Wizardry7Console::cmdAnim(int argc, const char **argv) {
+	if (argc != 2) {
+		print("Usage: anim <picture-id>\n");
+		return true;
+	}
+	int id = 0;
+	if (!parseInteger(argv[1], id) || id < 0 || id >= 96) {
+		print("Bad picture id '%s'\n", argv[1]);
+		return true;
+	}
+	Wizardry7::AttackAnimation anim;
+	if (!anim.load(*_vm->getScenario(), (uint)id)) {
+		print("No animation record %d\n", id);
+		return true;
+	}
+	print("picture %d: attacks start %u count %u pair %04x/%04x overrides %02x/%02x\n",
+		id, anim.getAttackStart(), anim.getAttackCount(), anim.getPairA(), anim.getPairB(),
+		anim.getOverrideA(), anim.getOverrideB());
+	for (uint i = 0; i < anim.getAttackCount(); ++i)
+		print("  attack %u: base %u rand %u extra %u\n", i, anim.getBaseDamage(i),
+			anim.getRandomDamage(i), anim.getExtraRandomDamage(i));
 	return true;
 }
 

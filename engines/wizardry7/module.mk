@@ -1,6 +1,7 @@
 MODULE := engines/wizardry7
 
 MODULE_OBJS := \
+	attack.o \
 	console.o \
 	creation.o \
 	equipment.o \

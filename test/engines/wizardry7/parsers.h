@@ -10,6 +10,7 @@
 #include "wizardry7/items.h"
 #include "wizardry7/maze.h"
 #include "wizardry7/monster.h"
+#include "wizardry7/attack.h"
 #include "wizardry7/party.h"
 #include "wizardry7/xp.h"
 #include "wizardry7/save.h"
@@ -752,5 +753,41 @@ public:
 		TS_ASSERT_EQUALS(info.bodyType, 3);
 		TS_ASSERT_EQUALS(info.pictureId, 26);
 		TS_ASSERT_EQUALS(info.flags, 1);
+	}
+
+	void testAttackAnimation() {
+		Common::Array<byte> data;
+		data.resize(Wizardry7::AttackAnimation::kRecordSize);
+		memset(data.data(), 0, data.size());
+		data[0x00] = 2; // attack start
+		data[0x04] = 3; // attack count
+		data[0x08 + 1] = 7;
+		data[0x12 + 1] = 4;
+		data[0x30 + 1] = 2;
+		data[0x26 + 5] = 9;
+		data[0xA5 + 3 * 4 + 0] = 21;
+		data[0xA5 + 3 * 4 + 1] = 22;
+		data[0xA5 + 3 * 4 + 2] = 23;
+		data[0xA5 + 3 * 4 + 3] = 24;
+		WRITE_LE_UINT16(data.data() + 0x148, 0x1234);
+		WRITE_LE_UINT16(data.data() + 0x14A, 0x5678);
+		data[0x15B] = 0xFE;
+		data[0x15C] = 0xFD;
+		Wizardry7::AttackAnimation anim;
+		TS_ASSERT(anim.loadFromData(data.data(), data.size()));
+		TS_ASSERT_EQUALS(anim.getAttackStart(), 2);
+		TS_ASSERT_EQUALS(anim.getAttackCount(), 3);
+		TS_ASSERT_EQUALS(anim.getBaseDamage(1), 7);
+		TS_ASSERT_EQUALS(anim.getRandomDamage(1), 4);
+		TS_ASSERT_EQUALS(anim.getExtraRandomDamage(1), 2);
+		TS_ASSERT_EQUALS(anim.getSpecialIndex(5), 9);
+		TS_ASSERT_EQUALS(anim.getSpecialSprite(3), 21);
+		TS_ASSERT_EQUALS(anim.getSpecialEffectByte(3), 22);
+		TS_ASSERT_EQUALS(anim.getSeverityBase(3), 23);
+		TS_ASSERT_EQUALS(anim.getSeverityRandom(3), 24);
+		TS_ASSERT_EQUALS(anim.getPairA(), 0x1234);
+		TS_ASSERT_EQUALS(anim.getPairB(), 0x5678);
+		TS_ASSERT_EQUALS(anim.getOverrideA(), 0xFE);
+		TS_ASSERT_EQUALS(anim.getOverrideB(), 0xFD);
 	}
 };
