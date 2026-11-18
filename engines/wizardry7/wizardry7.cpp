@@ -520,7 +520,8 @@ bool Wizardry7Engine::showProfessionChoices(const Common::Array<uint> &classes,
 	return true;
 }
 
-bool Wizardry7Engine::runCharacterCreationUI(const Common::String &fontName) {
+bool Wizardry7Engine::runCharacterCreationUI(const Common::String &fontName,
+		const Common::Path &screenshotPath) {
 	if (!startCreation())
 		return false;
 
@@ -580,6 +581,11 @@ bool Wizardry7Engine::runCharacterCreationUI(const Common::String &fontName) {
 			const Common::KeyCode key = event.kbd.keycode;
 			if (key == Common::KEYCODE_ESCAPE)
 				break;
+			if (key == Common::KEYCODE_F10 && !screenshotPath.empty()) {
+				if (!saveScreenshot(screenshotPath))
+					warning("Wizardry7: could not write creation screenshot");
+				continue;
+			}
 			switch (step) {
 			case CharacterCreationFlow::kStepSex:
 				if (key == Common::KEYCODE_LEFT || key == Common::KEYCODE_RIGHT)

@@ -427,7 +427,7 @@ bool Wizardry7Console::cmdCharGen(int argc, const char **argv) {
 }
 
 bool Wizardry7Console::cmdCharGenUI(int argc, const char **argv) {
-	_vm->runCharacterCreationUI();
+	_vm->runCharacterCreationUI("VBFONT0.VGA", argc >= 2 ? Common::Path(argv[1]) : Common::Path());
 	return true;
 }
 

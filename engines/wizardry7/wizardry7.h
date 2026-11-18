@@ -67,7 +67,8 @@ public:
 		const Common::String &fontName = "VBFONT0.VGA", int selection = 0);
 
 	/** Interactive DOS-style creation dialogs (mouse/keyboard). */
-	bool runCharacterCreationUI(const Common::String &fontName = "VBFONT0.VGA");
+	bool runCharacterCreationUI(const Common::String &fontName = "VBFONT0.VGA",
+		const Common::Path &screenshotPath = Common::Path());
 
 	// Headless creation driver used by the debug console/CI scripts.
 	bool startCreation();
