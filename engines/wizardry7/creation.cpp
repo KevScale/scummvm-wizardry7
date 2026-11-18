@@ -21,6 +21,7 @@
 #include "wizardry7/creation.h"
 
 #include "wizardry7/rng.h"
+#include "wizardry7/scenario.h"
 
 #include "common/endian.h"
 #include "common/util.h"
@@ -201,6 +202,46 @@ Common::Array<uint> CharacterCreation::getEligibleClasses() const {
 			classes.push_back(i);
 	}
 	return classes;
+}
+
+bool writeInventorySlot(byte *slot, uint16 itemId, const byte *itemRecord, uint8 count) {
+	if (!slot || !itemRecord)
+		return false;
+	memset(slot, 0, 12);
+	WRITE_LE_UINT16(slot, itemId);
+	WRITE_LE_UINT16(slot + 2, READ_LE_UINT16(itemRecord + 0x24)); // weight
+	slot[4] = itemRecord[0x38]; // kind/equip slot
+	slot[5] = itemRecord[0x39]; // subtype
+	slot[6] = count > 1 ? count : 0; // charges/count (non-stack items store 0)
+	slot[7] = 0x80; // identified
+	if (itemRecord[0x37] & 8)  slot[7] |= 4;
+	if (itemRecord[0x37] & 4)  slot[7] |= 8;
+	if (itemRecord[0x37] & 0x10) slot[7] |= 0x10;
+	if (itemRecord[0x37] & 0x20) slot[7] |= 0x20;
+	if (itemRecord[0x37] & 2)  slot[7] |= 0x40;
+	slot[8] = itemRecord[0x28];
+	slot[9] = itemRecord[0x29];
+	slot[10] = itemRecord[0x3C];
+	slot[11] = itemRecord[0x40]; // AC bonus
+	return true;
+}
+
+bool writeCharacterInventory(const CreatedCharacter &character, const ScenarioDatabase &scenario,
+		byte *record, uint size) {
+	if (!record || size < kCharacterRecordSize || !scenario.isLoaded())
+		return false;
+	Common::Array<byte> itemRecord;
+	for (uint i = 0; i < character.itemCount && i < 5; ++i) {
+		const uint16 itemId = character.items[i].itemId;
+		if (itemId >= scenario.getRecordCount(kRecordItem) ||
+			!scenario.readRecord(kRecordItem, itemId, itemRecord) ||
+			itemRecord.size() < 0x41)
+			return false;
+		if (!writeInventorySlot(record + 0x40 + i * 12, itemId, itemRecord.data(),
+				character.items[i].count))
+			return false;
+	}
+	return true;
 }
 
 bool writeCharacterRecord(const CreatedCharacter &character, byte *record, uint size) {

@@ -506,6 +506,8 @@ bool Wizardry7Engine::saveCreationRecord(const Common::Path &path) {
 	byte record[kCharacterRecordSize];
 	if (!writeCharacterRecord(_creationResult, record, sizeof(record)))
 		return false;
+	if (!writeCharacterInventory(_creationResult, _scenario, record, sizeof(record)))
+		return false;
 	Common::DumpFile out;
 	if (!out.open(path))
 		return false;

@@ -483,4 +483,29 @@ public:
 			TS_ASSERT_EQUALS(Wizardry7::StartingEquipment::getItems(cases[i].klass, cases[i].race, items), 5u);
 		}
 	}
+
+	void testInventorySlotWriter() {
+		byte item[72];
+		memset(item, 0, sizeof(item));
+		item[0x24] = 0x32;
+		item[0x38] = 2; // thrown
+		item[0x39] = 1; // subtype
+		item[0x37] = 4; // flag mapping -> slot bit 0x08
+		item[0x28] = 7;
+		item[0x29] = 9;
+		item[0x3C] = 3;
+		item[0x40] = 5; // AC bonus
+		byte slot[12];
+		TS_ASSERT(Wizardry7::writeInventorySlot(slot, 27, item, 6));
+		TS_ASSERT_EQUALS(READ_LE_UINT16(slot), 27);
+		TS_ASSERT_EQUALS(READ_LE_UINT16(slot + 2), 0x32);
+		TS_ASSERT_EQUALS(slot[4], 2);
+		TS_ASSERT_EQUALS(slot[5], 1);
+		TS_ASSERT_EQUALS(slot[6], 6);
+		TS_ASSERT_EQUALS(slot[7], 0x80 | 0x08);
+		TS_ASSERT_EQUALS(slot[8], 7);
+		TS_ASSERT_EQUALS(slot[9], 9);
+		TS_ASSERT_EQUALS(slot[10], 3);
+		TS_ASSERT_EQUALS(slot[11], 5);
+	}
 };

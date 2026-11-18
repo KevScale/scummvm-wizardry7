@@ -30,6 +30,7 @@
 namespace Wizardry7 {
 
 class WizardryRNG;
+class ScenarioDatabase;
 
 /** Fields rolled when a class is finalized (before starting equipment). */
 struct CreationRolls {
@@ -116,6 +117,13 @@ enum { kCharacterRecordSize = 584 };
  * callers must treat this as a partial record.
  */
 bool writeCharacterRecord(const CreatedCharacter &character, byte *record, uint size);
+
+/** Fill one 12-byte inventory slot from an item record (FUN_00458322 layout). */
+bool writeInventorySlot(byte *slot, uint16 itemId, const byte *itemRecord, uint8 count);
+
+/** Fill the five starting slots from the scenario item database. */
+bool writeCharacterInventory(const CreatedCharacter &character, const ScenarioDatabase &scenario,
+	byte *record, uint size);
 
 /** Step/selection state for the DOS character-creation dialogs. */
 class CharacterCreationFlow {
