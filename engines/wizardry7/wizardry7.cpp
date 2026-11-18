@@ -34,6 +34,7 @@
 #include "wizardry7/console.h"
 #include "wizardry7/font.h"
 #include "wizardry7/items.h"
+#include "wizardry7/xp.h"
 #include "wizardry7/save.h"
 #include "wizardry7/wizardry7.h"
 
@@ -540,6 +541,11 @@ bool Wizardry7Engine::showCharacterReview(const Common::Path &rosterPath, uint s
 	font.drawString(Common::String::format("%c-%s", c.gender ? 'F' : 'M',
 		c.race < 11 ? races[c.race] : "?").c_str(), _screen, 105, 16, 1);
 	font.drawString(CharacterCreation::getClassName(c.klass), _screen, 105, 24, 1);
+	ExperienceTable xpTable;
+	uint8 level = 1;
+	if (xpTable.load(_scenario))
+		level = xpTable.getLevel(c.klass, c.xp);
+	font.drawString(Common::String::format("LVL %u", level).c_str(), _screen, 105, 32, 1);
 	for (uint i = 0; i < 7; ++i) {
 		const int y = 40 + i * 6;
 		font.drawString(statNames[i], _screen, 118, y, 1);

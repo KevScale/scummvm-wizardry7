@@ -555,8 +555,13 @@ bool Wizardry7Console::cmdSheet(int argc, const char **argv) {
 	const char *raceName = c.race < 11 ? races[c.race] : "?";
 	print("%s  %c-%s %s  align %u\n", c.name.c_str(), c.gender ? 'F' : 'M',
 		raceName, CharacterCreation::getClassName(c.klass), c.alignment);
-	print("age %u  hp %u/%u  st %u/%u  ac %u  gold %u  portrait %u\n",
-		c.age, c.hp, c.hpMax, c.stamina, c.staminaMax, c.ac, c.gold, c.portrait);
+	ExperienceTable xpTable;
+	uint8 level = 1;
+	if (xpTable.load(*_vm->getScenario()))
+		level = xpTable.getLevel(c.klass, c.xp);
+	print("level %u rank %u  age %u  hp %u/%u  st %u/%u  ac %u  gold %u  portrait %u\n",
+		level, ExperienceTable::getRank(level), c.age, c.hp, c.hpMax, c.stamina,
+		c.staminaMax, c.ac, c.gold, c.portrait);
 	static const char *const names[7] = { "STR", "INT", "PIE", "VIT", "DEX", "SPD", "PER" };
 	for (uint i = 0; i < 7; ++i)
 		print("%s %u%s", names[i], c.stats[i], i == 6 ? "\n" : "  ");
