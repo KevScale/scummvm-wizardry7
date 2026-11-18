@@ -30,6 +30,38 @@ namespace Graphics { class Screen; }
 namespace Wizardry7 {
 
 class VgaBundle;
+struct ViewPiece;
+
+/** One view-list object (FUN_004493E4 layout). */
+struct ViewObject {
+	uint16 pieceA;
+	uint16 pieceB;
+	uint16 selB;
+	uint16 selA;
+	uint8 writemodeA;
+	uint8 writemodeB;
+	uint8 p6;
+	uint8 p7;
+	uint8 layer;
+	uint8 column;
+	uint8 slot;
+	uint8 p12;
+	uint8 group;
+};
+
+/** The view object list and its draw loop (still supplied by the caller). */
+class ViewObjectList {
+public:
+	ViewObjectList();
+
+	void clear() { _objects.clear(); }
+	uint size() const { return _objects.size(); }
+	bool spawn(const ViewObject &object);
+	Common::Array<ViewPiece> draw(uint columns) const;
+
+private:
+	Common::Array<ViewObject> _objects;
+};
 
 /** One scene-compositor draw request. */
 struct ViewPiece {

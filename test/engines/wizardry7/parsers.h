@@ -883,5 +883,15 @@ public:
 		kinds[0][0] = 1;
 		kinds[1][1] = 2;
 		TS_ASSERT_EQUALS(Wizardry7::ViewCompositor::painterPieces(kinds, true).size(), 2u);
+
+		Wizardry7::ViewObjectList objects;
+		Wizardry7::ViewObject a = { 5, 0xFFFF, 0xFFFF, 0xFFFF, 2, 0, 0, 0, 0xFD, 1, 3, 0, 0 };
+		Wizardry7::ViewObject b = { 6, 0xFFFF, 0xFFFF, 0xFFFF, 2, 0, 0, 0, 0xFD, 1, 3, 0, 0 };
+		TS_ASSERT(objects.spawn(a));
+		TS_ASSERT(objects.spawn(b));
+		Common::Array<Wizardry7::ViewPiece> drawn = objects.draw(2);
+		TS_ASSERT_EQUALS(drawn.size(), 2u);
+		TS_ASSERT_EQUALS(drawn[0].piece, 6); // reversed object order
+		TS_ASSERT_EQUALS(drawn[1].piece, 5);
 	}
 };

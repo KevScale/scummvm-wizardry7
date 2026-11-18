@@ -30,6 +30,46 @@ static const char *const kBundleNames[7] = {
 	"MAZEDATA", "TREEDATA", "TOWNDATA", "TILEDATA", "OTWNDATA", "WATRDATA", "TILEDATA"
 };
 
+ViewObjectList::ViewObjectList() {
+}
+
+bool ViewObjectList::spawn(const ViewObject &object) {
+	if (_objects.size() >= 0x78)
+		return false;
+	_objects.push_back(object);
+	return true;
+}
+
+Common::Array<ViewPiece> ViewObjectList::draw(uint columns) const {
+	Common::Array<ViewPiece> out;
+	for (int column = (int)columns - 1; column >= 0; --column) {
+		for (int layer = 0xFF; layer >= 0xFB; --layer) {
+			for (int i = (int)_objects.size() - 1; i >= 0; --i) {
+				const ViewObject &o = _objects[i];
+				if (o.column != column || o.layer != layer)
+					continue;
+				if (o.pieceA != 0xFFFF)
+					out.push_back({o.slot, o.pieceA, o.selA, o.writemodeA});
+				if (o.pieceB != 0xFFFF)
+					out.push_back({o.slot, o.pieceB, o.selB, o.writemodeB});
+			}
+			if (layer == 0xFF || layer == 0xFB) {
+				const uint8 group = layer == 0xFF ? 0 : 1;
+				for (int i = (int)_objects.size() - 1; i >= 0; --i) {
+					const ViewObject &o = _objects[i];
+					if (o.column != column || o.layer >= 0xFA || o.group != group)
+						continue;
+					if (o.pieceA != 0xFFFF)
+						out.push_back({o.slot, o.pieceA, o.selA, o.writemodeA});
+					if (o.pieceB != 0xFFFF)
+						out.push_back({o.slot, o.pieceB, o.selB, o.writemodeB});
+				}
+			}
+		}
+	}
+	return out;
+}
+
 ViewCompositor::ViewCompositor() {
 	memset(_bundles, 0, sizeof(_bundles));
 }
