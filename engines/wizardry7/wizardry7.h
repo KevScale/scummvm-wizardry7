@@ -73,7 +73,7 @@ public:
 		const Common::Path &screenshotPath = Common::Path());
 
 	// Headless creation driver used by the debug console/CI scripts.
-	bool startCreation();
+	bool startCreation(bool goldOrder = false);
 	bool creationChooseSex(uint sex);
 	bool creationChooseRace(uint race);
 	bool creationChooseProfession(uint classIndex);

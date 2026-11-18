@@ -572,7 +572,7 @@ bool Wizardry7Engine::showCharacterReview(const Common::Path &rosterPath, uint s
 
 bool Wizardry7Engine::runCharacterCreationUI(const Common::String &fontName,
 		const Common::Path &screenshotPath) {
-	if (!startCreation())
+	if (!startCreation(isGold()))
 		return false;
 
 	int selection = 0;
@@ -745,9 +745,9 @@ bool Wizardry7Engine::runCharacterCreationUI(const Common::String &fontName,
 	return true;
 }
 
-bool Wizardry7Engine::startCreation() {
+bool Wizardry7Engine::startCreation(bool goldOrder) {
 	byte zero[CharacterCreation::kStatCount] = { 0 };
-	_creation.begin(zero, 0);
+	_creation.begin(zero, 0, goldOrder);
 	_creationStarted = true;
 	_hasCreationResult = false;
 	return true;
@@ -756,7 +756,16 @@ bool Wizardry7Engine::startCreation() {
 bool Wizardry7Engine::creationChooseSex(uint sex) {
 	if (!_creationStarted || sex > 1)
 		return false;
-	return _creation.chooseSex((byte)sex);
+	if (!_creation.chooseSex((byte)sex))
+		return false;
+	if (_creation.isGoldOrder()) {
+		// Gold runs race before sex, so the female adjustment and bonus roll
+		// happen only after the sex choice.
+		CharacterCreation &character = _creation.getCharacter();
+		character.applySexModifiers(character.getSex());
+		character.setBonusPoints(CharacterCreation::rollBonusPoints(_rng));
+	}
+	return true;
 }
 
 bool Wizardry7Engine::creationChooseRace(uint race) {
@@ -764,8 +773,10 @@ bool Wizardry7Engine::creationChooseRace(uint race) {
 		return false;
 	CharacterCreation &character = _creation.getCharacter();
 	character.applyRaceMinimums((uint8)race);
-	character.applySexModifiers(character.getSex());
-	character.setBonusPoints(CharacterCreation::rollBonusPoints(_rng));
+	if (!_creation.isGoldOrder()) {
+		character.applySexModifiers(character.getSex());
+		character.setBonusPoints(CharacterCreation::rollBonusPoints(_rng));
+	}
 	return true;
 }
 

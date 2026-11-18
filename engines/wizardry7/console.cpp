@@ -572,13 +572,14 @@ bool Wizardry7Console::cmdItem(int argc, const char **argv) {
 
 bool Wizardry7Console::cmdCreate(int argc, const char **argv) {
 	if (argc < 2) {
-		print("Usage: create start|sex N|race N|class N|name NAME|bonus STAT|finish|status|record FILE|roster ROSTER OUT\n");
+		print("Usage: create start [gold]|sex N|race N|class N|name NAME|bonus STAT|finish|status|record FILE|roster ROSTER OUT\n");
 		return true;
 	}
 	const Common::String action = argv[1];
 	if (action == "start") {
-		_vm->startCreation();
-		print("Creation started at sex step\n");
+		const bool gold = argc >= 3 && Common::String(argv[2]).equalsIgnoreCase("gold");
+		_vm->startCreation(gold);
+		print("Creation started at %s step\n", gold ? "name" : "sex");
 		return true;
 	}
 	if (!_vm->isCreationStarted()) {
@@ -618,7 +619,10 @@ bool Wizardry7Console::cmdCreate(int argc, const char **argv) {
 			print("Usage: create name NAME\n");
 			return true;
 		}
-		print("name: %s\n", _vm->creationSetName(argv[2]) ? "ok" : "rejected");
+		const bool ok = _vm->creationSetName(argv[2]);
+		if (ok)
+			_vm->getCreation().finishName();
+		print("name: %s\n", ok ? "ok" : "rejected");
 		return true;
 	}
 	if (action == "record") {

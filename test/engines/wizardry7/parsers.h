@@ -291,6 +291,22 @@ public:
 		TS_ASSERT_EQUALS(flow.getStep(), Wizardry7::CharacterCreationFlow::kStepDone);
 	}
 
+	void testGoldCreationOrder() {
+		Wizardry7::CharacterCreationFlow flow;
+		const byte humanStats[8] = { 9, 8, 8, 9, 9, 8, 8, 0 };
+		flow.begin(humanStats, 20, true);
+		TS_ASSERT_EQUALS(flow.getStep(), Wizardry7::CharacterCreationFlow::kStepName);
+		TS_ASSERT(flow.setName("GOLD"));
+		TS_ASSERT(flow.finishName());
+		TS_ASSERT_EQUALS(flow.getStep(), Wizardry7::CharacterCreationFlow::kStepRace);
+		TS_ASSERT(flow.chooseRace(0));
+		TS_ASSERT_EQUALS(flow.getStep(), Wizardry7::CharacterCreationFlow::kStepSex);
+		TS_ASSERT(flow.chooseSex(0));
+		TS_ASSERT_EQUALS(flow.getStep(), Wizardry7::CharacterCreationFlow::kStepProfession);
+		TS_ASSERT(flow.chooseProfession(0));
+		TS_ASSERT_EQUALS(flow.getStep(), Wizardry7::CharacterCreationFlow::kStepBonus);
+	}
+
 	void testCreationRolls() {
 		Wizardry7::CharacterCreation creation;
 		const byte stats[8] = { 12, 10, 10, 15, 10, 10, 10, 0 };

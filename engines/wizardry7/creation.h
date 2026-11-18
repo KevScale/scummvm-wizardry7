@@ -142,8 +142,10 @@ public:
 
 	CharacterCreationFlow();
 
-	/** Start with the rolled/base stats and the initial bonus pool. */
-	void begin(const byte *stats, int bonusPoints);
+	/** Start with the rolled/base stats and the initial bonus pool.
+	 *  Gold asks for the name first and then race -> sex; DOS uses sex -> race. */
+	void begin(const byte *stats, int bonusPoints, bool goldOrder = false);
+	bool isGoldOrder() const { return _goldOrder; }
 	Step getStep() const { return _step; }
 	CharacterCreation &getCharacter() { return _character; }
 	const CharacterCreation &getCharacter() const { return _character; }
@@ -164,6 +166,7 @@ public:
 private:
 	CharacterCreation _character;
 	Step _step;
+	bool _goldOrder;
 	Common::String _name;
 	uint8 _race;
 	uint8 _bonusSpent[CharacterCreation::kStatCount];

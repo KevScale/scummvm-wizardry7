@@ -283,24 +283,25 @@ bool writeCharacterRecord(const CreatedCharacter &character, byte *record, uint 
 	return true;
 }
 
-CharacterCreationFlow::CharacterCreationFlow() : _step(kStepSex), _race(0) {
+CharacterCreationFlow::CharacterCreationFlow() : _step(kStepSex), _goldOrder(false), _race(0) {
 	memset(_bonusSpent, 0, sizeof(_bonusSpent));
 }
 
-void CharacterCreationFlow::begin(const byte *stats, int bonusPoints) {
+void CharacterCreationFlow::begin(const byte *stats, int bonusPoints, bool goldOrder) {
 	_character.setStats(stats);
 	_character.setBonusPoints(bonusPoints);
 	_name.clear();
 	_race = 0;
+	_goldOrder = goldOrder;
 	memset(_bonusSpent, 0, sizeof(_bonusSpent));
-	_step = kStepSex;
+	_step = goldOrder ? kStepName : kStepSex;
 }
 
 bool CharacterCreationFlow::chooseSex(byte sex) {
 	if (_step != kStepSex || sex > 1)
 		return false;
 	_character.setSex(sex);
-	_step = kStepRace;
+	_step = _goldOrder ? kStepProfession : kStepRace;
 	return true;
 }
 
@@ -308,14 +309,14 @@ bool CharacterCreationFlow::chooseRace(uint8 race) {
 	if (_step != kStepRace || race > 10)
 		return false;
 	_race = race;
-	_step = kStepProfession;
+	_step = _goldOrder ? kStepSex : kStepProfession;
 	return true;
 }
 
 bool CharacterCreationFlow::chooseProfession(uint classIndex) {
 	if (_step != kStepProfession || !_character.selectClass(classIndex))
 		return false;
-	_step = kStepName;
+	_step = _goldOrder ? kStepBonus : kStepName;
 	return true;
 }
 
@@ -334,7 +335,7 @@ bool CharacterCreationFlow::setName(const Common::String &name) {
 bool CharacterCreationFlow::finishName() {
 	if (_step != kStepName || _name.empty())
 		return false;
-	_step = kStepBonus;
+	_step = _goldOrder ? kStepRace : kStepBonus;
 	return true;
 }
 
