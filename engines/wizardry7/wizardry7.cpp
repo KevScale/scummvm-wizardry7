@@ -552,7 +552,7 @@ bool Wizardry7Engine::showCharacterReview(const Common::Path &rosterPath, uint s
 	font.drawString(Common::String::format("ST %u/%u", c.stamina, c.staminaMax).c_str(), _screen, 8, 104, 1);
 	font.drawString(Common::String::format("GP %u", c.gold).c_str(), _screen, 104, 96, 1);
 	font.drawString(Common::String::format("AC %u", c.ac).c_str(), _screen, 228, 40, 1);
-	font.drawString(c.name.c_str(), _screen, 20, 112, 1);
+	font.drawString(c.name.c_str(), _screen, 20, 78, 1);
 	for (uint i = 0; i < 5; ++i) {
 		if (!c.inventory[i])
 			continue;
@@ -561,9 +561,9 @@ bool Wizardry7Engine::showCharacterReview(const Common::Path &rosterPath, uint s
 			continue;
 		Common::String line1, line2;
 		decodeItemNameLines((const byte *)info.name.c_str(), 22, line1, line2);
-		font.drawString(line1.c_str(), _screen, 16, 128 + i * 12, 1);
+		font.drawString(line1.c_str(), _screen, 16, 116 + i * 12, 1);
 		if (!line2.empty())
-			font.drawString(line2.c_str(), _screen, 16, 134 + i * 12, 1);
+			font.drawString(line2.c_str(), _screen, 16, 122 + i * 12, 1);
 	}
 	_screen->makeAllDirty();
 	_screen->update();
