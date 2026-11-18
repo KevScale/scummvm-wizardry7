@@ -7,6 +7,7 @@ MODULE_OBJS := \
 	gfx.o \
 	metaengine.o \
 	msg.o \
+	party.o \
 	rng.o \
 	save.o \
 	scenario.o \

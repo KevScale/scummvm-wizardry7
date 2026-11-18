@@ -6,6 +6,7 @@
 #include "wizardry7/rng.h"
 #include "wizardry7/font.h"
 #include "wizardry7/gfx.h"
+#include "wizardry7/party.h"
 #include "wizardry7/save.h"
 
 #include <cxxtest/TestSuite.h>
@@ -291,5 +292,62 @@ public:
 		rng.reset();
 		const int bonus = Wizardry7::CharacterCreation::rollBonusPoints(rng);
 		TS_ASSERT_EQUALS(bonus, 8); // rand(6)=1 -> 6, no lucky +8s, floor 8
+	}
+
+	void testParty() {
+		Wizardry7::Party party;
+		TS_ASSERT(party.addMember(0));
+		TS_ASSERT(party.addMember(2));
+		TS_ASSERT(party.addMember(4));
+		TS_ASSERT(!party.addMember(2)); // duplicate
+		TS_ASSERT_EQUALS(party.size(), 3u);
+		TS_ASSERT(party.contains(4));
+		TS_ASSERT(party.moveMember(2, 0));
+		TS_ASSERT_EQUALS(party.getMember(0), 4);
+		TS_ASSERT_EQUALS(party.getMember(1), 0);
+		TS_ASSERT_EQUALS(party.getMember(2), 2);
+		TS_ASSERT(party.removeMember(2));
+		TS_ASSERT_EQUALS(party.size(), 2u);
+		TS_ASSERT_EQUALS(party.getMember(1), 0);
+		TS_ASSERT(!party.moveMember(0, 2));
+
+		byte bytes[6];
+		party.toBytes(bytes);
+		TS_ASSERT_EQUALS(bytes[0], 4);
+		TS_ASSERT_EQUALS(bytes[1], 0);
+		TS_ASSERT_EQUALS(bytes[2], 0xFF);
+		Wizardry7::Party restored;
+		TS_ASSERT(restored.fromBytes(bytes, sizeof(bytes)));
+		TS_ASSERT_EQUALS(restored.size(), 2u);
+		TS_ASSERT_EQUALS(restored.getMember(0), 4);
+		TS_ASSERT_EQUALS(restored.getMember(1), 0);
+
+		for (byte i = 6; i < 12; ++i)
+			if (party.size() < 6)
+				TS_ASSERT(party.addMember(i));
+		TS_ASSERT_EQUALS(party.size(), 6u);
+		TS_ASSERT(!party.addMember(12));
+		TS_ASSERT(!party.fromBytes(bytes, 5));
+	}
+
+	void testPartyFromRoster() {
+		Common::Array<byte> data;
+		data.resize(24 + 2 * 584);
+		memset(data.data(), 0, data.size());
+		data[0] = 0x48; // stride 584
+		data[1] = 0x02;
+		data[2] = 2; // slots
+		data[4] = 24; // header size
+		data[8] = 1;
+		data[9] = 1; // slots 0 and 1 used
+		memcpy(data.data() + 24, "AAA", 3);
+		memcpy(data.data() + 24 + 584, "BBB", 3);
+		Wizardry7::CharacterRoster roster;
+		TS_ASSERT(roster.loadFromData(data.data(), data.size()));
+		Wizardry7::Party party;
+		party.loadFromRoster(roster);
+		TS_ASSERT_EQUALS(party.size(), 2u);
+		TS_ASSERT_EQUALS(party.getMember(0), 0);
+		TS_ASSERT_EQUALS(party.getMember(1), 1);
 	}
 };
