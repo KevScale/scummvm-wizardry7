@@ -60,6 +60,12 @@ public:
 	byte getSpecial(uint face) const;
 	byte getFlags(uint face) const;
 	bool getHazard(uint layer, uint face) const; // 0..2 => +0x8B0/+0x930/+0x9B0
+	/** Packed face key used by the view assembly: cell*64 + column*8 + row. */
+	static uint cellFace(uint cell, uint column, uint row) {
+		return cell * 0x40 + column * 8 + row;
+	}
+	/** View kind from the three hazard planes: C -> 3, A -> 2, else 0. */
+	uint8 getViewKind(uint cell, uint column, uint row) const;
 	byte getEncounterGroup(uint slot, bool uncommon) const;
 	byte getEncounterChance(uint slot) const;
 	byte getMonster(uint row, uint columnGroup, uint band) const;

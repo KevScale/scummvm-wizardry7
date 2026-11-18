@@ -737,6 +737,10 @@ public:
 		TS_ASSERT_EQUALS(maze.getFlags(3), 2);
 		TS_ASSERT(maze.getHazard(0, 9));
 		TS_ASSERT(!maze.getHazard(1, 9));
+		TS_ASSERT_EQUALS(maze.getViewKind(0, 1, 1), 2); // face 9 is plane A
+		data[0x9B0] = 1; // face 0 plane C -> kind 3
+		TS_ASSERT(maze.loadFromData(data.data(), data.size()));
+		TS_ASSERT_EQUALS(maze.getViewKind(0, 0, 0), 3);
 		TS_ASSERT_EQUALS(maze.getEncounterGroup(0, false), 3);
 		TS_ASSERT_EQUALS(maze.getEncounterGroup(0, true), 4);
 		TS_ASSERT_EQUALS(maze.getEncounterChance(0), 65);

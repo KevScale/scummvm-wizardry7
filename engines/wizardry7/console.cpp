@@ -108,6 +108,7 @@ Wizardry7Console::Wizardry7Console(Wizardry7Engine *vm) : GUI::Debugger(), _vm(v
 	registerCmd("placeview", WRAP_METHOD(Wizardry7Console, cmdPlaceView));
 	registerCmd("viewfixed", WRAP_METHOD(Wizardry7Console, cmdViewFixed));
 	registerCmd("viewpaint", WRAP_METHOD(Wizardry7Console, cmdViewPaint));
+	registerCmd("viewkind", WRAP_METHOD(Wizardry7Console, cmdViewKind));
 	registerCmd("script", WRAP_METHOD(Wizardry7Console, cmdScript));
 }
 
@@ -230,6 +231,8 @@ bool Wizardry7Console::runScript(const Common::Path &path) {
 			ok &= cmdViewFixed(count, argv);
 		else if (command == "viewpaint")
 			ok &= cmdViewPaint(count, argv);
+		else if (command == "viewkind")
+			ok &= cmdViewKind(count, argv);
 		else if (command == "script")
 			ok &= cmdScript(count, argv);
 		else {
@@ -472,6 +475,31 @@ bool Wizardry7Console::cmdCharGen(int argc, const char **argv) {
 
 bool Wizardry7Console::cmdCharGenUI(int argc, const char **argv) {
 	_vm->runCharacterCreationUI("VBFONT0.VGA", argc >= 2 ? Common::Path(argv[1]) : Common::Path());
+	return true;
+}
+
+bool Wizardry7Console::cmdViewKind(int argc, const char **argv) {
+	if (argc != 5) {
+		print("Usage: viewkind <maze> <cell> <column> <row>\n");
+		return true;
+	}
+	int mazeId = 0, cell = 0, column = 0, row = 0;
+	if (!parseInteger(argv[1], mazeId) || !parseInteger(argv[2], cell) ||
+		!parseInteger(argv[3], column) || !parseInteger(argv[4], row) ||
+		mazeId < 0 || mazeId >= 32 || cell < 0 || cell >= 16 ||
+		column < 0 || column >= 8 || row < 0 || row >= 8) {
+		print("Bad maze/cell/column/row\n");
+		return true;
+	}
+	Wizardry7::MazeRecord maze;
+	if (!maze.load(*_vm->getScenario(), (uint)mazeId)) {
+		print("Cannot load maze %d\n", mazeId);
+		return true;
+	}
+	const uint face = Wizardry7::MazeRecord::cellFace((uint)cell, (uint)column, (uint)row);
+	print("maze %d cell %d col %d row %d: face %u A %u B %u C %u -> kind %u\n",
+		mazeId, cell, column, row, face, maze.getHazard(0, face), maze.getHazard(1, face),
+		maze.getHazard(2, face), maze.getViewKind((uint)cell, (uint)column, (uint)row));
 	return true;
 }
 

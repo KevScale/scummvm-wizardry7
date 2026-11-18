@@ -80,6 +80,15 @@ bool MazeRecord::getHazard(uint layer, uint face) const {
 	return (_raw[offset + face / 8] >> (face & 7)) & 1;
 }
 
+uint8 MazeRecord::getViewKind(uint cell, uint column, uint row) const {
+	const uint face = cellFace(cell, column, row);
+	if (getHazard(2, face))
+		return 3;
+	if (getHazard(0, face))
+		return 2;
+	return 0;
+}
+
 byte MazeRecord::getEncounterGroup(uint slot, bool uncommon) const {
 	const uint index = slot * 2 + (uncommon ? 1 : 0);
 	const uint byteIndex = 0xAB0 + index / 2;
