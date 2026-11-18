@@ -59,6 +59,17 @@ static const byte kClassMinimums[CharacterCreation::kClassCount][CharacterCreati
 	{ 12, 10, 10, 12, 12, 12, 0, 0 } // Ninja
 };
 
+int CharacterCreation::rollBonusPoints(WizardryRNG &rng) {
+	int bonus = rng.getRandom(6) + 5;
+	if (rng.getRandom(20) == 0)
+		bonus += 8;
+	if (rng.getRandom(20) == 0)
+		bonus += 8;
+	if (bonus < 9)
+		bonus = rng.getRandom(4) + 8;
+	return bonus;
+}
+
 CharacterCreation::CharacterCreation() : _bonusPoints(0), _sex(0), _classIndex(-1) {
 	memset(_stats, 0, sizeof(_stats));
 }

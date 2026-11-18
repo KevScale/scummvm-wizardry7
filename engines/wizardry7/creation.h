@@ -62,6 +62,9 @@ public:
 	void setSex(byte sex) { _sex = sex; }
 	byte getSex() const { return _sex; }
 
+	/** Initial bonus pool: rand(6)+5, two 1-in-20 +8 rolls, minimum 9. */
+	static int rollBonusPoints(WizardryRNG &rng);
+
 	/** Raise the stats to the race's minimums (race 0..10). */
 	void applyRaceMinimums(uint8 race);
 	/** Female adjustment: STR -2, PER +1, KAR +1. */

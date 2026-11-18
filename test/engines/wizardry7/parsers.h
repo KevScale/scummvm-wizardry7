@@ -285,4 +285,11 @@ public:
 		creation.applySexModifiers(0); // Male is a no-op
 		TS_ASSERT_EQUALS(creation.getStat(0), 7);
 	}
+
+	void testCreationBonusRoll() {
+		Wizardry7::WizardryRNG rng;
+		rng.reset();
+		const int bonus = Wizardry7::CharacterCreation::rollBonusPoints(rng);
+		TS_ASSERT_EQUALS(bonus, 8); // rand(6)=1 -> 6, no lucky +8s, floor 8
+	}
 };
