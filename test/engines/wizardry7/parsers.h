@@ -449,4 +449,35 @@ public:
 		TS_ASSERT_EQUALS(c.stamina, created.rolls.staminaMax);
 		TS_ASSERT_EQUALS(c.ac, created.rolls.ac);
 	}
+
+	void testCreationValidationCases() {
+		struct Case {
+			uint8 race, sex, klass, cost;
+			byte base[8], after[8];
+		};
+		static const Case cases[] = {
+			{ 0, 1, 0, 5, { 7, 8, 8, 9, 9, 8, 9, 1 }, { 12, 8, 8, 9, 9, 8, 9, 1 } },
+			{ 1, 0, 1, 2, { 7, 10, 10, 7, 9, 9, 8, 0 }, { 7, 12, 10, 7, 9, 9, 8, 0 } },
+			{ 0, 1, 3, 3, { 7, 8, 8, 9, 9, 8, 9, 1 }, { 7, 8, 8, 12, 9, 8, 9, 1 } },
+			{ 2, 0, 2, 3, { 11, 6, 10, 12, 7, 7, 7, 0 }, { 11, 6, 12, 12, 7, 7, 8, 0 } },
+			{ 4, 1, 6, 5, { 6, 7, 6, 9, 10, 7, 14, 1 }, { 6, 7, 10, 9, 10, 8, 14, 1 } },
+			{ 6, 0, 0, 0, { 12, 5, 5, 14, 8, 10, 3, 0 }, { 12, 5, 5, 14, 8, 10, 3, 0 } }
+		};
+		for (uint i = 0; i < ARRAYSIZE(cases); ++i) {
+			Wizardry7::CharacterCreation creation;
+			const byte zero[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
+			creation.setStats(zero);
+			creation.applyRaceMinimums(cases[i].race);
+			creation.applySexModifiers(cases[i].sex);
+			for (uint j = 0; j < 8; ++j)
+				TS_ASSERT_EQUALS(creation.getStat(j), cases[i].base[j]);
+			TS_ASSERT_EQUALS(creation.getClassCost(cases[i].klass), cases[i].cost);
+			creation.setBonusPoints(8);
+			TS_ASSERT(creation.selectClass(cases[i].klass));
+			for (uint j = 0; j < 8; ++j)
+				TS_ASSERT_EQUALS(creation.getStat(j), cases[i].after[j]);
+			Wizardry7::StartingItem items[Wizardry7::StartingEquipment::kMaxItems];
+			TS_ASSERT_EQUALS(Wizardry7::StartingEquipment::getItems(cases[i].klass, cases[i].race, items), 5u);
+		}
+	}
 };
