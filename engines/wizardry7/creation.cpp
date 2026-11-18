@@ -255,6 +255,12 @@ bool writeCharacterRecord(const CreatedCharacter &character, byte *record, uint 
 	WRITE_LE_UINT16(record + 0x1C, character.rolls.staminaMax);
 	WRITE_LE_UINT16(record + 0x1E, character.rolls.staminaMax);
 	WRITE_LE_UINT16(record + 0x1B6, character.rolls.ac);
+	for (uint i = 0x1B9; i <= 0x1BD; ++i)
+		record[i] = character.rolls.ac;
+	record[0x240] = 1;
+	record[0x241] = 10;
+	record[0x243] = 1;
+	record[0x244] = 1;
 	for (uint i = 0; i < character.itemCount && i < 5; ++i) {
 		const uint32 slot = 0x40 + i * 12;
 		WRITE_LE_UINT16(record + slot, character.items[i].itemId);

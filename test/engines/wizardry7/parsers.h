@@ -451,6 +451,12 @@ public:
 		TS_ASSERT_EQUALS(c.inventory[0], 8);
 		TS_ASSERT_EQUALS(c.inventory[1], 135);
 		TS_ASSERT_EQUALS(c.inventory[4], 141);
+		TS_ASSERT_EQUALS(record[0x1B9], created.rolls.ac);
+		TS_ASSERT_EQUALS(record[0x1BD], created.rolls.ac);
+		TS_ASSERT_EQUALS(record[0x240], 1);
+		TS_ASSERT_EQUALS(record[0x241], 10);
+		TS_ASSERT_EQUALS(record[0x243], 1);
+		TS_ASSERT_EQUALS(record[0x244], 1);
 	}
 
 	void testCreationValidationCases() {
