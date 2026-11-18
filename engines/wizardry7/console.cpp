@@ -29,6 +29,7 @@
 #include "common/util.h"
 
 #include "wizardry7/console.h"
+#include "wizardry7/items.h"
 #include "graphics/screen.h"
 
 #include "wizardry7/font.h"
@@ -90,6 +91,7 @@ Wizardry7Console::Wizardry7Console(Wizardry7Engine *vm) : GUI::Debugger(), _vm(v
 	registerCmd("saveinfo", WRAP_METHOD(Wizardry7Console, cmdSaveInfo));
 	registerCmd("text", WRAP_METHOD(Wizardry7Console, cmdText));
 	registerCmd("roster", WRAP_METHOD(Wizardry7Console, cmdRoster));
+	registerCmd("item", WRAP_METHOD(Wizardry7Console, cmdItem));
 	registerCmd("script", WRAP_METHOD(Wizardry7Console, cmdScript));
 }
 
@@ -186,6 +188,8 @@ bool Wizardry7Console::runScript(const Common::Path &path) {
 			ok &= cmdText(count, argv);
 		else if (command == "roster")
 			ok &= cmdRoster(count, argv);
+		else if (command == "item")
+			ok &= cmdItem(count, argv);
 		else if (command == "script")
 			ok &= cmdScript(count, argv);
 		else {
@@ -428,6 +432,30 @@ bool Wizardry7Console::cmdCharGen(int argc, const char **argv) {
 
 bool Wizardry7Console::cmdCharGenUI(int argc, const char **argv) {
 	_vm->runCharacterCreationUI("VBFONT0.VGA", argc >= 2 ? Common::Path(argv[1]) : Common::Path());
+	return true;
+}
+
+bool Wizardry7Console::cmdItem(int argc, const char **argv) {
+	if (argc != 2) {
+		print("Usage: item <id>\n");
+		return true;
+	}
+	int id = 0;
+	if (!parseInteger(argv[1], id) || id < 0 || id > 0xFFFF) {
+		print("Bad item id '%s'\n", argv[1]);
+		return true;
+	}
+	Wizardry7::ItemInfo info;
+	if (!Wizardry7::loadItem(*_vm->getScenario(), (uint16)id, info)) {
+		print("No item %d\n", id);
+		return true;
+	}
+	print("item %d: %s\n", id, info.displayName.c_str());
+	print("price %u weight %u kind %u subtype %u rank %u ac %u flags %u\n",
+		info.price, info.weight, info.kind, info.subtype, info.rank, info.acBonus, info.flags);
+	print("class %04x race %04x gender %u spell %u/%u charges %u\n",
+		info.classMask, info.raceMask, info.genderMask, info.getSpellId(),
+		info.getSpellPower(), info.getDefaultCharges());
 	return true;
 }
 

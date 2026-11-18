@@ -6,6 +6,7 @@ MODULE_OBJS := \
 	equipment.o \
 	font.o \
 	gfx.o \
+	items.o \
 	metaengine.o \
 	msg.o \
 	party.o \

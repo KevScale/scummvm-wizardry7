@@ -7,6 +7,7 @@
 #include "wizardry7/rng.h"
 #include "wizardry7/font.h"
 #include "wizardry7/gfx.h"
+#include "wizardry7/items.h"
 #include "wizardry7/party.h"
 #include "wizardry7/save.h"
 
@@ -555,5 +556,40 @@ public:
 		TS_ASSERT_EQUALS(row, 0); TS_ASSERT_EQUALS(col, 2);
 		Wizardry7::CharacterCreation::getProfessionGridPosition(5, 6, row, col);
 		TS_ASSERT_EQUALS(row, 1); TS_ASSERT_EQUALS(col, 2);
+	}
+
+	void testItemRecord() {
+		byte record[72];
+		memset(record, 0, sizeof(record));
+		memcpy(record, "SWORD =/FIRE", 12);
+		record[0x16] = 0x34; record[0x17] = 0x12;
+		record[0x1A] = 2; record[0x1C] = 3; record[0x1D] = 4;
+		record[0x20] = 1; record[0x21] = 6;
+		record[0x22] = 3; record[0x23] = 4;
+		record[0x24] = 0x2C; record[0x25] = 0x01;
+		record[0x28] = 0x15;
+		record[0x32] = 0xFF; record[0x33] = 0x3F;
+		record[0x34] = 0xFF; record[0x35] = 0x07;
+		record[0x36] = 3;
+		record[0x37] = 4;
+		record[0x38] = 0;
+		record[0x39] = 2;
+		record[0x3B] = 10;
+		record[0x40] = 2;
+
+		Wizardry7::ItemInfo info;
+		TS_ASSERT(Wizardry7::parseItemRecord(record, sizeof(record), info));
+		TS_ASSERT_EQUALS(info.displayName, Common::String("SWORD OF FIRE"));
+		TS_ASSERT_EQUALS(info.price, 0x1234);
+		TS_ASSERT_EQUALS(info.weight, 0x012C);
+		TS_ASSERT_EQUALS(info.getDefaultCharges(), 14);
+		TS_ASSERT_EQUALS(info.damageDiceCount, 1);
+		TS_ASSERT_EQUALS(info.damageDieSize, 6);
+		TS_ASSERT_EQUALS(info.getSpellId(), 3);
+		TS_ASSERT_EQUALS(info.getSpellPower(), 4);
+		TS_ASSERT_EQUALS(info.kind, 0);
+		TS_ASSERT_EQUALS(info.subtype, 2);
+		TS_ASSERT_EQUALS(info.rank, 10);
+		TS_ASSERT_EQUALS(info.acBonus, 2);
 	}
 };

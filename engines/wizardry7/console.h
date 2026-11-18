@@ -52,6 +52,7 @@ private:
 	bool cmdAddCharacter(int argc, const char **argv);
 	bool cmdCharGen(int argc, const char **argv);
 	bool cmdCharGenUI(int argc, const char **argv);
+	bool cmdItem(int argc, const char **argv);
 	bool cmdCreate(int argc, const char **argv);
 	bool cmdParty(int argc, const char **argv);
 	bool cmdScreen(int argc, const char **argv);
