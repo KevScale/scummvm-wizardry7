@@ -46,7 +46,7 @@ bool GamePalette::load(const Common::Path &path) {
 
 	for (uint i = 0; i < 768; ++i) {
 		const byte value = file.readByte();
-		_rgb[i] = (value * 255) / 63;
+		_rgb[i] = (value << 2) | (value >> 4);
 	}
 	_loaded = true;
 	return true;

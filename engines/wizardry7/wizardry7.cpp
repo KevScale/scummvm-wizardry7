@@ -33,6 +33,7 @@
 #include "image/bmp.h"
 
 #include "wizardry7/console.h"
+#include "wizardry7/font.h"
 #include "wizardry7/wizardry7.h"
 
 namespace Wizardry7 {
@@ -128,6 +129,50 @@ bool Wizardry7Engine::showScreen(const Common::String &name) {
 	_screen->copyRectToSurface(pixels.data(), width, 0, 0, width, height);
 	if (_palette.isLoaded())
 		_palette.apply(_screen);
+	_screen->update();
+	return true;
+}
+
+bool Wizardry7Engine::showMainMenu(const Common::String &fontName) {
+	if (!showScreen("MAINSCRN"))
+		return false;
+
+	GameFont font;
+	if (!font.load(Common::Path(fontName)))
+		return false;
+
+	static const char *const items[] = {
+		"CHARACTER MENU", "ADD CHARACTER", "LOAD SAVEGAME",
+		"CONFIGURATION", "IMPORT (BANE)", "QUIT GAME"
+	};
+	const int barX = 106;
+	const int barY = 44;
+	const int barWidth = 106;
+	const int barHeight = 7;
+	const int barStep = 13;
+
+	for (uint i = 0; i < ARRAYSIZE(items); ++i) {
+		const int y = barY + i * barStep;
+		// Fill plus the original bevel: bright top/left, dark bottom/right.
+		_screen->fillRect(Common::Rect(barX, y, barX + barWidth, y + barHeight), 192);
+		_screen->hLine(barX, y - 1, barX + barWidth - 1, 176);
+		_screen->vLine(barX - 1, y, y + barHeight - 1, 176);
+		_screen->hLine(barX, y + barHeight, barX + barWidth - 1, 197);
+		_screen->vLine(barX + barWidth, y, y + barHeight - 1, 197);
+		_screen->setPixel(barX - 1, y - 1, 176);
+		_screen->setPixel(barX + barWidth, y - 1, 182);
+		_screen->setPixel(barX - 1, y + barHeight, 182);
+		_screen->setPixel(barX + barWidth, y + barHeight, 198);
+
+		const char *text = items[i];
+		int textWidth = 0;
+		for (const char *p = text; *p; ++p)
+			textWidth += font.getAdvance((byte)*p);
+		int x = barX + (barWidth - textWidth) / 2 + 1;
+		const int textY = y + (barHeight - (int)font.getHeight()) / 2 + 1;
+		for (const char *p = text; *p; ++p)
+			x += font.drawChar((byte)*p, _screen, x, textY, 1, false, 0);
+	}
 	_screen->update();
 	return true;
 }
