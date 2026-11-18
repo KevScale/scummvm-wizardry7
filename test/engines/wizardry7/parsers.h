@@ -379,4 +379,30 @@ public:
 		TS_ASSERT_EQUALS(items[4].itemId, 384);
 		TS_ASSERT_EQUALS(Wizardry7::StartingEquipment::getItems(14, 0, items), 0u);
 	}
+
+	void testCreationResult() {
+		Wizardry7::CharacterCreationFlow flow;
+		const byte stats[8] = { 7, 10, 8, 10, 9, 9, 9, 11 };
+		flow.begin(stats, 11);
+		TS_ASSERT(flow.chooseSex(0));
+		TS_ASSERT(flow.chooseRace(0));
+		TS_ASSERT(flow.chooseProfession(0)); // Fighter
+		TS_ASSERT(flow.setName("TESTY"));
+		TS_ASSERT(flow.finishName());
+		while (flow.getCharacter().getBonusPoints() > 0)
+			TS_ASSERT(flow.addBonusPoint(0));
+
+		Wizardry7::CreatedCharacter result;
+		Wizardry7::WizardryRNG rng;
+		rng.reset();
+		TS_ASSERT(flow.buildCharacter(rng, result));
+		TS_ASSERT_EQUALS(flow.getStep(), Wizardry7::CharacterCreationFlow::kStepDone);
+		TS_ASSERT_EQUALS(result.name, Common::String("TESTY"));
+		TS_ASSERT_EQUALS(result.race, 0);
+		TS_ASSERT_EQUALS(result.sex, 0);
+		TS_ASSERT_EQUALS(result.classIndex, 0);
+		TS_ASSERT_EQUALS(result.rolls.ageDays >= 6570, true);
+		TS_ASSERT_EQUALS(result.itemCount, 5u);
+		TS_ASSERT_EQUALS(result.items[0].itemId, 8);
+	}
 };

@@ -269,6 +269,21 @@ bool CharacterCreationFlow::removeBonusPoint(uint statIndex) {
 	return true;
 }
 
+bool CharacterCreationFlow::buildCharacter(WizardryRNG &rng, CreatedCharacter &out) {
+	if (_step != kStepBonus || _character.getBonusPoints() != 0 || _character.getClass() < 0)
+		return false;
+	out.name = _name;
+	out.race = _race;
+	out.sex = _character.getSex();
+	out.classIndex = (uint8)_character.getClass();
+	for (uint i = 0; i < CharacterCreation::kStatCount; ++i)
+		out.stats[i] = _character.getStat(i);
+	out.rolls = _character.rollDerived(_race, rng);
+	out.itemCount = StartingEquipment::getItems(out.classIndex, _race, out.items);
+	_step = kStepDone;
+	return true;
+}
+
 bool CharacterCreationFlow::finish() {
 	if (_step != kStepBonus || _character.getBonusPoints() != 0)
 		return false;

@@ -25,6 +25,8 @@
 #include "common/scummsys.h"
 #include "common/str.h"
 
+#include "wizardry7/equipment.h"
+
 namespace Wizardry7 {
 
 class WizardryRNG;
@@ -93,6 +95,18 @@ private:
 	int _classIndex;
 };
 
+/** Result of a completed creation dialog. */
+struct CreatedCharacter {
+	Common::String name;
+	uint8 race;
+	uint8 sex;
+	uint8 classIndex;
+	byte stats[CharacterCreation::kStatCount];
+	CreationRolls rolls;
+	StartingItem items[StartingEquipment::kMaxItems];
+	uint itemCount;
+};
+
 /** Step/selection state for the DOS character-creation dialogs. */
 class CharacterCreationFlow {
 public:
@@ -122,6 +136,8 @@ public:
 	bool finishName();
 	bool addBonusPoint(uint statIndex);
 	bool removeBonusPoint(uint statIndex);
+	/** Finish and roll the final age/HP/ST/capacity + starting kit. */
+	bool buildCharacter(WizardryRNG &rng, CreatedCharacter &out);
 	bool finish();
 
 private:
