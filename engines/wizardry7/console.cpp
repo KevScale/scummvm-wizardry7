@@ -105,6 +105,7 @@ Wizardry7Console::Wizardry7Console(Wizardry7Engine *vm) : GUI::Debugger(), _vm(v
 	registerCmd("anim", WRAP_METHOD(Wizardry7Console, cmdAnim));
 	registerCmd("encounter", WRAP_METHOD(Wizardry7Console, cmdEncounter));
 	registerCmd("placement", WRAP_METHOD(Wizardry7Console, cmdPlacement));
+	registerCmd("placeview", WRAP_METHOD(Wizardry7Console, cmdPlaceView));
 	registerCmd("script", WRAP_METHOD(Wizardry7Console, cmdScript));
 }
 
@@ -221,6 +222,8 @@ bool Wizardry7Console::runScript(const Common::Path &path) {
 			ok &= cmdEncounter(count, argv);
 		else if (command == "placement")
 			ok &= cmdPlacement(count, argv);
+		else if (command == "placeview")
+			ok &= cmdPlaceView(count, argv);
 		else if (command == "script")
 			ok &= cmdScript(count, argv);
 		else {
@@ -463,6 +466,29 @@ bool Wizardry7Console::cmdCharGen(int argc, const char **argv) {
 
 bool Wizardry7Console::cmdCharGenUI(int argc, const char **argv) {
 	_vm->runCharacterCreationUI("VBFONT0.VGA", argc >= 2 ? Common::Path(argv[1]) : Common::Path());
+	return true;
+}
+
+bool Wizardry7Console::cmdPlaceView(int argc, const char **argv) {
+	if (argc < 3 || argc > 5) {
+		print("Usage: placeview <file.VGA> <record> [dx dy]\n");
+		return true;
+	}
+	int record = 0, dx = 0, dy = 0;
+	if (!parseInteger(argv[2], record) || record < 0 ||
+		(argc >= 4 && !parseInteger(argv[3], dx)) ||
+		(argc >= 5 && !parseInteger(argv[4], dy))) {
+		print("Bad record/offset\n");
+		return true;
+	}
+	Common::String file(argv[1]);
+	if (!file.hasSuffixIgnoreCase(".VGA"))
+		file += ".VGA";
+	if (!_vm->showPlacement(Common::Path(file), (uint)record, dx, dy)) {
+		print("Cannot render placement %d from '%s'\n", record, file.c_str());
+		return true;
+	}
+	print("Rendered %s placement %d at offset %d,%d\n", file.c_str(), record, dx, dy);
 	return true;
 }
 

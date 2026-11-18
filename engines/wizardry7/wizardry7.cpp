@@ -521,6 +521,22 @@ bool Wizardry7Engine::showProfessionChoices(const Common::Array<uint> &classes,
 	return true;
 }
 
+bool Wizardry7Engine::showPlacement(const Common::Path &bundlePath, uint record, int dx, int dy) {
+	VgaBundle bundle;
+	if (!bundle.load(bundlePath))
+		return false;
+	VgaPlacement placement;
+	if (!bundle.getPlacement(record, placement))
+		return false;
+	if (!showScreen("PCVWSCRN"))
+		return false;
+	const int x = (placement.xExtra + placement.x) * 8 + dx;
+	bundle.drawChunk(placement.bitmap, _screen, x, placement.y + dy);
+	_screen->makeAllDirty();
+	_screen->update();
+	return true;
+}
+
 bool Wizardry7Engine::showCharacterReview(const Common::Path &rosterPath, uint slot,
 		const Common::String &fontName) {
 	CharacterRoster roster;
