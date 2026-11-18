@@ -744,18 +744,49 @@ bool Wizardry7Engine::creationFinish(CreatedCharacter &out) {
 	return true;
 }
 
-bool Wizardry7Engine::saveCreationRecord(const Common::Path &path) {
+bool Wizardry7Engine::buildCreationRecord(byte *record) {
 	if (!_hasCreationResult)
 		return false;
-	byte record[kCharacterRecordSize];
-	if (!writeCharacterRecord(_creationResult, record, sizeof(record)))
+	if (!writeCharacterRecord(_creationResult, record, kCharacterRecordSize))
 		return false;
-	if (!writeCharacterInventory(_creationResult, _scenario, record, sizeof(record)))
+	return writeCharacterInventory(_creationResult, _scenario, record, kCharacterRecordSize);
+}
+
+bool Wizardry7Engine::saveCreationRecord(const Common::Path &path) {
+	byte record[kCharacterRecordSize];
+	if (!buildCreationRecord(record))
 		return false;
 	Common::DumpFile out;
 	if (!out.open(path))
 		return false;
 	const bool ok = out.write(record, sizeof(record)) == sizeof(record);
+	out.close();
+	return ok;
+}
+
+bool Wizardry7Engine::saveCreationToRoster(const Common::Path &rosterPath, const Common::Path &outPath) {
+	byte record[kCharacterRecordSize];
+	if (!buildCreationRecord(record))
+		return false;
+	CharacterRoster roster;
+	if (!roster.load(rosterPath)) {
+		warning("Wizardry7: cannot read roster '%s'", rosterPath.toString().c_str());
+		return false;
+	}
+	const int slot = roster.findFreeSlot();
+	if (slot < 0) {
+		warning("Wizardry7: roster '%s' is full", rosterPath.toString().c_str());
+		return false;
+	}
+	if (!roster.setCharacterRecord((uint)slot, record, sizeof(record)))
+		return false;
+	Common::Array<byte> data;
+	if (!roster.writeToData(data))
+		return false;
+	Common::DumpFile out;
+	if (!out.open(outPath))
+		return false;
+	const bool ok = out.write(data.data(), data.size()) == data.size();
 	out.close();
 	return ok;
 }

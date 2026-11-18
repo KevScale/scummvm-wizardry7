@@ -433,7 +433,7 @@ bool Wizardry7Console::cmdCharGenUI(int argc, const char **argv) {
 
 bool Wizardry7Console::cmdCreate(int argc, const char **argv) {
 	if (argc < 2) {
-		print("Usage: create start|sex N|race N|class N|name NAME|bonus STAT|finish|status\n");
+		print("Usage: create start|sex N|race N|class N|name NAME|bonus STAT|finish|status|record FILE|roster ROSTER OUT\n");
 		return true;
 	}
 	const Common::String action = argv[1];
@@ -492,6 +492,18 @@ bool Wizardry7Console::cmdCreate(int argc, const char **argv) {
 			return true;
 		}
 		print("Wrote partial record to '%s'\n", argv[2]);
+		return true;
+	}
+	if (action == "roster") {
+		if (argc != 4) {
+			print("Usage: create roster ROSTER OUT\n");
+			return true;
+		}
+		if (!_vm->saveCreationToRoster(Common::Path(argv[2]), Common::Path(argv[3]))) {
+			print("Could not write creation result into roster\n");
+			return true;
+		}
+		print("Wrote character into roster '%s' -> '%s'\n", argv[2], argv[3]);
 		return true;
 	}
 	if (action == "finish") {

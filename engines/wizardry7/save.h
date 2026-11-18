@@ -73,9 +73,19 @@ public:
 	bool isSlotUsed(uint slot) const { return slot < _used.size() && _used[slot]; }
 	const SaveCharacter &getCharacter(uint slot) const { return _characters[slot]; }
 
+	/** First unused slot, or -1 when the roster is full. */
+	int findFreeSlot() const;
+	/** Replace a roster slot with a raw 584-byte character record. */
+	bool setCharacterRecord(uint slot, const byte *record, uint32 size);
+	/** Serialise the (possibly modified) file back to memory. */
+	bool writeToData(Common::Array<byte> &out) const;
+
 private:
+	Common::Array<byte> _raw;
 	Common::Array<SaveCharacter> _characters;
 	Common::Array<bool> _used;
+	uint16 _stride;
+	uint16 _headerSize;
 };
 
 class SaveGame {

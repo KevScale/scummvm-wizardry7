@@ -75,7 +75,7 @@ static bool readWholeFile(const Common::Path &path, Common::Array<byte> &data) {
 	return ok;
 }
 
-CharacterRoster::CharacterRoster() {
+CharacterRoster::CharacterRoster() : _stride(0), _headerSize(0) {
 }
 
 bool CharacterRoster::load(const Common::Path &path) {
@@ -104,12 +104,41 @@ bool CharacterRoster::loadFromData(const byte *source, uint32 size) {
 		data.size() < headerSize + (uint32)slots * stride)
 		return false;
 
+	_raw = data;
+	_stride = stride;
+	_headerSize = headerSize;
 	_characters.resize(slots);
 	_used.resize(slots);
 	for (uint i = 0; i < slots; ++i) {
 		_used[i] = data[8 + i] != 0;
 		parseCharacter(data.data() + headerSize + i * stride, _characters[i]);
 	}
+	return true;
+}
+
+int CharacterRoster::findFreeSlot() const {
+	for (uint i = 0; i < _used.size(); ++i) {
+		if (!_used[i])
+			return (int)i;
+	}
+	return -1;
+}
+
+bool CharacterRoster::setCharacterRecord(uint slot, const byte *record, uint32 size) {
+	if (slot >= _used.size() || !record || size != kCharacterSize ||
+		_headerSize + (slot + 1) * _stride > _raw.size())
+		return false;
+	memcpy(_raw.data() + _headerSize + slot * _stride, record, kCharacterSize);
+	_raw[8 + slot] = 1;
+	_used[slot] = true;
+	parseCharacter(_raw.data() + _headerSize + slot * _stride, _characters[slot]);
+	return true;
+}
+
+bool CharacterRoster::writeToData(Common::Array<byte> &out) const {
+	if (_raw.empty())
+		return false;
+	out = _raw;
 	return true;
 }
 
@@ -134,7 +163,6 @@ bool SaveGame::loadFromData(const byte *data, uint32 size) {
 	_size = size;
 	_characters.clear();
 
-	if (size < 4)
 	if (_size < 4)
 		return false;
 

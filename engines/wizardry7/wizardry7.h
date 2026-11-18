@@ -79,6 +79,7 @@ public:
 	bool creationAddBonus(uint statIndex);
 	bool creationFinish(CreatedCharacter &out);
 	bool saveCreationRecord(const Common::Path &path);
+	bool saveCreationToRoster(const Common::Path &rosterPath, const Common::Path &outPath);
 	CharacterCreationFlow &getCreation() { return _creation; }
 	const CharacterCreationFlow &getCreation() const { return _creation; }
 	bool isCreationStarted() const { return _creationStarted; }
@@ -87,6 +88,7 @@ public:
 
 private:
 	bool loadGameData();
+	bool buildCreationRecord(byte *record);
 	void drawStatusScreen();
 
 	const Wizardry7GameDescription *_gameDescription;

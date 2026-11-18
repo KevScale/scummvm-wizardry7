@@ -144,6 +144,28 @@ public:
 		TS_ASSERT(!roster.isSlotUsed(1));
 		TS_ASSERT_EQUALS(roster.getCharacter(0).name, Common::String("AAA"));
 		TS_ASSERT_EQUALS(roster.getCharacter(1).name, Common::String("BBB"));
+
+		TS_ASSERT_EQUALS(roster.findFreeSlot(), 1);
+		byte record[584];
+		memset(record, 0, sizeof(record));
+		memcpy(record, "NEW", 3);
+		record[0x238] = 1; // female
+		TS_ASSERT(roster.setCharacterRecord(1, record, sizeof(record)));
+		TS_ASSERT(roster.isSlotUsed(1));
+		TS_ASSERT_EQUALS(roster.getCharacter(1).name, Common::String("NEW"));
+		TS_ASSERT_EQUALS(roster.getCharacter(1).gender, 1);
+		TS_ASSERT_EQUALS(roster.findFreeSlot(), -1);
+
+		Common::Array<byte> out;
+		TS_ASSERT(roster.writeToData(out));
+		TS_ASSERT_EQUALS(out.size(), data.size());
+		TS_ASSERT_EQUALS(out[8 + 1], 1);
+		TS_ASSERT_EQUALS(memcmp(out.data() + 24 + 584, record, sizeof(record)), 0);
+
+		Wizardry7::CharacterRoster roundTrip;
+		TS_ASSERT(roundTrip.loadFromData(out.data(), out.size()));
+		TS_ASSERT(roundTrip.isSlotUsed(1));
+		TS_ASSERT_EQUALS(roundTrip.getCharacter(1).name, Common::String("NEW"));
 	}
 
 	void testCreationEligibility() {
