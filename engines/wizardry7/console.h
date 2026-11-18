@@ -53,6 +53,8 @@ private:
 	bool cmdFontInfo(int argc, const char **argv);
 	bool cmdGlyphs(int argc, const char **argv);
 	bool cmdGlyph(int argc, const char **argv);
+	bool cmdSaveInfo(int argc, const char **argv);
+	bool cmdText(int argc, const char **argv);
 	bool cmdScript(int argc, const char **argv);
 
 	Wizardry7Engine *_vm;

@@ -7,6 +7,7 @@ MODULE_OBJS := \
 	metaengine.o \
 	msg.o \
 	rng.o \
+	save.o \
 	scenario.o \
 	wizardry7.o
 

@@ -85,14 +85,6 @@ bool GameFont::load(const Common::Path &path) {
 		return false;
 	}
 
-	for (uint i = 0; i < 128; ++i) {
-		if (_data[0x10 + i * 2] >= _glyphCount) {
-			warning("Wizardry7: font '%s' glyph table entry %u is out of range", path.toString().c_str(), i);
-			_data.clear();
-			return false;
-		}
-	}
-
 	return true;
 }
 
@@ -106,9 +98,12 @@ uint GameFont::getAdvance(byte character) const {
 const byte *GameFont::glyphData(byte character) const {
 	if (character >= 128)
 		return nullptr;
-	const uint index = _data[0x10 + character * 2];
+	// Text fonts map character -> glyph through the table. Icon/portrait fonts
+	// (e.g. VBFONT1, VCPORT0) may have more table entries than bitmaps; the
+	// renderer then indexes the bitmap with (character % glyphCount).
+	uint index = _data[0x10 + character * 2];
 	if (index >= _glyphCount)
-		return nullptr;
+		index = character % _glyphCount;
 	return _data.data() + kFontHeaderSize + index * _bytesPerGlyph;
 }
 

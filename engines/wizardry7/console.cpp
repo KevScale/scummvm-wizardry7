@@ -33,6 +33,7 @@
 
 #include "wizardry7/font.h"
 #include "wizardry7/gfx.h"
+#include "wizardry7/save.h"
 #include "wizardry7/msg.h"
 #include "wizardry7/rng.h"
 #include "wizardry7/scenario.h"
@@ -78,6 +79,8 @@ Wizardry7Console::Wizardry7Console(Wizardry7Engine *vm) : GUI::Debugger(), _vm(v
 	registerCmd("fontinfo", WRAP_METHOD(Wizardry7Console, cmdFontInfo));
 	registerCmd("glyphs", WRAP_METHOD(Wizardry7Console, cmdGlyphs));
 	registerCmd("glyph", WRAP_METHOD(Wizardry7Console, cmdGlyph));
+	registerCmd("saveinfo", WRAP_METHOD(Wizardry7Console, cmdSaveInfo));
+	registerCmd("text", WRAP_METHOD(Wizardry7Console, cmdText));
 	registerCmd("script", WRAP_METHOD(Wizardry7Console, cmdScript));
 }
 
@@ -154,6 +157,10 @@ bool Wizardry7Console::runScript(const Common::Path &path) {
 			ok &= cmdGlyphs(count, argv);
 		else if (command == "glyph")
 			ok &= cmdGlyph(count, argv);
+		else if (command == "saveinfo")
+			ok &= cmdSaveInfo(count, argv);
+		else if (command == "text")
+			ok &= cmdText(count, argv);
 		else if (command == "script")
 			ok &= cmdScript(count, argv);
 		else {
@@ -505,6 +512,86 @@ bool Wizardry7Console::cmdGlyph(int argc, const char **argv) {
 	const uint advance = font.drawChar(code, screen, x, y, 15, true, 0);
 	screen->update();
 	print("Glyph %d advance %u\n", code, advance);
+	return true;
+}
+
+bool Wizardry7Console::cmdSaveInfo(int argc, const char **argv) {
+	if (argc != 2) {
+		print("Usage: saveinfo <SAVEGAME.DBS | file.sgm>\n");
+		return true;
+	}
+	SaveGame save;
+	if (!save.load(Common::Path(argv[1]))) {
+		print("Cannot read save '%s'\n", argv[1]);
+		return true;
+	}
+
+	print("'%s': %s, %u bytes, %u character(s)\n", argv[1],
+		SaveGame::getKindName(save.getKind()), save.getSize(), save.getCharacterCount());
+	for (uint i = 0; i < save.getCharacterCount(); ++i) {
+		const SaveCharacter &c = save.getCharacter(i);
+		print("  %2u %-8s age %u xp %u hp %u/%u st %u/%u ac %u gold %u wt %u race %u class %u align %u knack %u\n",
+			i, c.name.c_str(), c.age, c.xp, c.hp, c.hpMax, c.stamina, c.staminaMax,
+			c.ac, c.gold, c.weight, c.race, c.klass, c.alignment, c.knack);
+	}
+	return true;
+}
+
+bool Wizardry7Console::cmdText(int argc, const char **argv) {
+	if (argc < 3 || argc > 6) {
+		print("Usage: text <font.VGA> <msgId> [x] [y] [color]\n");
+		return true;
+	}
+	GameFont font;
+	if (!font.load(Common::Path(argv[1]))) {
+		print("Cannot load font '%s'\n", argv[1]);
+		return true;
+	}
+	int id, x = 0, y = 0, color = 15;
+	if (!parseInteger(argv[2], id) || id < 0 || id > 0xFFFF)
+		return true;
+	if (argc >= 4 && !parseInteger(argv[3], x))
+		return true;
+	if (argc >= 5 && !parseInteger(argv[4], y))
+		return true;
+	if (argc == 6 && !parseInteger(argv[5], color))
+		return true;
+
+	MessageDatabase *messages = _vm->getMessages();
+	if (!messages->isLoaded() || !messages->hasMessage(id)) {
+		print("No message %d\n", id);
+		return true;
+	}
+	const Common::String text = messages->getMessage(id);
+	Graphics::Screen *screen = _vm->getScreen();
+	if (!screen)
+		return true;
+	if (_vm->getPalette()->isLoaded())
+		_vm->getPalette()->apply(screen);
+
+	uint drawn = 0;
+	for (uint i = 0; i < text.size(); ++i) {
+		const byte c = text[i];
+		if (c == '\n' || c == '\r') {
+			x = 0;
+			y += font.getHeight() + 1;
+			continue;
+		}
+		if (c < 32) // TODO: control codes need their own handling
+			continue;
+		const uint advance = font.getAdvance(c);
+		if (x + (int)advance >= screen->w) {
+			x = 0;
+			y += font.getHeight() + 1;
+		}
+		if (y + (int)font.getHeight() >= screen->h)
+			break;
+		font.drawChar(c, screen, x, y, (byte)color, true, 0);
+		x += advance;
+		++drawn;
+	}
+	screen->update();
+	print("Drew %u character(s) of message %d with '%s'\n", drawn, id, argv[1]);
 	return true;
 }
 
