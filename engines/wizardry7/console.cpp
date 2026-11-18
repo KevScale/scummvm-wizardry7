@@ -77,6 +77,7 @@ Wizardry7Console::Wizardry7Console(Wizardry7Engine *vm) : GUI::Debugger(), _vm(v
 	registerCmd("charactermenu", WRAP_METHOD(Wizardry7Console, cmdCharacterMenu));
 	registerCmd("addcharacter", WRAP_METHOD(Wizardry7Console, cmdAddCharacter));
 	registerCmd("chargen", WRAP_METHOD(Wizardry7Console, cmdCharGen));
+	registerCmd("create", WRAP_METHOD(Wizardry7Console, cmdCreate));
 	registerCmd("screen", WRAP_METHOD(Wizardry7Console, cmdScreen));
 	registerCmd("screenshot", WRAP_METHOD(Wizardry7Console, cmdScreenshot));
 	registerCmd("bundle", WRAP_METHOD(Wizardry7Console, cmdBundle));
@@ -158,6 +159,8 @@ bool Wizardry7Console::runScript(const Common::Path &path) {
 			ok &= cmdAddCharacter(count, argv);
 		else if (command == "chargen")
 			ok &= cmdCharGen(count, argv);
+		else if (command == "create")
+			ok &= cmdCreate(count, argv);
 		else if (command == "screen")
 			ok &= cmdScreen(count, argv);
 		else if (command == "screenshot")
@@ -408,6 +411,88 @@ bool Wizardry7Console::cmdCharGen(int argc, const char **argv) {
 		return true;
 	}
 	print("Showing character-creation step '%s'\n", argv[1]);
+	return true;
+}
+
+bool Wizardry7Console::cmdCreate(int argc, const char **argv) {
+	if (argc < 2) {
+		print("Usage: create start|sex N|race N|class N|name NAME|bonus STAT|finish|status\n");
+		return true;
+	}
+	const Common::String action = argv[1];
+	if (action == "start") {
+		_vm->startCreation();
+		print("Creation started at sex step\n");
+		return true;
+	}
+	if (!_vm->isCreationStarted()) {
+		print("Creation not started; run 'create start'\n");
+		return true;
+	}
+	if (action == "sex" || action == "race" || action == "class" || action == "bonus") {
+		if (argc != 3) {
+			print("Usage: create %s N\n", action.c_str());
+			return true;
+		}
+		int value = 0;
+		if (!parseInteger(argv[2], value)) {
+			print("Bad number '%s'\n", argv[2]);
+			return true;
+		}
+		bool ok = false;
+		if (action == "sex")
+			ok = _vm->creationChooseSex(value);
+		else if (action == "race")
+			ok = _vm->creationChooseRace(value);
+		else if (action == "class")
+			ok = _vm->creationChooseProfession(value);
+		else {
+			if (_vm->getCreation().getStep() == CharacterCreationFlow::kStepName &&
+				!_vm->getCreation().finishName()) {
+				print("Set a valid name before bonus points\n");
+				return true;
+			}
+			ok = _vm->creationAddBonus(value);
+		}
+		print("%s %d: %s\n", action.c_str(), value, ok ? "ok" : "rejected");
+		return true;
+	}
+	if (action == "name") {
+		if (argc != 3) {
+			print("Usage: create name NAME\n");
+			return true;
+		}
+		print("name: %s\n", _vm->creationSetName(argv[2]) ? "ok" : "rejected");
+		return true;
+	}
+	if (action == "finish") {
+		Wizardry7::CreatedCharacter result;
+		if (!_vm->creationFinish(result)) {
+			print("finish rejected (name/bonus step incomplete?)\n");
+			return true;
+		}
+		print("CREATED %s race %u sex %u class %u\n", result.name.c_str(),
+			result.race, result.sex, result.classIndex);
+		print("stats");
+		for (uint i = 0; i < Wizardry7::CharacterCreation::kStatCount; ++i)
+			print(" %u", result.stats[i]);
+		print("\nage %u hp %u st %u cc %u ac %u\n", result.rolls.ageDays,
+			result.rolls.hpMax, result.rolls.staminaMax, result.rolls.carryingCapacity,
+			result.rolls.ac);
+		print("items");
+		for (uint i = 0; i < result.itemCount; ++i)
+			print(" %u:%u", result.items[i].itemId, result.items[i].count);
+		print("\n");
+		return true;
+	}
+	if (action == "status") {
+		const CharacterCreationFlow &flow = _vm->getCreation();
+		print("step %d bonus %d sex %u race %u class %d\n", (int)flow.getStep(),
+			flow.getCharacter().getBonusPoints(), flow.getCharacter().getSex(),
+			flow.getRace(), flow.getCharacter().getClass());
+		return true;
+	}
+	print("Unknown create action '%s'\n", action.c_str());
 	return true;
 }
 

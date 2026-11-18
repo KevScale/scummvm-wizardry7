@@ -26,6 +26,7 @@
 
 #include "engines/engine.h"
 
+#include "wizardry7/creation.h"
 #include "wizardry7/detection.h"
 #include "wizardry7/gfx.h"
 #include "wizardry7/msg.h"
@@ -61,6 +62,18 @@ public:
 	bool showAddCharacter(const Common::String &fontName = "VBFONT0.VGA",
 		const Common::Path &rosterPath = Common::Path());
 	bool showCharacterCreation(const Common::String &step, const Common::String &fontName = "VBFONT0.VGA");
+
+	// Headless creation driver used by the debug console/CI scripts.
+	bool startCreation();
+	bool creationChooseSex(uint sex);
+	bool creationChooseRace(uint race);
+	bool creationChooseProfession(uint classIndex);
+	bool creationSetName(const Common::String &name);
+	bool creationAddBonus(uint statIndex);
+	bool creationFinish(CreatedCharacter &out);
+	CharacterCreationFlow &getCreation() { return _creation; }
+	const CharacterCreationFlow &getCreation() const { return _creation; }
+	bool isCreationStarted() const { return _creationStarted; }
 	bool saveScreenshot(const Common::Path &path);
 	void showStatusScreen() { drawStatusScreen(); }
 
@@ -74,6 +87,8 @@ private:
 	ScenarioDatabase _scenario;
 	GamePalette _palette;
 	Graphics::Screen *_screen;
+	CharacterCreationFlow _creation;
+	bool _creationStarted;
 	bool _messagesLoaded;
 	bool _scenarioLoaded;
 };

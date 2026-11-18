@@ -50,7 +50,7 @@ static void drawLine(Graphics::Screen *screen, const Graphics::Font *font, int &
 
 Wizardry7Engine::Wizardry7Engine(OSystem *syst, const Wizardry7GameDescription *gameDesc) :
 	Engine(syst), _gameDescription(gameDesc), _screen(nullptr),
-	_messagesLoaded(false), _scenarioLoaded(false) {
+	_creationStarted(false), _messagesLoaded(false), _scenarioLoaded(false) {
 
 	setDebugger(new Wizardry7Console(this));
 }
@@ -447,6 +447,49 @@ bool Wizardry7Engine::showCharacterCreation(const Common::String &step, const Co
 
 	_screen->update();
 	return true;
+}
+
+bool Wizardry7Engine::startCreation() {
+	byte zero[CharacterCreation::kStatCount] = { 0 };
+	_creation.begin(zero, 0);
+	_creationStarted = true;
+	return true;
+}
+
+bool Wizardry7Engine::creationChooseSex(uint sex) {
+	if (!_creationStarted || sex > 1)
+		return false;
+	return _creation.chooseSex((byte)sex);
+}
+
+bool Wizardry7Engine::creationChooseRace(uint race) {
+	if (!_creationStarted || !_creation.chooseRace((uint8)race))
+		return false;
+	CharacterCreation &character = _creation.getCharacter();
+	character.applyRaceMinimums((uint8)race);
+	character.applySexModifiers(character.getSex());
+	character.setBonusPoints(CharacterCreation::rollBonusPoints(_rng));
+	return true;
+}
+
+bool Wizardry7Engine::creationChooseProfession(uint classIndex) {
+	return _creationStarted && _creation.chooseProfession(classIndex);
+}
+
+bool Wizardry7Engine::creationSetName(const Common::String &name) {
+	return _creationStarted && _creation.setName(name);
+}
+
+bool Wizardry7Engine::creationAddBonus(uint statIndex) {
+	return _creationStarted && _creation.addBonusPoint(statIndex);
+}
+
+bool Wizardry7Engine::creationFinish(CreatedCharacter &out) {
+	if (!_creationStarted)
+		return false;
+	if (_creation.getStep() == CharacterCreationFlow::kStepName && !_creation.finishName())
+		return false;
+	return _creation.buildCharacter(_rng, out);
 }
 
 bool Wizardry7Engine::saveScreenshot(const Common::Path &path) {
