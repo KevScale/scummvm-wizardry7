@@ -80,11 +80,29 @@ bool MazeRecord::getHazard(uint layer, uint face) const {
 	return (_raw[offset + face / 8] >> (face & 7)) & 1;
 }
 
+bool MazeRecord::stepCell(uint &cell, uint &localX, uint &localY, int dx, int dy) const {
+	uint ox = 0, oy = 0;
+	getCellOrigin(cell, ox, oy);
+	const int x = (int)ox + (int)localX + dx;
+	const int y = (int)oy + (int)localY + dy;
+	return findCell(x, y, cell, localX, localY);
+}
+
+bool MazeRecord::getKindRay(uint cell, uint localX, uint localY, int dx, int dy,
+		uint8 kinds[5]) const {
+	for (uint i = 0; i < 5; ++i) {
+		kinds[i] = getViewKind(cell, localX, localY);
+		if (!stepCell(cell, localX, localY, dx, dy))
+			return false;
+	}
+	return true;
+}
+
 uint8 MazeRecord::getViewKind(uint cell, uint column, uint row) const {
 	const uint face = cellFace(cell, column, row);
-	if (getHazard(2, face))
+	if (getHazard(1, face)) // +0x930: plane C
 		return 3;
-	if (getHazard(0, face))
+	if (getHazard(2, face)) // +0x9B0: plane A
 		return 2;
 	return 0;
 }
@@ -111,6 +129,29 @@ int MazeRecord::selectEncounterMonster(uint slot, WizardryRNG &rng) const {
 	const uint32 bandRoll = rng.getRandom(100);
 	const uint band = bandRoll < 0x4A ? 0 : bandRoll < 0x5C ? 1 : 2;
 	return getMonster(group, columnGroup, band);
+}
+
+void MazeRecord::getCellOrigin(uint cell, uint &originX, uint &originY) const {
+	if (cell >= 16) {
+		originX = originY = 0;
+		return;
+	}
+	originX = _raw[0x490 + cell];
+	originY = _raw[0x4A0 + cell];
+}
+
+bool MazeRecord::findCell(int x, int y, uint &cell, uint &localX, uint &localY) const {
+	for (uint i = 0; i < 16; ++i) {
+		const int ox = _raw[0x490 + i];
+		const int oy = _raw[0x4A0 + i];
+		if (x >= ox && x <= ox + 7 && y >= oy && y <= oy + 7) {
+			cell = i;
+			localX = (uint)(x - ox);
+			localY = (uint)(y - oy);
+			return true;
+		}
+	}
+	return false;
 }
 
 byte MazeRecord::getMonster(uint row, uint columnGroup, uint band) const {

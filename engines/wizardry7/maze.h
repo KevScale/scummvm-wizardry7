@@ -66,9 +66,18 @@ public:
 	}
 	/** View kind from the three hazard planes: C -> 3, A -> 2, else 0. */
 	uint8 getViewKind(uint cell, uint column, uint row) const;
+	/** Step one local cell (wrapping across the 16-cell graph). */
+	bool stepCell(uint &cell, uint &localX, uint &localY, int dx, int dy) const;
+	/** Five depth kinds along a ray; false if the ray leaves the cell graph. */
+	bool getKindRay(uint cell, uint localX, uint localY, int dx, int dy, uint8 kinds[5]) const;
 	byte getEncounterGroup(uint slot, bool uncommon) const;
 	byte getEncounterChance(uint slot) const;
 	byte getMonster(uint row, uint columnGroup, uint band) const;
+
+	/** Cell origin tables at +0x490/+0x4A0 (16 cells, 8x8 each). */
+	void getCellOrigin(uint cell, uint &originX, uint &originY) const;
+	/** Resolve absolute x/y to a cell and local (0..7) coordinates. */
+	bool findCell(int x, int y, uint &cell, uint &localX, uint &localY) const;
 
 	/**
 	 * Encounter roll for one of the 16 slots. Returns -1 when the chance check

@@ -726,6 +726,7 @@ public:
 		data[0x4B1] = 0x2A >> 2;
 		data[0x7B0] = 2 << 6; // flags face3=2
 		data[0x8B0 + 1] = 2; // hazard layer0 face9
+		data[0x9B0 + 1] = 2; // plane A face9 -> kind 2
 		data[0xAB0] = 0x43; // encounter slot0 common=3, uncommon=4
 		data[0xAC0] = 65;
 		Wizardry7::MazeRecord maze;
@@ -739,12 +740,27 @@ public:
 		TS_ASSERT(maze.getHazard(0, 9));
 		TS_ASSERT(!maze.getHazard(1, 9));
 		TS_ASSERT_EQUALS(maze.getViewKind(0, 1, 1), 2); // face 9 is plane A
-		data[0x9B0] = 1; // face 0 plane C -> kind 3
+		data[0x930] = 1; // face 0 plane C -> kind 3
 		TS_ASSERT(maze.loadFromData(data.data(), data.size()));
 		TS_ASSERT_EQUALS(maze.getViewKind(0, 0, 0), 3);
 		TS_ASSERT_EQUALS(maze.getEncounterGroup(0, false), 3);
 		TS_ASSERT_EQUALS(maze.getEncounterGroup(0, true), 4);
 		TS_ASSERT_EQUALS(maze.getEncounterChance(0), 65);
+		for (uint i = 0; i < 16; ++i) {
+			data[0x490 + i] = 50;
+			data[0x4A0 + i] = 50;
+		}
+		data[0x490 + 2] = 10;
+		data[0x4A0 + 2] = 20;
+		TS_ASSERT(maze.loadFromData(data.data(), data.size()));
+		uint cell = 0, lx = 0, ly = 0;
+		TS_ASSERT(maze.findCell(12, 23, cell, lx, ly));
+		TS_ASSERT_EQUALS(cell, 2u);
+		TS_ASSERT_EQUALS(lx, 2u);
+		TS_ASSERT_EQUALS(ly, 3u);
+		TS_ASSERT(!maze.findCell(0, 0, cell, lx, ly));
+		uint8 kinds[5];
+		TS_ASSERT(maze.getKindRay(2, 2, 3, 1, 0, kinds));
 		maze.getEncounterChance(1);
 		data[0xAC0 + 1] = 0; // no encounter possible
 		TS_ASSERT(maze.loadFromData(data.data(), data.size()));

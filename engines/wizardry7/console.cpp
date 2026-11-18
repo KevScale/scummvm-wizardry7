@@ -110,6 +110,8 @@ Wizardry7Console::Wizardry7Console(Wizardry7Engine *vm) : GUI::Debugger(), _vm(v
 	registerCmd("viewpaint", WRAP_METHOD(Wizardry7Console, cmdViewPaint));
 	registerCmd("viewkind", WRAP_METHOD(Wizardry7Console, cmdViewKind));
 	registerCmd("viewtrace", WRAP_METHOD(Wizardry7Console, cmdViewTrace));
+	registerCmd("cell", WRAP_METHOD(Wizardry7Console, cmdCell));
+	registerCmd("cellray", WRAP_METHOD(Wizardry7Console, cmdCellRay));
 	registerCmd("script", WRAP_METHOD(Wizardry7Console, cmdScript));
 }
 
@@ -236,6 +238,10 @@ bool Wizardry7Console::runScript(const Common::Path &path) {
 			ok &= cmdViewKind(count, argv);
 		else if (command == "viewtrace")
 			ok &= cmdViewTrace(count, argv);
+		else if (command == "cell")
+			ok &= cmdCell(count, argv);
+		else if (command == "cellray")
+			ok &= cmdCellRay(count, argv);
 		else if (command == "script")
 			ok &= cmdScript(count, argv);
 		else {
@@ -481,6 +487,60 @@ bool Wizardry7Console::cmdCharGenUI(int argc, const char **argv) {
 	return true;
 }
 
+bool Wizardry7Console::cmdCellRay(int argc, const char **argv) {
+	if (argc != 7) {
+		print("Usage: cellray <maze> <cell> <lx> <ly> <dx> <dy>\n");
+		return true;
+	}
+	int mazeId = 0, cell = 0, lx = 0, ly = 0, dx = 0, dy = 0;
+	if (!parseInteger(argv[1], mazeId) || !parseInteger(argv[2], cell) ||
+		!parseInteger(argv[3], lx) || !parseInteger(argv[4], ly) ||
+		!parseInteger(argv[5], dx) || !parseInteger(argv[6], dy)) {
+		print("Bad ray arguments\n");
+		return true;
+	}
+	Wizardry7::MazeRecord maze;
+	if (!maze.load(*_vm->getScenario(), (uint)mazeId)) {
+		print("Cannot load maze %d\n", mazeId);
+		return true;
+	}
+	uint8 kinds[5];
+	if (!maze.getKindRay((uint)cell, (uint)lx, (uint)ly, dx, dy, kinds)) {
+		print("Ray leaves the cell graph\n");
+		return true;
+	}
+	print("maze %d ray: %u %u %u %u %u\n", mazeId, kinds[0], kinds[1], kinds[2], kinds[3], kinds[4]);
+	return true;
+}
+
+bool Wizardry7Console::cmdCell(int argc, const char **argv) {
+	if (argc != 4) {
+		print("Usage: cell <maze> <x> <y>\n");
+		return true;
+	}
+	int mazeId = 0, x = 0, y = 0;
+	if (!parseInteger(argv[1], mazeId) || !parseInteger(argv[2], x) ||
+		!parseInteger(argv[3], y) || mazeId < 0 || mazeId >= 32) {
+		print("Bad maze/x/y\n");
+		return true;
+	}
+	Wizardry7::MazeRecord maze;
+	if (!maze.load(*_vm->getScenario(), (uint)mazeId)) {
+		print("Cannot load maze %d\n", mazeId);
+		return true;
+	}
+	uint cell = 0, lx = 0, ly = 0;
+	if (!maze.findCell(x, y, cell, lx, ly)) {
+		print("(%d,%d) is outside every cell\n", x, y);
+		return true;
+	}
+	uint ox = 0, oy = 0;
+	maze.getCellOrigin(cell, ox, oy);
+	print("maze %d (%d,%d) -> cell %u local %u,%u origin %u,%u\n",
+		mazeId, x, y, cell, lx, ly, ox, oy);
+	return true;
+}
+
 bool Wizardry7Console::cmdViewTrace(int argc, const char **argv) {
 	if (argc != 2) {
 		print("Usage: viewtrace <trace.txt>\n");
@@ -513,9 +573,9 @@ bool Wizardry7Console::cmdViewKind(int argc, const char **argv) {
 		return true;
 	}
 	const uint face = Wizardry7::MazeRecord::cellFace((uint)cell, (uint)column, (uint)row);
-	print("maze %d cell %d col %d row %d: face %u A %u B %u C %u -> kind %u\n",
-		mazeId, cell, column, row, face, maze.getHazard(0, face), maze.getHazard(1, face),
-		maze.getHazard(2, face), maze.getViewKind((uint)cell, (uint)column, (uint)row));
+	print("maze %d cell %d col %d row %d: face %u A %u C %u B %u -> kind %u\n",
+		mazeId, cell, column, row, face, maze.getHazard(2, face), maze.getHazard(1, face),
+		maze.getHazard(0, face), maze.getViewKind((uint)cell, (uint)column, (uint)row));
 	return true;
 }
 
