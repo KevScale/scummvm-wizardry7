@@ -715,6 +715,19 @@ public:
 		TS_ASSERT_EQUALS(maze.getEncounterGroup(0, false), 3);
 		TS_ASSERT_EQUALS(maze.getEncounterGroup(0, true), 4);
 		TS_ASSERT_EQUALS(maze.getEncounterChance(0), 65);
+		maze.getEncounterChance(1);
+		data[0xAC0 + 1] = 0; // no encounter possible
+		TS_ASSERT(maze.loadFromData(data.data(), data.size()));
+		Wizardry7::WizardryRNG rng;
+		rng.reset();
+		TS_ASSERT_EQUALS(maze.selectEncounterMonster(1, rng), -1);
+		for (uint i = 0; i < 144; ++i)
+			data[i] = 42;
+		data[0xAC0 + 2] = 100;
+		data[0xAB0] = 0; // slot 0 group 0; slot 2 also low nibble 0
+		TS_ASSERT(maze.loadFromData(data.data(), data.size()));
+		rng.reset();
+		TS_ASSERT_EQUALS(maze.selectEncounterMonster(2, rng), 42);
 	}
 
 	void testMonsterRecord() {

@@ -103,6 +103,7 @@ Wizardry7Console::Wizardry7Console(Wizardry7Engine *vm) : GUI::Debugger(), _vm(v
 	registerCmd("maze", WRAP_METHOD(Wizardry7Console, cmdMaze));
 	registerCmd("monster", WRAP_METHOD(Wizardry7Console, cmdMonster));
 	registerCmd("anim", WRAP_METHOD(Wizardry7Console, cmdAnim));
+	registerCmd("encounter", WRAP_METHOD(Wizardry7Console, cmdEncounter));
 	registerCmd("script", WRAP_METHOD(Wizardry7Console, cmdScript));
 }
 
@@ -215,6 +216,8 @@ bool Wizardry7Console::runScript(const Common::Path &path) {
 			ok &= cmdMonster(count, argv);
 		else if (command == "anim")
 			ok &= cmdAnim(count, argv);
+		else if (command == "encounter")
+			ok &= cmdEncounter(count, argv);
 		else if (command == "script")
 			ok &= cmdScript(count, argv);
 		else {
@@ -457,6 +460,34 @@ bool Wizardry7Console::cmdCharGen(int argc, const char **argv) {
 
 bool Wizardry7Console::cmdCharGenUI(int argc, const char **argv) {
 	_vm->runCharacterCreationUI("VBFONT0.VGA", argc >= 2 ? Common::Path(argv[1]) : Common::Path());
+	return true;
+}
+
+bool Wizardry7Console::cmdEncounter(int argc, const char **argv) {
+	if (argc != 3) {
+		print("Usage: encounter <maze> <slot>\n");
+		return true;
+	}
+	int mazeId = 0, slot = 0;
+	if (!parseInteger(argv[1], mazeId) || !parseInteger(argv[2], slot) ||
+		mazeId < 0 || mazeId >= 32 || slot < 0 || slot >= 16) {
+		print("Bad maze/slot\n");
+		return true;
+	}
+	Wizardry7::MazeRecord maze;
+	if (!maze.load(*_vm->getScenario(), (uint)mazeId)) {
+		print("Cannot load maze %d\n", mazeId);
+		return true;
+	}
+	const int monsterId = maze.selectEncounterMonster((uint)slot, *_vm->getRNG());
+	if (monsterId < 0) {
+		print("maze %d slot %d: no encounter\n", mazeId, slot);
+		return true;
+	}
+	Wizardry7::MonsterInfo info;
+	const bool named = Wizardry7::loadMonster(*_vm->getScenario(), (uint16)monsterId, info);
+	print("maze %d slot %d: monster %d%s%s\n", mazeId, slot, monsterId,
+		named ? " " : "", named ? info.names[0].c_str() : "");
 	return true;
 }
 

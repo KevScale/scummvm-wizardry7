@@ -60,6 +60,7 @@ private:
 	bool cmdMaze(int argc, const char **argv);
 	bool cmdMonster(int argc, const char **argv);
 	bool cmdAnim(int argc, const char **argv);
+	bool cmdEncounter(int argc, const char **argv);
 	bool cmdCreate(int argc, const char **argv);
 	bool cmdParty(int argc, const char **argv);
 	bool cmdScreen(int argc, const char **argv);
