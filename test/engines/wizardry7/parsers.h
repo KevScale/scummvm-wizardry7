@@ -115,7 +115,9 @@ public:
 		data.resize(10820 + 584);
 		memset(data.data(), 0, data.size());
 		data[0] = 0x0A; // in-progress save tag
-		data[0x2350] = 56; data[0x2360] = 57; data[0x2372] = 0xEC; data[0x2373] = 0x03;
+		data[0x234E] = 14; data[0x2350] = 56; data[0x2352] = 57;
+		data[0x235C] = 14; data[0x235E] = 55; data[0x2360] = 57;
+		data[0x2372] = 0xEC; data[0x2373] = 0x03;
 
 		byte *record = data.data() + 10820;
 		memcpy(record, "TEST", 4);
@@ -157,8 +159,12 @@ public:
 		TS_ASSERT_EQUALS(c.hp, 10u);
 		TS_ASSERT_EQUALS(c.hpMax, 20u);
 		TS_ASSERT_EQUALS(c.stamina, 30u);
+		TS_ASSERT_EQUALS(save.getPartyMaze(), 14);
 		TS_ASSERT_EQUALS(save.getPartyX(), 56);
 		TS_ASSERT_EQUALS(save.getPartyY(), 57);
+		TS_ASSERT_EQUALS(save.getPrevMaze(), 14);
+		TS_ASSERT_EQUALS(save.getPrevX(), 55);
+		TS_ASSERT_EQUALS(save.getPrevY(), 57);
 		TS_ASSERT_EQUALS(save.getPartyCounter(), 1004);
 		TS_ASSERT_EQUALS(c.ac, 7u);
 		TS_ASSERT_EQUALS(c.carryingCapacity, 50u);
