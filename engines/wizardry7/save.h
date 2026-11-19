@@ -141,8 +141,11 @@ public:
 	bool loadFromData(const byte *data, uint32 size);
 	bool save(const Common::Path &path) const;
 
-	/** Replace one DOS character record (584 B); no-op for compressed Gold saves. */
+	/** Replace one DOS/Gold character record (584 B). */
 	bool setCharacterRecord(uint index, const byte *record, uint32 size);
+	/** Update the current party tuple in the container image. */
+	bool setPartyPosition(uint16 maze, uint16 worldX, uint16 worldY, uint16 localX,
+		uint16 localY, uint16 window, uint16 facing);
 	bool writeToData(Common::Array<byte> &out) const;
 
 	/** Rewrite the DOS active-party records from roster slots, preserving state. */

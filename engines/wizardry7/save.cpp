@@ -247,6 +247,23 @@ bool SaveGame::setCharacterRecord(uint index, const byte *record, uint32 size) {
 	return true;
 }
 
+bool SaveGame::setPartyPosition(uint16 maze, uint16 worldX, uint16 worldY, uint16 localX,
+		uint16 localY, uint16 window, uint16 facing) {
+	if (_raw.size() < _partyBase + 0x4C)
+		return false;
+	WRITE_LE_UINT16(_raw.data() + _partyBase + 0x00, maze);
+	WRITE_LE_UINT16(_raw.data() + _partyBase + 0x02, worldX);
+	WRITE_LE_UINT16(_raw.data() + _partyBase + 0x04, worldY);
+	WRITE_LE_UINT16(_raw.data() + _partyBase + 0x06, localX);
+	WRITE_LE_UINT16(_raw.data() + _partyBase + 0x08, localY);
+	WRITE_LE_UINT16(_raw.data() + _partyBase + 0x0A, window);
+	WRITE_LE_UINT16(_raw.data() + _partyBase + 0x0C, facing);
+	_partyMaze = maze; _partyX = worldX; _partyY = worldY;
+	_partyLocalX = localX; _partyLocalY = localY; _partyWindow = window;
+	_partyFacing = facing;
+	return true;
+}
+
 bool SaveGame::writeToData(Common::Array<byte> &out) const {
 	if (_raw.empty())
 		return false;

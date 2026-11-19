@@ -205,6 +205,13 @@ public:
 		TS_ASSERT(save.writeToData(out));
 		TS_ASSERT_EQUALS(out.size(), data.size());
 		TS_ASSERT_EQUALS(memcmp(out.data() + 10820, replacement, sizeof(replacement)), 0);
+		TS_ASSERT(save.setPartyPosition(14, 125, 130, 1, 6, 5, 3));
+		TS_ASSERT_EQUALS(save.getPartyMaze(), 14);
+		TS_ASSERT_EQUALS(save.getPartyX(), 125);
+		TS_ASSERT_EQUALS(save.getPartyLocalX(), 1);
+		TS_ASSERT_EQUALS(save.getPartyWindow(), 5);
+		TS_ASSERT_EQUALS(save.getPartyFacing(), 3);
+
 		Wizardry7::SaveGame roundTrip;
 		TS_ASSERT(roundTrip.loadFromData(out.data(), out.size()));
 		TS_ASSERT_EQUALS(roundTrip.getCharacter(0).name, Common::String("NEW"));
@@ -225,6 +232,8 @@ public:
 		Wizardry7::Party party;
 		TS_ASSERT(party.addMember(1));
 		TS_ASSERT(party.addMember(0));
+		Common::Array<byte> beforeParty;
+		TS_ASSERT(save.writeToData(beforeParty));
 		TS_ASSERT(save.setPartyFromRoster(roster, party));
 		TS_ASSERT_EQUALS(save.getCharacterCount(), 2u);
 		TS_ASSERT_EQUALS(save.getCharacter(0).name, Common::String("BBB"));
@@ -232,7 +241,7 @@ public:
 		Common::Array<byte> partyData;
 		TS_ASSERT(save.writeToData(partyData));
 		TS_ASSERT_EQUALS(partyData.size(), 10820u + 2 * 584u);
-		TS_ASSERT_EQUALS(memcmp(partyData.data(), data.data(), 10820), 0);
+		TS_ASSERT_EQUALS(memcmp(partyData.data(), beforeParty.data(), 10820), 0);
 	}
 
 	void testRoster() {
