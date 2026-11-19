@@ -89,6 +89,10 @@ public:
 	/** All painter draws: columns 0..4, depth slots in order 2,1,0,3,4. */
 	static Common::Array<ViewPiece> painterPieces(const byte kinds[5][5], bool mirror);
 
+	/** Port of FUN_00449941 for one (column, depth) using the extracted shapes. */
+	static void spawnObjects(uint column, uint kind, uint viewKind, bool mirror,
+		uint depth, ViewObjectList &objects);
+
 	bool loadBundles();
 	bool drawPiece(Graphics::Screen *screen, const ViewPiece &piece) const;
 

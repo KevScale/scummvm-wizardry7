@@ -594,6 +594,19 @@ bool Wizardry7Engine::showViewCell(uint mazeId, int partyA, int partyB, uint fac
 	const Common::Array<ViewPiece> painter = ViewCompositor::painterPieces(kinds, mirror);
 	for (uint i = 0; i < painter.size(); ++i)
 		compositor.drawPiece(_screen, painter[i]);
+	const uint viewKind = (mode >= 1 && mode <= 6) ? mode - 1 : 2;
+	ViewObjectList objects;
+	static const uint kDepthOrder[5] = { 2, 1, 0, 3, 4 };
+	for (uint column = 0; column < 5; ++column) {
+		for (uint i = 0; i < 5; ++i) {
+			const uint depth = kDepthOrder[i];
+			ViewCompositor::spawnObjects(column, kinds[column][depth], viewKind, mirror,
+				depth, objects);
+		}
+	}
+	const Common::Array<ViewPiece> objectPieces = objects.draw(5);
+	for (uint i = 0; i < objectPieces.size(); ++i)
+		compositor.drawPiece(_screen, objectPieces[i]);
 	_screen->makeAllDirty();
 	_screen->update();
 	return true;
