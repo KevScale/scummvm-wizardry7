@@ -61,6 +61,10 @@ static const byte kClassMinimums[CharacterCreation::kClassCount][CharacterCreati
 	{ 12, 10, 10, 12, 12, 12, 0, 0 } // Ninja
 };
 
+uint8 CharacterCreation::rollPortrait(byte sex, WizardryRNG &rng) {
+	return (uint8)(rng.getRandom(19) + (sex == 1 ? 1 : 0));
+}
+
 int CharacterCreation::rollBonusPoints(WizardryRNG &rng) {
 	int bonus = rng.getRandom(6) + 5;
 	if (rng.getRandom(20) == 0)
@@ -265,7 +269,7 @@ bool writeCharacterRecord(const CreatedCharacter &character, byte *record, uint 
 		record[i] = character.rolls.ac;
 	for (uint i = 0; i < 7; ++i)
 		record[0x170 + i] = character.stats[i];
-	record[0x177] = character.stats[7]; // DOS KAR / Gold portrait; rolled later
+	record[0x177] = character.portrait; // DOS KAR / Gold portrait
 	record[0x240] = 1;
 	record[0x241] = 10;
 	record[0x243] = 1;
@@ -369,6 +373,7 @@ bool CharacterCreationFlow::buildCharacter(WizardryRNG &rng, CreatedCharacter &o
 	for (uint i = 0; i < CharacterCreation::kStatCount; ++i)
 		out.stats[i] = _character.getStat(i);
 	out.rolls = _character.rollDerived(_race, rng);
+	out.portrait = CharacterCreation::rollPortrait(_character.getSex(), rng);
 	out.itemCount = StartingEquipment::getItems(out.classIndex, _race, out.items);
 	_step = kStepDone;
 	return true;

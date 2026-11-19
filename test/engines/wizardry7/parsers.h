@@ -585,7 +585,8 @@ public:
 		TS_ASSERT_EQUALS(c.inventory[4], 141);
 		for (uint i = 0; i < 7; ++i)
 			TS_ASSERT_EQUALS(record[0x170 + i], created.stats[i]);
-		TS_ASSERT_EQUALS(record[0x177], created.stats[7]);
+		TS_ASSERT_EQUALS(record[0x177], created.portrait);
+		TS_ASSERT(created.portrait >= 1 && created.portrait <= 19);
 		TS_ASSERT_EQUALS(record[0x1B9], created.rolls.ac);
 		TS_ASSERT_EQUALS(record[0x1BD], created.rolls.ac);
 		TS_ASSERT_EQUALS(record[0x240], 1);

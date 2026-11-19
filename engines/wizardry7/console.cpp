@@ -1109,9 +1109,9 @@ bool Wizardry7Console::cmdCreate(int argc, const char **argv) {
 		print("stats");
 		for (uint i = 0; i < Wizardry7::CharacterCreation::kStatCount; ++i)
 			print(" %u", result.stats[i]);
-		print("\nage %u hp %u st %u cc %u ac %u\n", result.rolls.ageDays,
+		print("\nage %u hp %u st %u cc %u ac %u portrait %u\n", result.rolls.ageDays,
 			result.rolls.hpMax, result.rolls.staminaMax, result.rolls.carryingCapacity,
-			result.rolls.ac);
+			result.rolls.ac, result.portrait);
 		print("items");
 		for (uint i = 0; i < result.itemCount; ++i)
 			print(" %u:%u", result.items[i].itemId, result.items[i].count);

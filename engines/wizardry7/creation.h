@@ -69,6 +69,9 @@ public:
 	/** Initial bonus pool: rand(6)+5, two 1-in-20 +8 rolls, minimum 9. */
 	static int rollBonusPoints(WizardryRNG &rng);
 
+	/** Final portrait index: rand(19) + 1 for female (FUN_0041A792). */
+	static uint8 rollPortrait(byte sex, WizardryRNG &rng);
+
 	/** Raise the stats to the shared race minimums. */
 	void applyRaceMinimums(uint8 race);
 	/** Female: STR -2, PER +1, trailing KAR/portrait +1 (both builds). */
@@ -108,6 +111,7 @@ struct CreatedCharacter {
 	uint8 classIndex;
 	byte stats[CharacterCreation::kStatCount];
 	CreationRolls rolls;
+	uint8 portrait = 0; // trailing +0x177 byte after the portrait roll
 	StartingItem items[StartingEquipment::kMaxItems];
 	uint itemCount;
 };
