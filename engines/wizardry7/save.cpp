@@ -215,6 +215,9 @@ bool SaveGame::loadFromData(const byte *data, uint32 size) {
 			_prevX = READ_LE_UINT16(data + partyBase + 0x10);
 			_prevY = READ_LE_UINT16(data + partyBase + 0x12);
 			_partyFacing = READ_LE_UINT16(data + partyBase + 0x0C);
+			_partyLocalX = READ_LE_UINT16(data + partyBase + 0x06);
+			_partyLocalY = READ_LE_UINT16(data + partyBase + 0x08);
+			_partyWindow = READ_LE_UINT16(data + partyBase + 0x0A);
 			_partyCounter = READ_LE_UINT16(data + partyBase + 0x26);
 			_raw.resize(size);
 			memcpy(_raw.data(), data, size);
