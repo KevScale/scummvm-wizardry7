@@ -30,6 +30,7 @@ namespace Graphics { class Screen; }
 namespace Wizardry7 {
 
 class VgaBundle;
+class MazeRecord;
 struct ViewPiece;
 
 /** One view-list object (FUN_004493E4 layout). */
@@ -92,6 +93,12 @@ public:
 	/** Port of FUN_00449941 for one (column, depth) using the extracted shapes. */
 	static void spawnObjects(uint column, uint kind, uint viewKind, bool m78, bool m74,
 		uint depth, ViewObjectList &objects);
+	static void spawnShape(uint column, uint shape, uint sel, const int16 *p,
+		uint viewKind, bool m74, bool m78, ViewObjectList &objects);
+	static void spawnPainter(uint column, uint depth, uint viewKind, bool m74, bool m78,
+		const int16 *p, bool gate, ViewObjectList &objects);
+	static void buildObjects(MazeRecord &maze, int partyA, int partyB, uint facing,
+		uint viewKind, uint viewMode, bool m78, ViewObjectList &objects);
 
 	bool loadBundles();
 	bool drawPiece(Graphics::Screen *screen, const ViewPiece &piece) const;

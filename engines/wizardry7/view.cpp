@@ -27,6 +27,8 @@
 
 #include "wizardry7/gfx.h"
 #include "wizardry7/view.h"
+#include "wizardry7/maze.h"
+#include "wizardry7/viewdata.h"
 
 namespace Wizardry7 {
 
@@ -235,6 +237,213 @@ void ViewCompositor::spawnObjects(uint column, uint kind, uint viewKind, bool m7
 			else if (viewKind == 2)
 				emit(0xFF, m78 ? t(0x44) + column : t(0x42) + column, pieceLair, 2, 2, 0, 0,
 					m74 ? t(0x42) + column : kNone, selLair, column, t(0x1A), 0, 0);
+		}
+	}
+}
+
+static void appendObject(ViewObjectList &objects, uint8 layer, uint16 pieceA, uint16 pieceB,
+		uint8 p4, uint8 p5, uint8 p6, uint8 p7, uint16 selB, uint16 selA,
+		uint8 column, uint8 slot, uint8 p12, uint8 group) {
+	ViewObject o;
+	o.pieceA = pieceA; o.pieceB = pieceB; o.selB = selB; o.selA = selA;
+	o.writemodeA = p4; o.writemodeB = p5; o.p6 = p6; o.p7 = p7;
+	o.layer = layer; o.column = column; o.slot = slot; o.p12 = p12; o.group = group;
+	objects.spawn(o);
+}
+
+void ViewCompositor::spawnShape(uint column, uint shape, uint sel, const int16 *p,
+		uint viewKind, bool m74, bool m78, ViewObjectList &objects) {
+	const auto g = [p](uint k) -> int32 { return p[k - 4]; }; // p covers params 4..32
+	int32 sVar5 = -1, avar14 = -1;
+	if (shape == 7 || shape == 2 || shape == 10 || shape == 11 || shape == 12 ||
+		shape == 13 || shape == 14 || shape == 15) {
+		if (shape == 7 && column < 4) {
+			sVar5 = column + (m78 ? g(28) : g(27));
+			avar14 = m78 ? column + g(27) : -1;
+		}
+		if (viewKind == 0) {
+			if (column < 4) {
+				const int32 selB = m78 ? column + g(10) : -1;
+				const int32 pieceA = column + (m78 ? g(11) : g(10));
+				appendObject(objects, 0xFD, pieceA, sVar5, 2, 2, 0, 0, selB,
+					avar14, column, g(4), 0, 1);
+			}
+		} else if (viewKind < 3 || viewKind == 5) {
+			if (column < 5) {
+				if (viewKind == 2 && sVar5 != -1)
+					appendObject(objects, 0xFD, sVar5, 0xFFFF, 2, 0, 0, 0, avar14,
+						0xFFFF, column, g(6), 0, 1);
+				const int32 selB = m78 ? column + g(19) : -1;
+				const int32 pieceA = column + (m78 ? g(20) : g(19));
+				appendObject(objects, 0xFD, pieceA, 0xFFFF, 2, 0, 0, 0, selB, 0xFFFF,
+					column, g(7), 0, 1);
+			}
+		} else if (viewKind < 5 && column < 4) {
+			const int32 selB = m78 ? column + g(29) : -1;
+			const int32 pieceA = column + (m78 ? g(30) : g(29));
+			appendObject(objects, 0xFD, pieceA, 0xFFFF, 2, 0, 0, 0, selB, 0xFFFF,
+				column, g(9), 0, 1);
+		}
+	} else if (shape == 4) {
+		if (column < 4) {
+			const int32 selB = m74 ? column + g(12) : -1;
+			const int32 pieceA = column + (m74 ? g(13) : g(12));
+			appendObject(objects, 0xFB, pieceA, 0xFFFF, 2, 0, 0, 0, selB, 0xFFFF,
+				column, g(5), 0, 1);
+		}
+	} else if (shape == 5) {
+		if (column < 4) {
+			const int32 selB = m78 ? column + g(31) : -1;
+			const int32 pieceA = column + (m78 ? g(32) : g(31));
+			appendObject(objects, 0xFD, pieceA, 0xFFFF, 2, 0, 0, 0, selB, 0xFFFF,
+				column, g(8), 0, 1);
+		}
+	}
+	if (shape == 8 || shape == 9) {
+		if (g(18) != -1 && column == 0) {
+			const int32 base = g(18) + (shape == 8 ? 1 : 3);
+			int32 pB, selB;
+			if ((int)sel < 2) { pB = base + 1; selB = base; }
+			else { pB = -1; selB = -1; }
+			const int32 pB2 = ((shape == 8 && sel > 2) || (shape == 9 && sel < 2)) ? base + 1 : -1;
+			appendObject(objects, 0xFD, base, pB2, 2, 2, 0, 0, selB, pB, column, g(4), 0, 1);
+		}
+	}
+	if (shape == 8 || shape == 9 || shape == 3 || shape == 6) {
+		if (shape == 3 && column < 4) {
+			if (g(25) != -1) {
+				const int32 selB = m78 ? column + g(25) : -1;
+				const int32 pieceA = column + (m78 ? g(26) : g(25));
+				appendObject(objects, 0xFD, pieceA, 0xFFFF, 2, 0, 0, 0, selB, 0xFFFF,
+					column, g(6), 0, 1);
+			}
+			sVar5 = column + (m78 ? g(24) : g(23));
+			avar14 = m78 ? column + g(23) : -1;
+		}
+		if (shape == 6 && column < 4) {
+			sVar5 = column + (m78 ? g(17) : g(16));
+			avar14 = m78 ? column + g(16) : -1;
+		}
+	}
+	if (shape == 8 || shape == 9 || shape == 3 || shape == 6 || shape == 1) {
+		if (viewKind == 0) {
+			if (column < 4) {
+				const int32 selB = m78 ? column + g(14) : -1;
+				const int32 pieceA = column + (m78 ? g(15) : g(14));
+				appendObject(objects, 0xFD, pieceA, sVar5, 2, 2, 0, 0, selB, avar14,
+					column, g(4), 0, 1);
+			}
+		} else if (viewKind == 2 && column < 5) {
+			const int32 selB = m78 ? column + g(21) : -1;
+			const int32 pieceA = column + (m78 ? g(22) : g(21));
+			appendObject(objects, 0xFD, pieceA, sVar5, 2, 2, 0, 0, selB, avar14,
+				column, g(6), 0, 1);
+		}
+		if (g(18) != -1 && column == 0 && (shape == 8 || shape == 9)) {
+			const int32 selB = (sel < 2) ? g(18) : -1;
+			appendObject(objects, 0xFD, g(18), 0xFFFF, 2, 0, 0, 0, selB, 0xFFFF,
+				column, g(4), 0, 1);
+		}
+	}
+	if (column < 4) {
+		const int l10 = (sel == 1 || sel == 3) ? 0 : 1;
+		const int l14 = sel < 3 ? 0 : 1;
+		const int idx = l10 * 4 + column * 8 + l14 * 2;
+		const int16 *tbl = nullptr;
+		if (shape == 10 || shape == 11 || shape == 14 || shape == 15)
+			tbl = (shape == 10) ? kShape10 : (shape == 11) ? kShape11 : kShape14;
+		else if (shape == 12 || shape == 13)
+			tbl = viewKind == 0 ? kShape12_c0 : kShape12_cX;
+		if (tbl && idx + 1 < 48) {
+			const uint8 layer = (shape == 10 || shape == 11) ? 9 : 10;
+			const uint8 p7 = shape == 10 ? 4 : shape == 11 ? 9 : 7 + (shape == 13 ? 1 : 0);
+			const uint8 grp = (shape == 14 || shape == 15) ? 0xC : 0;
+			appendObject(objects, layer, tbl[idx], tbl[idx + 1], p7, grp, 0, 0, 0x48,
+				0xF8, column, kOverlay17E8[column], l14, 1);
+		}
+	}
+}
+
+void ViewCompositor::spawnPainter(uint column, uint depth, uint viewKind, bool m74, bool m78,
+		const int16 *p, bool gate, ViewObjectList &objects) {
+	if (!gate || viewKind != 2 || column >= 5)
+		return;
+	const auto g = [p](uint k) -> int32 { return p[k - 2]; };
+	const int32 selB = m78 ? column + g(11) : -1;
+	const int32 pieceA = column + (m78 ? g(12) : g(11));
+	appendObject(objects, 0xFF, pieceA, 0xFFFF, 2, 0, 0, 0, selB, 0xFFFF, column, g(5), 0, 0);
+	int32 sVar4 = -1, sVar5 = -1, sVar8 = -1, sVar6 = -1;
+	if (g(31) != -1) {
+		sVar4 = column + (m78 ? g(32) : g(31));
+		sVar8 = m78 ? column + g(31) : -1;
+	}
+	if (column > 0) {
+		sVar5 = column + (m74 ? g(30) : g(29)) - 1;
+		sVar6 = m74 ? column + g(29) - 1 : -1;
+	}
+	if (sVar5 != -1 || sVar4 != -1) {
+		appendObject(objects, 0xFF, sVar4, sVar5, 2, 2, 0, 0, sVar8, sVar6,
+			column, g(5), 0, 0);
+		if (sVar5 != -1 && viewKind != 0 && column == 4) {
+			if (depth == 0)
+				appendObject(objects, 0xFF, 0xC3 - (m74 ? 0 : 1), 0xFFFF, 2, 0, 0, 0,
+					m74 ? 0 : 0xC2, 0xFFFF, column, g(5), 0, 0);
+			else if (depth == 4)
+				appendObject(objects, 0xFF, m74 ? 1 - 0x3E : 0xC2, 0xFFFF, 2, 0, 0, 0,
+					m74 ? 0xC3 : 0, 0xFFFF, column, g(5), 0, 0);
+		}
+	}
+}
+
+void ViewCompositor::buildObjects(MazeRecord &maze, int partyA, int partyB, uint facing,
+		uint viewKind, uint viewMode, bool m78, ViewObjectList &objects) {
+	static const int16 *const kSites[4] = { kSpawnSite0, kSpawnSite1, kSpawnSite2, kSpawnSite3 };
+	static const int kDepthOrder[5] = { 2, 1, 0, 3, 4 };
+	static const int kShapeDepth[5] = { 0, -1, 1, -2, 2 };
+	for (int column = 0; column < 5; ++column) {
+		const bool m74 = ((facing + partyB + partyA + column) & 1) != 0;
+		uint8 sgrid[5][5];
+		memset(sgrid, 0, sizeof(sgrid));
+		maze.resetCellCache();
+		for (uint k = 0; k < 5; ++k) {
+			const int depth = kShapeDepth[k];
+			if ((depth == -2 || depth == 2) && column <= 1)
+				continue;
+			int z = partyA - column, x = partyB;
+			if (depth)
+				MazeRecord::stepFacing(facing, z, x, depth, 0);
+			uint cell = 0, lz = 0, lx = 0;
+			if (!maze.resolveCell(0, z, x, cell, lz, lx))
+				continue;
+			sgrid[column][depth + 2] = maze.depthShape(0, z, x, cell, lz, lx,
+				facing, viewKind, (uint)column);
+		}
+		uint8 siteShapes[4] = { 0 };
+		maze.resetCellCache();
+		{
+			const int a = partyA - column, b = partyB;
+			uint cell = 0, lz = 0, lx = 0;
+			if (maze.resolveCell(0, a, b, cell, lz, lx)) {
+				static const int kDirs[4] = { 0, 2, 0, 2 };
+				static const int kP7[4] = { 0, 0, -1, 1 };
+				for (uint i = 0; i < 4; ++i)
+					siteShapes[i] = maze.shapeOf(kDirs[i], a, b, cell, lz, lx, kP7[i],
+						facing, viewKind, viewMode, (uint)column);
+			}
+		}
+		const int siteCount = column <= 1 ? 2 : 4;
+		for (int i = 0; i < 5; ++i) {
+			const int depth = kDepthOrder[i];
+			spawnObjects(column, sgrid[column][depth + 2], viewKind, m78, m74, depth, objects);
+			const bool gate = kPainterGate[column * 5 + depth] == 1;
+			const int16 *psite = depth == 0 ? kPainterSite0 : depth == 1 ? kPainterSite1 :
+				depth == 2 ? kPainterSite2 : depth == 3 ? kPainterSite3 : kPainterSite4;
+			spawnPainter(column, depth, viewKind, m74, m78, psite, gate, objects);
+			if (i == 0) {
+				for (int s = 0; s < siteCount; ++s)
+					spawnShape(column, siteShapes[s], kSpawnSiteSel[s], kSites[s],
+						viewKind, m74, m78, objects);
+			}
 		}
 	}
 }

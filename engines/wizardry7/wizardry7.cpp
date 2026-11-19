@@ -592,39 +592,8 @@ bool Wizardry7Engine::showViewCell(uint mazeId, int partyA, int partyB, uint fac
 	uint8 kinds[5][5];
 	maze.deriveKindTable(partyA, partyB, facing, kinds);
 	const uint viewKind = (mode >= 1 && mode <= 6) ? mode - 1 : 2;
-	// Object spawner switch key is the per-(column,depth) shape, not the kind table.
-	uint8 shapes[5][5];
-	memset(shapes, 0, sizeof(shapes));
-	static const int kDepthOrder[5] = { 0, -1, 1, -2, 2 };
-	for (int column = 0; column < 5; ++column) {
-		maze.resetCellCache();
-		for (uint k = 0; k < 5; ++k) {
-			const int depth = kDepthOrder[k];
-			if ((depth == -2 || depth == 2) && column <= 1)
-				continue;
-			int z = partyA - column, x = partyB;
-			if (depth)
-				MazeRecord::stepFacing(facing, z, x, depth, 0);
-			uint cell = 0, lz = 0, lx = 0;
-			if (!maze.resolveCell(0, z, x, cell, lz, lx))
-				continue;
-			shapes[column][depth + 2] = maze.depthShape(0, z, x, cell, lz, lx,
-				facing, viewKind, (uint)column);
-		}
-	}
-	const Common::Array<ViewPiece> painter = ViewCompositor::painterPieces(kinds, mirror);
-	for (uint i = 0; i < painter.size(); ++i)
-		compositor.drawPiece(_screen, painter[i]);
 	ViewObjectList objects;
-	static const uint kSpawnOrder[5] = { 2, 1, 0, 3, 4 };
-	for (uint column = 0; column < 5; ++column) {
-		const bool m74 = ((facing + partyA + partyB + column) & 1) != 0;
-		for (uint i = 0; i < 5; ++i) {
-			const uint depth = kSpawnOrder[i];
-			ViewCompositor::spawnObjects(column, shapes[column][depth], viewKind, mirror, m74,
-				depth, objects);
-		}
-	}
+	ViewCompositor::buildObjects(maze, partyA, partyB, facing, viewKind, mode, mirror, objects);
 	const Common::Array<ViewPiece> objectPieces = objects.draw(5);
 	for (uint i = 0; i < objectPieces.size(); ++i)
 		compositor.drawPiece(_screen, objectPieces[i]);
