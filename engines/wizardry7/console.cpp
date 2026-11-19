@@ -20,6 +20,7 @@
  */
 
 #include <stdarg.h>
+#include <string.h>
 
 #include "common/debug.h"
 #include "common/file.h"
@@ -43,6 +44,7 @@
 #include "wizardry7/party.h"
 #include "wizardry7/rng.h"
 #include "wizardry7/scenario.h"
+#include "wizardry7/screendiff.h"
 #include "wizardry7/trace.h"
 #include "wizardry7/wizardry7.h"
 
@@ -89,6 +91,7 @@ Wizardry7Console::Wizardry7Console(Wizardry7Engine *vm) : GUI::Debugger(), _vm(v
 	registerCmd("party", WRAP_METHOD(Wizardry7Console, cmdParty));
 	registerCmd("screen", WRAP_METHOD(Wizardry7Console, cmdScreen));
 	registerCmd("screenshot", WRAP_METHOD(Wizardry7Console, cmdScreenshot));
+	registerCmd("screendiff", WRAP_METHOD(Wizardry7Console, cmdScreenDiff));
 	registerCmd("bundle", WRAP_METHOD(Wizardry7Console, cmdBundle));
 	registerCmd("fontinfo", WRAP_METHOD(Wizardry7Console, cmdFontInfo));
 	registerCmd("glyphs", WRAP_METHOD(Wizardry7Console, cmdGlyphs));
@@ -260,6 +263,8 @@ bool Wizardry7Console::runScript(const Common::Path &path) {
 			ok &= cmdScript(count, argv);
 		else if (command == "trace")
 			ok &= cmdTrace(count, argv);
+		else if (command == "screendiff")
+			ok &= cmdScreenDiff(count, argv);
 		else {
 			print("Unknown script command '%s'\n", command.c_str());
 			ok = false;
@@ -1245,6 +1250,157 @@ bool Wizardry7Console::cmdScreenshot(int argc, const char **argv) {
 		return true;
 	}
 	print("Wrote screenshot '%s'\n", argv[1]);
+	return true;
+}
+
+bool Wizardry7Console::cmdScreenDiff(int argc, const char **argv) {
+	if (argc < 2) {
+		print("Usage: screendiff <reference.bmp> [layout] [--layout name] [--grid CxR]\n");
+		print("                  [--region [name=]x,y,w,h]... [--regions file]\n");
+		print("                  [--mask x,y,w,h]... [--threshold n]\n");
+		print("Layouts: full (default), chargen-sex, chargen-race, chargen-profession,\n");
+		print("         chargen-name, chargen-bonus, charmenu, mainmenu, review\n");
+		return true;
+	}
+
+	ScreenLayout layout = kLayoutFull;
+	Common::Array<ScreenRegion> explicitRegions;
+	Common::Array<Common::Rect> masks;
+	Common::Path regionFile;
+	uint gridColumns = 0, gridRows = 0;
+	uint threshold = 0;
+	bool haveLayout = false;
+
+	for (int i = 2; i < argc; ++i) {
+		const Common::String argument(argv[i]);
+		if (argument == "--layout" || argument == "--grid" || argument == "--region" ||
+				argument == "--regions" || argument == "--mask" || argument == "--threshold") {
+			if (i + 1 >= argc) {
+				print("Missing value for %s\n", argument.c_str());
+				return true;
+			}
+			const char *value = argv[++i];
+			if (argument == "--layout") {
+				if (!parseScreenLayout(value, layout)) {
+					print("Unknown layout '%s'\n", value);
+					return true;
+				}
+				haveLayout = true;
+			} else if (argument == "--grid") {
+				if (!parseRegionGrid(value, gridColumns, gridRows)) {
+					print("Bad grid '%s' (expected COLUMNSxROWS)\n", value);
+					return true;
+				}
+			} else if (argument == "--region") {
+				ScreenRegion region;
+				Common::String spec(value);
+				if (const char *equals = strrchr(value, '=')) {
+					region.name = Common::String(value, equals - value);
+					spec = Common::String(equals + 1);
+				}
+				if (!parseRegionRect(spec.c_str(), region.rect)) {
+					print("Bad region '%s' (expected [name=]x,y,w,h)\n", value);
+					return true;
+				}
+				if (region.name.empty())
+					region.name = Common::String::format("r%u", (uint)explicitRegions.size());
+				explicitRegions.push_back(region);
+			} else if (argument == "--regions") {
+				regionFile = Common::Path(value);
+			} else if (argument == "--mask") {
+				Common::Rect rect;
+				if (!parseRegionRect(value, rect)) {
+					print("Bad mask '%s' (expected x,y,w,h)\n", value);
+					return true;
+				}
+				masks.push_back(rect);
+			} else {
+				int limit = 0;
+				if (!parseInteger(value, limit) || limit < 0) {
+					print("Bad threshold '%s'\n", value);
+					return true;
+				}
+				threshold = (uint)limit;
+			}
+		} else if (argument.hasPrefix("--")) {
+			print("Unknown option '%s'\n", argument.c_str());
+			return true;
+		} else {
+			if (haveLayout) {
+				print("Unexpected argument '%s'\n", argument.c_str());
+				return true;
+			}
+			if (!parseScreenLayout(argument, layout)) {
+				print("Unknown layout '%s'\n", argument.c_str());
+				return true;
+			}
+			haveLayout = true;
+		}
+	}
+
+	Graphics::Screen *screen = _vm->getScreen();
+	if (!screen) {
+		print("No framebuffer yet\n");
+		return true;
+	}
+	if (screen->format.bytesPerPixel != 1) {
+		print("Framebuffer is not 8-bit (%u byte(s) per pixel)\n", screen->format.bytesPerPixel);
+		return true;
+	}
+
+	Common::Array<ScreenRegion> regions;
+	Common::String error;
+	if (!regionFile.empty()) {
+		if (gridColumns != 0 || !explicitRegions.empty()) {
+			print("Use either --regions, --grid or --region, not several\n");
+			return true;
+		}
+		if (!ScreenDiff::loadRegionList(regionFile, regions, error)) {
+			print("%s\n", error.c_str());
+			return true;
+		}
+	} else if (gridColumns != 0) {
+		if (!explicitRegions.empty()) {
+			print("Use either --grid or --region, not both\n");
+			return true;
+		}
+		buildGridRegions(screen->w, screen->h, gridColumns, gridRows, regions);
+	} else if (!explicitRegions.empty()) {
+		regions = explicitRegions;
+	} else {
+		getScreenLayoutRegions(layout, regions);
+	}
+
+	byte palette[768];
+	memset(palette, 0, sizeof(palette));
+	screen->getPalette(palette);
+
+	Common::Array<byte> engineRgb;
+	ScreenDiff::expandIndexed((const byte *)screen->getPixels(), screen->pitch, palette,
+		screen->w, screen->h, engineRgb);
+
+	Common::Array<byte> referenceRgb;
+	uint referenceWidth = 0, referenceHeight = 0;
+	if (!ScreenDiff::loadReference(Common::Path(argv[1]), referenceRgb, referenceWidth,
+			referenceHeight, error)) {
+		print("Cannot load reference '%s': %s\n", argv[1], error.c_str());
+		return true;
+	}
+	if (referenceWidth != (uint)screen->w || referenceHeight != (uint)screen->h) {
+		print("Reference is %ux%u but the framebuffer is %dx%d\n", referenceWidth,
+			referenceHeight, screen->w, screen->h);
+		return true;
+	}
+
+	ScreenDiffResult result;
+	ScreenDiff::compare(referenceRgb.data(), engineRgb.data(), referenceWidth, referenceHeight,
+		regions, masks, result);
+	print("Layout '%s', reference '%s'\n", getScreenLayoutName(layout), argv[1]);
+	print("%s", ScreenDiff::formatReport(result, threshold).c_str());
+
+	// The console contract is to keep going on a mismatch: returning false
+	// aborts the script and, under a headless backend, parks the process in a
+	// modal error dialog. Scripts gate on the "result=PASS|FAIL" line instead.
 	return true;
 }
 

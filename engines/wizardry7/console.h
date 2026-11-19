@@ -77,6 +77,7 @@ private:
 	bool cmdParty(int argc, const char **argv);
 	bool cmdScreen(int argc, const char **argv);
 	bool cmdScreenshot(int argc, const char **argv);
+	bool cmdScreenDiff(int argc, const char **argv);
 	bool cmdBundle(int argc, const char **argv);
 	bool cmdFontInfo(int argc, const char **argv);
 	bool cmdGlyphs(int argc, const char **argv);
