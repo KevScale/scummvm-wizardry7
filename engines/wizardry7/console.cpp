@@ -1377,10 +1377,10 @@ bool Wizardry7Console::cmdSaveInfo(int argc, const char **argv) {
 
 	ExperienceTable xpTable;
 	const bool haveXp = xpTable.load(*_vm->getScenario());
-	print("'%s': %s, %u bytes, %u character(s), maze %u pos (%u,%u) prev maze %u pos (%u,%u) counter %u\n", argv[1],
+	print("'%s': %s, %u bytes, %u character(s), maze %u pos (%u,%u) facing %u prev maze %u pos (%u,%u) counter %u\n", argv[1],
 		SaveGame::getKindName(save.getKind()), save.getSize(), save.getCharacterCount(),
-		save.getPartyMaze(), save.getPartyX(), save.getPartyY(), save.getPrevMaze(),
-		save.getPrevX(), save.getPrevY(), save.getPartyCounter());
+		save.getPartyMaze(), save.getPartyX(), save.getPartyY(), save.getPartyFacing(),
+		save.getPrevMaze(), save.getPrevX(), save.getPrevY(), save.getPartyCounter());
 	for (uint i = 0; i < save.getCharacterCount(); ++i) {
 		const SaveCharacter &c = save.getCharacter(i);
 		const uint8 level = haveXp ? xpTable.getLevel(c.klass, c.xp) : c.level;

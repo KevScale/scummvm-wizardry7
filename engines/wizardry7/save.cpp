@@ -192,27 +192,51 @@ bool SaveGame::loadFromData(const byte *data, uint32 size) {
 	_raw.clear();
 	_characters.clear();
 
-	if (_size < 4)
+	if (_size < 0x34C)
 		return false;
 
-	const uint16 tag = READ_LE_UINT16(data);
-	if (tag == 0x0A && _size >= kDosStateSize && (_size - kDosStateSize - kDosRandomSize) % kCharacterSize == 0)
-		return parseDos(data, _size);
-
-	// Gold .SGM: 414-byte header + compressed 16*(1346+1740) payload + trailer.
-	if (_size > 414) {
-		_kind = kSaveGold;
-		_raw.resize(size);
-		memcpy(_raw.data(), data, size);
-		return true;
+	// One container for Gold .SGM, DOS SAVEGAME.DBS and NEWGAME.*:
+	// 844 B scenario block, variable patch/drop lists, 8192 B lair/automap,
+	// party header, six state blocks, optional random pool + records.
+	const uint32 patchCount = READ_LE_UINT16(data + 0x2CC);
+	const uint32 dropCount = READ_LE_UINT16(data + 0x2CE);
+	const uint32 partyBase = 844 + patchCount * 6 + dropCount * 8 + 8192;
+	if (partyBase + 0x4C + 1608 <= _size) {
+		const uint32 recordOffset = partyBase + 0x4C + 1608 + kDosRandomSize;
+		const uint8 count = data[partyBase + 0x4A];
+		if (count <= 16 && recordOffset + (uint32)count * kCharacterSize <= _size) {
+			_kind = (patchCount || dropCount) ? kSaveGold : kSaveDos;
+			_partyBase = partyBase;
+			_recordOffset = recordOffset;
+			_partyMaze = READ_LE_UINT16(data + partyBase + 0x00);
+			_partyX = READ_LE_UINT16(data + partyBase + 0x02);
+			_partyY = READ_LE_UINT16(data + partyBase + 0x04);
+			_prevMaze = READ_LE_UINT16(data + partyBase + 0x0E);
+			_prevX = READ_LE_UINT16(data + partyBase + 0x10);
+			_prevY = READ_LE_UINT16(data + partyBase + 0x12);
+			_partyFacing = READ_LE_UINT16(data + partyBase + 0x0C);
+			_partyCounter = READ_LE_UINT16(data + partyBase + 0x26);
+			_raw.resize(size);
+			memcpy(_raw.data(), data, size);
+			_characters.resize(count);
+			for (uint i = 0; i < count; ++i)
+				parseCharacter(data + recordOffset + i * kCharacterSize, _characters[i]);
+			return true;
+		}
 	}
+
+	// Legacy fixed-offset DOS fallback (p/d counts zero).
+	const uint16 tag = READ_LE_UINT16(data);
+	if (tag == 0x0A && _size >= kDosStateSize &&
+		(_size - kDosStateSize - kDosRandomSize) % kCharacterSize == 0)
+		return parseDos(data, _size);
 	return false;
 }
 
 bool SaveGame::setCharacterRecord(uint index, const byte *record, uint32 size) {
-	if (_kind != kSaveDos || index >= _characters.size() || !record || size != kCharacterSize)
+	if (index >= _characters.size() || !record || size != kCharacterSize)
 		return false;
-	const uint32 offset = kDosStateSize + kDosRandomSize + index * kCharacterSize;
+	const uint32 offset = _recordOffset + index * kCharacterSize;
 	if (offset + kCharacterSize > _raw.size())
 		return false;
 	memcpy(_raw.data() + offset, record, kCharacterSize);
@@ -228,8 +252,7 @@ bool SaveGame::writeToData(Common::Array<byte> &out) const {
 }
 
 bool SaveGame::setPartyFromRoster(const CharacterRoster &roster, const Party &party) {
-	if (_kind != kSaveDos || _raw.size() < kDosStateSize + kDosRandomSize ||
-		party.size() > 6)
+	if (_raw.size() < _recordOffset || party.size() > 6)
 		return false;
 	for (uint i = 0; i < party.size(); ++i) {
 		if (!roster.isSlotUsed(party.getMember(i)))
@@ -237,21 +260,19 @@ bool SaveGame::setPartyFromRoster(const CharacterRoster &roster, const Party &pa
 	}
 
 	Common::Array<byte> data;
-	data.resize(kDosStateSize + kDosRandomSize + party.size() * kCharacterSize);
-	memcpy(data.data(), _raw.data(), kDosStateSize + kDosRandomSize);
+	data.resize(_recordOffset + party.size() * kCharacterSize);
+	memcpy(data.data(), _raw.data(), _recordOffset);
 	for (uint i = 0; i < party.size(); ++i) {
 		const byte *record = nullptr;
 		if (!roster.getRawRecord(party.getMember(i), record))
 			return false;
-		memcpy(data.data() + kDosStateSize + kDosRandomSize + i * kCharacterSize,
-			record, kCharacterSize);
+		memcpy(data.data() + _recordOffset + i * kCharacterSize, record, kCharacterSize);
 	}
 	_raw = data;
 	_size = data.size();
 	_characters.resize(party.size());
 	for (uint i = 0; i < party.size(); ++i)
-		parseCharacter(_raw.data() + kDosStateSize + kDosRandomSize + i * kCharacterSize,
-			_characters[i]);
+		parseCharacter(_raw.data() + _recordOffset + i * kCharacterSize, _characters[i]);
 	return true;
 }
 
@@ -275,6 +296,8 @@ bool SaveGame::parseDos(const byte *data, uint32 size) {
 	}
 
 	_kind = kSaveDos;
+	_partyBase = kDosStateSize;
+	_recordOffset = kDosStateSize + kDosRandomSize;
 	if (size >= 0x2374) {
 		_partyMaze = READ_LE_UINT16(data + 0x234E);
 		_partyX = READ_LE_UINT16(data + 0x2350);
@@ -282,6 +305,7 @@ bool SaveGame::parseDos(const byte *data, uint32 size) {
 		_prevMaze = READ_LE_UINT16(data + 0x235C);
 		_prevX = READ_LE_UINT16(data + 0x235E);
 		_prevY = READ_LE_UINT16(data + 0x2360);
+		_partyFacing = READ_LE_UINT16(data + 0x2358);
 		_partyCounter = READ_LE_UINT16(data + 0x2372);
 	}
 	_raw.resize(size);
@@ -299,7 +323,7 @@ const char *SaveGame::getKindName(SaveKind kind) {
 	case kSaveDos:
 		return "DOS SAVEGAME";
 	case kSaveGold:
-		return "Gold .SGM (compressed, not decoded)";
+		return "Gold .SGM / savegame container";
 	default:
 		return "unknown";
 	}

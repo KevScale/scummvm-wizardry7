@@ -115,8 +115,9 @@ public:
 		data.resize(10820 + 584);
 		memset(data.data(), 0, data.size());
 		data[0] = 0x0A; // in-progress save tag
-		data[0x234E] = 14; data[0x2350] = 56; data[0x2352] = 57;
-		data[0x235C] = 14; data[0x235E] = 55; data[0x2360] = 57;
+		data[0x234C] = 14; data[0x234E] = 56; data[0x2350] = 57;
+		data[0x2358] = 2; data[0x235A] = 14; data[0x235C] = 55; data[0x235E] = 57;
+		data[0x2396] = 1; // party count
 		data[0x2372] = 0xEC; data[0x2373] = 0x03;
 
 		byte *record = data.data() + 10820;
@@ -165,6 +166,7 @@ public:
 		TS_ASSERT_EQUALS(save.getPrevMaze(), 14);
 		TS_ASSERT_EQUALS(save.getPrevX(), 55);
 		TS_ASSERT_EQUALS(save.getPrevY(), 57);
+		TS_ASSERT_EQUALS(save.getPartyFacing(), 2);
 		TS_ASSERT_EQUALS(save.getPartyCounter(), 1004);
 		TS_ASSERT_EQUALS(c.ac, 7u);
 		TS_ASSERT_EQUALS(c.carryingCapacity, 50u);

@@ -115,12 +115,15 @@ public:
 private:
 	Common::Array<byte> _raw;
 	Common::Array<SaveCharacter> _characters;
+	uint32 _partyBase = 0;
+	uint32 _recordOffset = 0;
 	uint16 _partyMaze = 0;
 	uint16 _partyX = 0;
 	uint16 _partyY = 0;
 	uint16 _prevMaze = 0;
 	uint16 _prevX = 0;
 	uint16 _prevY = 0;
+	uint16 _partyFacing = 0;
 	uint16 _partyCounter = 0;
 	Common::Array<bool> _used;
 	uint16 _stride;
@@ -149,6 +152,7 @@ public:
 	uint16 getPrevMaze() const { return _prevMaze; }
 	uint16 getPrevX() const { return _prevX; }
 	uint16 getPrevY() const { return _prevY; }
+	uint16 getPartyFacing() const { return _partyFacing; }
 	uint16 getPartyCounter() const { return _partyCounter; }
 	uint32 getSize() const { return _size; }
 	uint getCharacterCount() const { return _characters.size(); }
@@ -164,12 +168,15 @@ private:
 	uint32 _size;
 	Common::Array<byte> _raw;
 	Common::Array<SaveCharacter> _characters;
+	uint32 _partyBase = 0;
+	uint32 _recordOffset = 0;
 	uint16 _partyMaze = 0;
 	uint16 _partyX = 0;
 	uint16 _partyY = 0;
 	uint16 _prevMaze = 0;
 	uint16 _prevX = 0;
 	uint16 _prevY = 0;
+	uint16 _partyFacing = 0;
 	uint16 _partyCounter = 0;
 };
 
