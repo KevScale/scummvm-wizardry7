@@ -115,6 +115,9 @@ public:
 private:
 	Common::Array<byte> _raw;
 	Common::Array<SaveCharacter> _characters;
+	uint16 _partyX = 0;
+	uint16 _partyY = 0;
+	uint16 _partyCounter = 0;
 	Common::Array<bool> _used;
 	uint16 _stride;
 	uint32 _headerSize;
@@ -136,6 +139,9 @@ public:
 	bool setPartyFromRoster(const CharacterRoster &roster, const Party &party);
 
 	SaveKind getKind() const { return _kind; }
+	uint16 getPartyX() const { return _partyX; }
+	uint16 getPartyY() const { return _partyY; }
+	uint16 getPartyCounter() const { return _partyCounter; }
 	uint32 getSize() const { return _size; }
 	uint getCharacterCount() const { return _characters.size(); }
 	const SaveCharacter &getCharacter(uint index) const { return _characters[index]; }
@@ -150,6 +156,9 @@ private:
 	uint32 _size;
 	Common::Array<byte> _raw;
 	Common::Array<SaveCharacter> _characters;
+	uint16 _partyX = 0;
+	uint16 _partyY = 0;
+	uint16 _partyCounter = 0;
 };
 
 } // End of namespace Wizardry7

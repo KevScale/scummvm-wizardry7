@@ -1330,8 +1330,9 @@ bool Wizardry7Console::cmdSaveInfo(int argc, const char **argv) {
 
 	ExperienceTable xpTable;
 	const bool haveXp = xpTable.load(*_vm->getScenario());
-	print("'%s': %s, %u bytes, %u character(s)\n", argv[1],
-		SaveGame::getKindName(save.getKind()), save.getSize(), save.getCharacterCount());
+	print("'%s': %s, %u bytes, %u character(s), pos (%u,%u) counter %u\n", argv[1],
+		SaveGame::getKindName(save.getKind()), save.getSize(), save.getCharacterCount(),
+		save.getPartyX(), save.getPartyY(), save.getPartyCounter());
 	for (uint i = 0; i < save.getCharacterCount(); ++i) {
 		const SaveCharacter &c = save.getCharacter(i);
 		const uint8 level = haveXp ? xpTable.getLevel(c.klass, c.xp) : c.level;

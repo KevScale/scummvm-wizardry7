@@ -275,6 +275,11 @@ bool SaveGame::parseDos(const byte *data, uint32 size) {
 	}
 
 	_kind = kSaveDos;
+	if (size >= 0x2374) {
+		_partyX = READ_LE_UINT16(data + 0x2350);
+		_partyY = READ_LE_UINT16(data + 0x2360);
+		_partyCounter = READ_LE_UINT16(data + 0x2372);
+	}
 	_raw.resize(size);
 	memcpy(_raw.data(), data, size);
 	_characters.resize(count);
