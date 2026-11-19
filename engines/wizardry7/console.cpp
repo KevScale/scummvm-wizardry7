@@ -1339,6 +1339,18 @@ bool Wizardry7Console::cmdSaveInfo(int argc, const char **argv) {
 			i, c.name.c_str(), level, ExperienceTable::getRank(level), c.age, c.xp,
 			c.hp, c.hpMax, c.stamina, c.staminaMax, c.ac, c.carryingCapacity, c.weight,
 			c.race, c.klass, c.alignment, c.knack);
+		print("      items:");
+		for (uint k = 0; k < 20; ++k) {
+			if (!c.inventory[k])
+				continue;
+			ItemInfo item;
+			if (loadItem(*_vm->getScenario(), c.inventory[k], item))
+				print(" %s%s", item.displayName.c_str(),
+					c.inventoryCount[k] > 1 ? Common::String::format("x%u", c.inventoryCount[k]).c_str() : "");
+			else
+				print(" #%u", c.inventory[k]);
+		}
+		print("\n");
 	}
 	return true;
 }
