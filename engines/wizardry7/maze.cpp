@@ -45,6 +45,7 @@ bool MazeRecord::loadFromData(const byte *data, uint32 size) {
 	_raw.resize(kRecordSize);
 	memcpy(_raw.data(), data, kRecordSize);
 	_loaded = true;
+	_cellCache = -1;
 	return true;
 }
 
@@ -118,6 +119,143 @@ void MazePosition::stepBackward() {
 
 bool MazePosition::resolve(const MazeRecord &mazeRecord, uint &cell, uint &localA, uint &localB) const {
 	return mazeRecord.findCell(a, b, cell, localA, localB);
+}
+
+bool MazeRecord::resolveCell(uint hint, int z, int x, uint &cell, uint &localZ, uint &localX) const {
+	int order[17];
+	uint n = 0;
+	order[n++] = hint & 0xF;
+	if (_cellCache >= 0 && _cellCache != (int)(hint & 0xF))
+		order[n++] = _cellCache;
+	for (uint k = 1; k < 16; ++k)
+		order[n++] = (hint + k) & 0xF;
+	for (uint i = 0; i < n; ++i) {
+		const uint c = order[i];
+		const int oz = _raw[0x490 + c];
+		const int ox = _raw[0x4A0 + c];
+		if (z >= oz && z <= oz + 7 && x >= ox && x <= ox + 7) {
+			cell = c;
+			localZ = z - oz;
+			localX = x - ox;
+			_cellCache = c;
+			return true;
+		}
+	}
+	return false;
+}
+
+uint16 MazeRecord::packedField(uint base, uint key, uint bits) const {
+	const uint bit = key * bits;
+	const uint byte = base + bit / 8;
+	const uint shift = bit & 7;
+	const uint16 word = _raw[byte] | (_raw[byte + 1] << 8);
+	return (word >> shift) & ((1u << bits) - 1);
+}
+
+bool MazeRecord::planeBit(uint base, uint key) const {
+	return (_raw[base + (key >> 3)] >> (key & 7)) & 1;
+}
+
+void MazeRecord::stepFacing(uint facing, int &z, int &x, int depth, int sub) {
+	switch (facing) {
+	case 0: z += depth; x += sub; break;
+	case 1: z += sub; x -= depth; break;
+	case 2: z -= depth; x -= sub; break;
+	default: z -= sub; x += depth; break;
+	}
+}
+
+static uint8 viewFallback(uint viewMode) {
+	switch (viewMode) {
+	case 1: return 4;
+	case 3: return 0;
+	case 5: return 0;
+	default: return 2;
+	}
+}
+
+uint8 MazeRecord::variantField(uint variant, int z, int x, uint localA, uint localB, uint cell,
+		uint viewMode) const {
+	const uint key = cell * 64 + localB * 8 + localA;
+	if (variant == 1)
+		return packedField(0x090, key, 4);
+	if (variant == 2)
+		return packedField(0x290, key, 4);
+	uint rcell = 0, rz = 0, rx = 0;
+	if (variant == 0) {
+		if (!resolveCell(cell, z - 1, x, rcell, rz, rx))
+			return viewFallback(viewMode);
+		return packedField(0x290, rcell * 64 + rx * 8 + rz, 4);
+	}
+	if (!resolveCell(cell, z, x - 1, rcell, rz, rx))
+		return viewFallback(viewMode);
+	return packedField(0x090, rcell * 64 + rx * 8 + rz, 4);
+}
+
+uint8 MazeRecord::shapeOf(uint dir, int z, int x, uint cell, uint localA, uint localB, uint p7,
+		uint facing, uint viewKind, uint viewMode, uint column) const {
+	if (p7 != 0) {
+		int z2 = z, x2 = x;
+		stepFacing(facing, z2, x2, p7, 0);
+		uint c2 = 0, lz2 = 0, lx2 = 0;
+		if (!resolveCell(cell, z2, x2, c2, lz2, lx2))
+			return viewFallback(viewKind);
+		cell = c2; localA = lz2; localB = lx2; z = z2; x = x2;
+	}
+	const uint key = cell * 64 + localB * 8 + localA;
+	if (planeBit(0x8B0, key) && (viewKind == 0 || viewKind == 3))
+		return 0;
+	uint8 r = variantField((dir + facing) & 3, z, x, localA, localB, cell, viewMode);
+	const uint8 c1 = packedField(0x4B0, key, 6);
+	const uint8 c2 = packedField(0x7B0, key, 2);
+	if (((dir + 1 + c2) & 3) == facing) {
+		if (c1 >= 1 && c1 <= 4)
+			r = 8 + c1 - 1;
+		else if (c1 == 5 && column == 0)
+			r = 0x0C;
+		else if (c1 == 6 && column == 0)
+			r = 0x0D;
+		else if (c1 == 9)
+			r = 0x0E;
+		else if (c1 == 10)
+			r = 0x0F;
+	}
+	return r;
+}
+
+uint8 MazeRecord::depthShape(uint depth, int z, int x, uint cell, uint localA, uint localB,
+		uint facing, uint viewKind, uint column) const {
+	if (depth != 0) {
+		int z2 = z, x2 = x;
+		stepFacing(facing, z2, x2, depth, 0);
+		uint c2 = 0, lz2 = 0, lx2 = 0;
+		if (!resolveCell(cell, z2, x2, c2, lz2, lx2))
+			return viewFallback(viewKind);
+		if (viewKind <= 5)
+			return viewFallback(viewKind);
+		cell = c2; localA = lz2; localB = lx2; z = z2; x = x2;
+	}
+	const uint key = cell * 64 + localB * 8 + localA;
+	uint8 r;
+	if (facing == 0 || facing == 1)
+		r = packedField(facing == 0 ? 0x090 : 0x290, key, 4);
+	else
+		r = variantField(facing == 2 ? 3 : 0, z, x, localA, localB, cell, 3);
+	const uint8 c1 = packedField(0x4B0, key, 6);
+	const uint8 c2 = packedField(0x7B0, key, 2);
+	if (facing == c2 || (c1 > 6 && c1 < 10) || c1 > 0xB) {
+		if (c1 >= 1 && c1 <= 4)
+			r = 8 + c1 - 1;
+		else if (c1 == 5 && column == 0)
+			r = 0x0C;
+		else if (c1 == 6 && column == 0)
+			r = 0x0D;
+		else if (c1 == 10)
+			r = 0x0E;
+		else if (c1 == 11)
+			r = 0x0F;
+	}
+	return r;
 }
 
 bool MazeRecord::deriveKindTable(int partyA, int partyB, uint facing, uint8 kinds[5][5]) const {

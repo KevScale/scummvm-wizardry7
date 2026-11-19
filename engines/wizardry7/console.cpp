@@ -114,6 +114,7 @@ Wizardry7Console::Wizardry7Console(Wizardry7Engine *vm) : GUI::Debugger(), _vm(v
 	registerCmd("cellray", WRAP_METHOD(Wizardry7Console, cmdCellRay));
 	registerCmd("kindtable", WRAP_METHOD(Wizardry7Console, cmdKindTable));
 	registerCmd("viewcell", WRAP_METHOD(Wizardry7Console, cmdViewCell));
+	registerCmd("shapegrid", WRAP_METHOD(Wizardry7Console, cmdShapeGrid));
 	registerCmd("script", WRAP_METHOD(Wizardry7Console, cmdScript));
 }
 
@@ -248,6 +249,8 @@ bool Wizardry7Console::runScript(const Common::Path &path) {
 			ok &= cmdKindTable(count, argv);
 		else if (command == "viewcell")
 			ok &= cmdViewCell(count, argv);
+		else if (command == "shapegrid")
+			ok &= cmdShapeGrid(count, argv);
 		else if (command == "script")
 			ok &= cmdScript(count, argv);
 		else {
@@ -490,6 +493,50 @@ bool Wizardry7Console::cmdCharGen(int argc, const char **argv) {
 
 bool Wizardry7Console::cmdCharGenUI(int argc, const char **argv) {
 	_vm->runCharacterCreationUI("VBFONT0.VGA", argc >= 2 ? Common::Path(argv[1]) : Common::Path());
+	return true;
+}
+
+bool Wizardry7Console::cmdShapeGrid(int argc, const char **argv) {
+	if (argc != 7) {
+		print("Usage: shapegrid <maze> <x> <y> <facing> <viewKind> <viewMode>\n");
+		return true;
+	}
+	int mazeId = 0, x = 0, y = 0, facing = 0, viewKind = 0, viewMode = 0;
+	if (!parseInteger(argv[1], mazeId) || !parseInteger(argv[2], x) ||
+		!parseInteger(argv[3], y) || !parseInteger(argv[4], facing) ||
+		!parseInteger(argv[5], viewKind) || !parseInteger(argv[6], viewMode) ||
+		mazeId < 0 || mazeId >= 32 || facing < 0 || facing > 3) {
+		print("Bad shapegrid arguments\n");
+		return true;
+	}
+	Wizardry7::MazeRecord maze;
+	if (!maze.load(*_vm->getScenario(), (uint)mazeId)) {
+		print("Cannot load maze %d\n", mazeId);
+		return true;
+	}
+	static const int kDepths[5] = { 0, -1, 1, -2, 2 };
+	for (int column = 0; column < 5; ++column) {
+		maze.resetCellCache();
+		print("col %d:", column);
+		for (int i = 0; i < 5; ++i) {
+			const int depth = kDepths[i];
+			if ((depth == -2 || depth == 2) && column <= 1) {
+				print(" -");
+				continue;
+			}
+			int z = x - column, xx = y;
+			if (depth)
+				Wizardry7::MazeRecord::stepFacing((uint)facing, z, xx, depth, 0);
+			uint cell = 0, lz = 0, lx = 0;
+			if (!maze.resolveCell(0, z, xx, cell, lz, lx)) {
+				print(" ?");
+				continue;
+			}
+			print(" %u", maze.depthShape(0, z, xx, cell, lz, lx,
+				(uint)facing, (uint)viewKind, (uint)column));
+		}
+		print("\n");
+	}
 	return true;
 }
 

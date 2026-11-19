@@ -100,8 +100,25 @@ public:
 
 	/** Cell origin tables at +0x490 (z) / +0x4A0 (x), 16 cells of 8x8. */
 	void getCellOrigin(uint cell, uint &originZ, uint &originX) const;
-	/** Resolve absolute (z,x) to a cell and local z/x coordinates. */
+	/** Resolve absolute (z,x) to a cell and local z/x coordinates (first-match scan). */
 	bool findCell(int z, int x, uint &cell, uint &localZ, uint &localX) const;
+
+	/** Gold's FUN_0046BCA4: hint cell, cached cell, then wrapping scan. */
+	bool resolveCell(uint hint, int z, int x, uint &cell, uint &localZ, uint &localX) const;
+	void resetCellCache() const { _cellCache = -1; }
+
+	/** Packed field reader FUN_00432DC2 (4/6/2-bit tables). */
+	uint16 packedField(uint base, uint key, uint bits) const;
+	/** Plane bit test FUN_00432B90. */
+	bool planeBit(uint base, uint key) const;
+	/** Facing-relative step (FUN_0044EBB0 with depth/sub). */
+	static void stepFacing(uint facing, int &z, int &x, int depth, int sub = 0);
+
+	/** Ports of FUN_004490BB / FUN_004489D9's return: shape for one direction/depth. */
+	uint8 shapeOf(uint dir, int z, int x, uint cell, uint localA, uint localB, uint p7,
+		uint facing, uint viewKind, uint viewMode, uint column) const;
+	uint8 depthShape(uint depth, int z, int x, uint cell, uint localA, uint localB,
+		uint facing, uint viewKind, uint column) const;
 
 	/**
 	 * Encounter roll for one of the 16 slots. Returns -1 when the chance check
@@ -111,9 +128,12 @@ public:
 
 private:
 	uint readBits(uint offset, uint bitOffset, uint width) const;
+	uint8 variantField(uint variant, int z, int x, uint localA, uint localB, uint cell,
+		uint viewMode) const;
 
 	Common::Array<byte> _raw;
 	bool _loaded;
+	mutable int _cellCache = -1;
 };
 
 } // End of namespace Wizardry7
