@@ -32,6 +32,7 @@
 #include "wizardry7/msg.h"
 #include "wizardry7/rng.h"
 #include "wizardry7/scenario.h"
+#include "wizardry7/trace.h"
 
 namespace Graphics {
 class Screen;
@@ -51,6 +52,7 @@ public:
 	bool isGold() const { return _gameDescription->gameType == kGameGold; }
 
 	WizardryRNG *getRNG() { return &_rng; }
+	TraceLog *getTrace() { return &_trace; }
 	MessageDatabase *getMessages() { return &_messages; }
 	ScenarioDatabase *getScenario() { return &_scenario; }
 	GamePalette *getPalette() { return &_palette; }
@@ -101,6 +103,7 @@ private:
 
 	const Wizardry7GameDescription *_gameDescription;
 	WizardryRNG _rng;
+	TraceLog _trace;
 	MessageDatabase _messages;
 	ScenarioDatabase _scenario;
 	GamePalette _palette;

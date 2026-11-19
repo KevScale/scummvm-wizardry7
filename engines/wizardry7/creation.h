@@ -31,6 +31,7 @@ namespace Wizardry7 {
 
 class WizardryRNG;
 class ScenarioDatabase;
+class TraceLog;
 
 /** Fields rolled when a class is finalized (before starting equipment). */
 struct CreationRolls {
@@ -164,7 +165,7 @@ public:
 	bool addBonusPoint(uint statIndex);
 	bool removeBonusPoint(uint statIndex);
 	/** Finish and roll the final age/HP/ST/capacity + starting kit. */
-	bool buildCharacter(WizardryRNG &rng, CreatedCharacter &out);
+	bool buildCharacter(WizardryRNG &rng, CreatedCharacter &out, TraceLog *trace = nullptr);
 	bool finish();
 
 private:

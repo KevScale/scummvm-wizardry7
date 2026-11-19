@@ -57,6 +57,7 @@ Wizardry7Engine::Wizardry7Engine(OSystem *syst, const Wizardry7GameDescription *
 	_scenarioLoaded(false) {
 
 	setDebugger(new Wizardry7Console(this));
+	_rng.setTrace(&_trace);
 }
 
 Wizardry7Engine::~Wizardry7Engine() {
@@ -927,7 +928,7 @@ bool Wizardry7Engine::creationFinish(CreatedCharacter &out) {
 		return false;
 	if (_creation.getStep() == CharacterCreationFlow::kStepName && !_creation.finishName())
 		return false;
-	if (!_creation.buildCharacter(_rng, out))
+	if (!_creation.buildCharacter(_rng, out, &_trace))
 		return false;
 	_creationResult = out;
 	_hasCreationResult = true;

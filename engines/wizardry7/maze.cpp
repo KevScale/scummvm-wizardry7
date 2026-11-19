@@ -20,10 +20,12 @@
  */
 
 #include "common/endian.h"
+#include "common/str.h"
 
 #include "wizardry7/maze.h"
 #include "wizardry7/rng.h"
 #include "wizardry7/scenario.h"
+#include "wizardry7/trace.h"
 
 namespace Wizardry7 {
 
@@ -304,18 +306,27 @@ byte MazeRecord::getEncounterChance(uint slot) const {
 	return slot < kEncounterSlots ? _raw[0xAC0 + slot] : 0;
 }
 
-int MazeRecord::selectEncounterMonster(uint slot, WizardryRNG &rng) const {
-	if (slot >= kEncounterSlots)
-		return -1;
-	const uint32 chance = getEncounterChance(slot);
-	const uint32 roll = rng.getRandom(100);
-	if (chance <= roll)
-		return -1;
-	const byte group = getEncounterGroup(slot, false);
-	const uint32 columnGroup = rng.getRandom(100) & 3;
-	const uint32 bandRoll = rng.getRandom(100);
-	const uint band = bandRoll < 0x4A ? 0 : bandRoll < 0x5C ? 1 : 2;
-	return getMonster(group, columnGroup, band);
+int MazeRecord::selectEncounterMonster(uint slot, WizardryRNG &rng, TraceLog *trace) const {
+	int monsterId = -1;
+	if (slot < kEncounterSlots) {
+		const uint32 chance = getEncounterChance(slot);
+		const uint32 roll = rng.getRandom(100);
+		if (chance > roll) {
+			const byte group = getEncounterGroup(slot, false);
+			const uint32 columnGroup = rng.getRandom(100) & 3;
+			const uint32 bandRoll = rng.getRandom(100);
+			const uint band = bandRoll < 0x4A ? 0 : bandRoll < 0x5C ? 1 : 2;
+			monsterId = getMonster(group, columnGroup, band);
+		}
+	}
+
+	if (trace) {
+		if (monsterId < 0)
+			trace->addEvent(Common::String::format("encounter slot=%u none", slot));
+		else
+			trace->addEvent(Common::String::format("encounter slot=%u monster=%d", slot, monsterId));
+	}
+	return monsterId;
 }
 
 void MazeRecord::getCellOrigin(uint cell, uint &originZ, uint &originX) const {

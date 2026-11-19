@@ -26,6 +26,8 @@
 
 namespace Wizardry7 {
 
+class TraceLog;
+
 /**
  * The combined Wichmann-Hill generator used by Wizardry VII for all rolls.
  *
@@ -36,6 +38,9 @@ namespace Wizardry7 {
 class WizardryRNG {
 public:
 	WizardryRNG();
+
+	/** Attach the gameplay trace; draws are then logged while it records. */
+	void setTrace(TraceLog *trace) { _trace = trace; }
 
 	/** Restore the initial seed used at process start. */
 	void reset();
@@ -55,7 +60,11 @@ public:
 private:
 	static uint16 step(uint16 state, int schrageModulus, int multiplier, int increment, int modulus);
 
+	/** Step all three generators and fold the outputs; no logging. */
+	uint16 advance();
+
 	uint16 _seed[3];
+	TraceLog *_trace;
 };
 
 } // End of namespace Wizardry7

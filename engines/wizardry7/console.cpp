@@ -43,6 +43,7 @@
 #include "wizardry7/party.h"
 #include "wizardry7/rng.h"
 #include "wizardry7/scenario.h"
+#include "wizardry7/trace.h"
 #include "wizardry7/wizardry7.h"
 
 namespace Wizardry7 {
@@ -117,6 +118,7 @@ Wizardry7Console::Wizardry7Console(Wizardry7Engine *vm) : GUI::Debugger(), _vm(v
 	registerCmd("mazewalk", WRAP_METHOD(Wizardry7Console, cmdMazeWalk));
 	registerCmd("shapegrid", WRAP_METHOD(Wizardry7Console, cmdShapeGrid));
 	registerCmd("script", WRAP_METHOD(Wizardry7Console, cmdScript));
+	registerCmd("trace", WRAP_METHOD(Wizardry7Console, cmdTrace));
 }
 
 int Wizardry7Console::print(const char *format, ...) {
@@ -256,6 +258,8 @@ bool Wizardry7Console::runScript(const Common::Path &path) {
 			ok &= cmdShapeGrid(count, argv);
 		else if (command == "script")
 			ok &= cmdScript(count, argv);
+		else if (command == "trace")
+			ok &= cmdTrace(count, argv);
 		else {
 			print("Unknown script command '%s'\n", command.c_str());
 			ok = false;
@@ -810,7 +814,7 @@ bool Wizardry7Console::cmdEncounter(int argc, const char **argv) {
 		print("Cannot load maze %d\n", mazeId);
 		return true;
 	}
-	const int monsterId = maze.selectEncounterMonster((uint)slot, *_vm->getRNG());
+	const int monsterId = maze.selectEncounterMonster((uint)slot, *_vm->getRNG(), _vm->getTrace());
 	if (monsterId < 0) {
 		print("maze %d slot %d: no encounter\n", mazeId, slot);
 		return true;
@@ -1518,6 +1522,49 @@ bool Wizardry7Console::cmdScript(int argc, const char **argv) {
 		return true;
 	}
 	return runScript(Common::Path(argv[1]));
+}
+
+bool Wizardry7Console::cmdTrace(int argc, const char **argv) {
+	TraceLog *trace = _vm->getTrace();
+	const Common::String action = argc >= 2 ? argv[1] : "status";
+
+	if (action == "status") {
+		print("trace: %s, draws %u, lines %u, seed %u %u %u\n",
+			trace->isEnabled() ? "on" : "off", trace->getDrawIndex(), trace->getLineCount(),
+			(uint)trace->getSeed(0), (uint)trace->getSeed(1), (uint)trace->getSeed(2));
+		return true;
+	}
+
+	if (action == "on") {
+		WizardryRNG *rng = _vm->getRNG();
+		trace->start(rng->getSeed(0), rng->getSeed(1), rng->getSeed(2));
+		print("trace: on, seed %u %u %u\n", (uint)rng->getSeed(0), (uint)rng->getSeed(1),
+			(uint)rng->getSeed(2));
+		return true;
+	}
+
+	if (action == "off") {
+		trace->stop();
+		print("trace: off, %u lines\n", trace->getLineCount());
+		return true;
+	}
+
+	if (action == "dump") {
+		if (argc != 3) {
+			print("Usage: trace dump <file>\n");
+			return true;
+		}
+		Common::String error;
+		if (!trace->dump(Common::Path(argv[2]), error)) {
+			print("Cannot write trace '%s': %s\n", argv[2], error.c_str());
+			return true;
+		}
+		print("trace: wrote %u lines to '%s'\n", trace->getLineCount(), argv[2]);
+		return true;
+	}
+
+	print("Usage: trace on|off|dump <file>|status\n");
+	return true;
 }
 
 } // End of namespace Wizardry7

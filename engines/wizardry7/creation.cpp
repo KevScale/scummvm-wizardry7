@@ -22,6 +22,7 @@
 
 #include "wizardry7/rng.h"
 #include "wizardry7/scenario.h"
+#include "wizardry7/trace.h"
 
 #include "common/endian.h"
 #include "common/util.h"
@@ -363,7 +364,7 @@ bool CharacterCreationFlow::removeBonusPoint(uint statIndex) {
 	return true;
 }
 
-bool CharacterCreationFlow::buildCharacter(WizardryRNG &rng, CreatedCharacter &out) {
+bool CharacterCreationFlow::buildCharacter(WizardryRNG &rng, CreatedCharacter &out, TraceLog *trace) {
 	if (_step != kStepBonus || _character.getBonusPoints() != 0 || _character.getClass() < 0)
 		return false;
 	out.name = _name;
@@ -376,6 +377,9 @@ bool CharacterCreationFlow::buildCharacter(WizardryRNG &rng, CreatedCharacter &o
 	out.portrait = CharacterCreation::rollPortrait(_character.getSex(), rng);
 	out.itemCount = StartingEquipment::getItems(out.classIndex, _race, out.items);
 	_step = kStepDone;
+	if (trace)
+		trace->addEvent(Common::String::format("create race=%u sex=%u class=%u age=%u hp=%u portrait=%u",
+			out.race, out.sex, out.classIndex, out.rolls.ageDays, out.rolls.hpMax, out.portrait));
 	return true;
 }
 

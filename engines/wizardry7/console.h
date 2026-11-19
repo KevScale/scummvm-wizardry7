@@ -85,6 +85,7 @@ private:
 	bool cmdText(int argc, const char **argv);
 	bool cmdRoster(int argc, const char **argv);
 	bool cmdScript(int argc, const char **argv);
+	bool cmdTrace(int argc, const char **argv);
 
 	Wizardry7Engine *_vm;
 	bool _scriptMode;

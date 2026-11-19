@@ -20,12 +20,14 @@
  */
 
 #include "common/scummsys.h"
+#include "common/str.h"
 
 #include "wizardry7/rng.h"
+#include "wizardry7/trace.h"
 
 namespace Wizardry7 {
 
-WizardryRNG::WizardryRNG() {
+WizardryRNG::WizardryRNG() : _trace(nullptr) {
 	reset();
 }
 
@@ -37,6 +39,8 @@ void WizardryRNG::reset(uint16 seed1, uint16 seed2, uint16 seed3) {
 	_seed[0] = seed1;
 	_seed[1] = seed2;
 	_seed[2] = seed3;
+	if (_trace)
+		_trace->addEvent(Common::String::format("rngseed %u %u %u", seed1, seed2, seed3));
 }
 
 uint16 WizardryRNG::step(uint16 state, int schrageModulus, int multiplier, int increment, int modulus) {
@@ -47,7 +51,7 @@ uint16 WizardryRNG::step(uint16 state, int schrageModulus, int multiplier, int i
 	return (uint16)value;
 }
 
-uint16 WizardryRNG::rand16() {
+uint16 WizardryRNG::advance() {
 	_seed[0] = step(_seed[0], 177, 171, 2, 30269);
 	_seed[1] = step(_seed[1], 176, 172, 35, 30307);
 	_seed[2] = step(_seed[2], 178, 170, 63, 30323);
@@ -59,10 +63,27 @@ uint16 WizardryRNG::rand16() {
 	return (uint16)((t3 + ((t1 + t2) & 0x7FFF)) & 0x7FFF);
 }
 
+uint16 WizardryRNG::rand16() {
+	const uint16 seed1 = _seed[0], seed2 = _seed[1], seed3 = _seed[2];
+	const uint16 value = advance();
+	if (_trace)
+		_trace->addRngDraw(0, seed1, seed2, seed3, value);
+	return value;
+}
+
 uint32 WizardryRNG::getRandom(uint32 max) {
-	if (max == 0)
+	if (max == 0) {
+		// FUN_00444A66 answers without touching the generator.
+		if (_trace)
+			_trace->addRngDraw(0, _seed[0], _seed[1], _seed[2], 0, false);
 		return 0;
-	return rand16() % max;
+	}
+
+	const uint16 seed1 = _seed[0], seed2 = _seed[1], seed3 = _seed[2];
+	const uint16 value = advance() % max;
+	if (_trace)
+		_trace->addRngDraw(max, seed1, seed2, seed3, value);
+	return value;
 }
 
 uint16 WizardryRNG::getSeed(int index) const {

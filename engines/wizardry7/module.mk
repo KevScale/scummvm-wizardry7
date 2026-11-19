@@ -16,6 +16,7 @@ MODULE_OBJS := \
 	rng.o \
 	save.o \
 	scenario.o \
+	trace.o \
 	view.o \
 	wizardry7.o \
 	xp.o

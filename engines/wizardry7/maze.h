@@ -29,6 +29,7 @@ namespace Wizardry7 {
 
 class ScenarioDatabase;
 class WizardryRNG;
+class TraceLog;
 
 /**
  * One SCENARIO type-2 maze record (2768 bytes).
@@ -124,7 +125,7 @@ public:
 	 * Encounter roll for one of the 16 slots. Returns -1 when the chance check
 	 * fails, otherwise the type-4 monster id from the 12x12 header.
 	 */
-	int selectEncounterMonster(uint slot, WizardryRNG &rng) const;
+	int selectEncounterMonster(uint slot, WizardryRNG &rng, TraceLog *trace = nullptr) const;
 
 private:
 	uint readBits(uint offset, uint bitOffset, uint width) const;
