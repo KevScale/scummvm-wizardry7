@@ -90,7 +90,7 @@ public:
 	static Common::Array<ViewPiece> painterPieces(const byte kinds[5][5], bool mirror);
 
 	/** Port of FUN_00449941 for one (column, depth) using the extracted shapes. */
-	static void spawnObjects(uint column, uint kind, uint viewKind, bool mirror,
+	static void spawnObjects(uint column, uint kind, uint viewKind, bool m78, bool m74,
 		uint depth, ViewObjectList &objects);
 
 	bool loadBundles();

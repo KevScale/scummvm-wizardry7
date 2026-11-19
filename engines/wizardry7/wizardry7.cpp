@@ -621,7 +621,7 @@ bool Wizardry7Engine::showViewCell(uint mazeId, int partyA, int partyB, uint fac
 		const bool m74 = ((facing + partyA + partyB + column) & 1) != 0;
 		for (uint i = 0; i < 5; ++i) {
 			const uint depth = kSpawnOrder[i];
-			ViewCompositor::spawnObjects(column, shapes[column][depth], viewKind, m74,
+			ViewCompositor::spawnObjects(column, shapes[column][depth], viewKind, mirror, m74,
 				depth, objects);
 		}
 	}

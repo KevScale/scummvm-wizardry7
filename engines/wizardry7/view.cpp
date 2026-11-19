@@ -125,7 +125,7 @@ Common::Array<ViewPiece> ViewObjectList::draw(uint columns) const {
 	return out;
 }
 
-void ViewCompositor::spawnObjects(uint column, uint kind, uint viewKind, bool mirror,
+void ViewCompositor::spawnObjects(uint column, uint kind, uint viewKind, bool m78, bool m74,
 		uint depth, ViewObjectList &objects) {
 	if (depth >= 5)
 		return;
@@ -134,36 +134,51 @@ void ViewCompositor::spawnObjects(uint column, uint kind, uint viewKind, bool mi
 	const auto t = [block](uint off) -> uint16 { return off < 0x60 ? block[off] : 0; };
 	const uint16 kNone = 0xFFFF;
 	ViewObject o = {};
-
 	auto emit = [&](uint8 layer, uint16 pieceA, uint16 pieceB, uint8 p4, uint8 p5,
 			uint8 p6, uint8 p7, uint16 selB, uint16 selA, uint8 col, uint8 slot,
 			uint8 p12, uint8 group) {
-		o.pieceA = pieceA;
-		o.pieceB = pieceB;
-		o.writemodeA = p4;
-		o.writemodeB = p5;
-		o.p6 = p6;
-		o.p7 = p7;
-		o.selB = selB;
-		o.selA = selA;
-		o.layer = layer;
-		o.column = col;
-		o.slot = slot;
-		o.p12 = p12;
-		o.group = group;
+		o.pieceA = pieceA; o.pieceB = pieceB; o.selB = selB; o.selA = selA;
+		o.writemodeA = p4; o.writemodeB = p5; o.p6 = p6; o.p7 = p7;
+		o.layer = layer; o.column = col; o.slot = slot; o.p12 = p12; o.group = group;
 		objects.spawn(o);
 	};
+	// Static overlay ramp for the layer-5 band (0x6A15C8), signed words.
+	static const int16 kOverlay[32] = {
+		0, -112, 0, 112, 0, 0, -72, 0, 72, 0, -96, -48, 0, 48, 96, -64,
+		-32, 0, 32, 64, -48, -24, 0, 24, 48, 0, 0, 0, 0, -20, -35, -45
+	};
 
-	uint16 pieceLair = kNone, selLair = kNone;
-	if (viewKind > 0 && column == 3) {
+	uint16 pieceLair = kNone, selLair = kNone, bLair = kNone;
+	if (viewKind > 0 && column == 3 && (depth == 0 || depth == 4)) {
 		uint16 a, b;
-		if (viewKind < 3 || viewKind == 5) {
-			a = 0x15; b = 0x16;
-		} else {
-			a = 0x14; b = 0x15;
-		}
-		pieceLair = mirror ? b : a;
-		selLair = mirror ? a : kNone;
+		if (viewKind < 3 || viewKind == 5) { a = 0x15; b = 0x16; }
+		else { a = 0x14; b = 0x15; }
+		pieceLair = m78 ? b : a;
+		selLair = m78 ? a : kNone;
+		bLair = b;
+	}
+
+	if (kind == 3 || kind == 6) {
+		const int16 ramp = kOverlay[column * 5 + depth];
+		emit(5, (uint16)ramp, 0, m74 + column * 2 + 5, 0, 0, 0, 0x48, 0xF7,
+			column, 0, m74, 0);
+		emit(5, (uint16)ramp, 0, column + 1, 0, 0, 0, 0x48, 0xF7,
+			column, 0, m74, 0);
+	}
+	if ((kind == 1 || kind == 3 || kind == 6 || kind == 7) && column < 4) {
+		const uint16 lo = t(0x46) + column;
+		const uint16 hi = t(0x48) + column;
+		const uint16 a = m74 ? hi : lo;
+		const uint16 b = m74 ? lo : hi;
+		emit(0xFF, a, b, 2, 2, 0, 0, m74 ? lo : kNone, m74 ? hi : kNone,
+			column, 2, 0, 0);
+	}
+	if (kind == 7 && column < 4) {
+		const uint16 pa = t(m74 ? 0x44 : 0x42) + column;
+		const uint16 pb = t(m74 ? 0x50 : 0x4E) + column;
+		emit(0xFF, pa, pb, 2, 2, 0, 0,
+			m74 ? t(0x42) + column : kNone, m74 ? t(0x4E) + column : kNone,
+			column, t(0x1A), 0, 0);
 	}
 
 	if (kind >= 1 && kind <= 0xF) {
@@ -182,17 +197,17 @@ void ViewCompositor::spawnObjects(uint column, uint kind, uint viewKind, bool mi
 		} else if (kind != 8 && kind != 9) {
 			if (viewKind == 0) {
 				if (column < 3)
-					emit(0xFF, mirror ? t(0x24) + column : t(0x22) + column, kNone,
+					emit(0xFF, m78 ? t(0x24) + column : t(0x22) + column, kNone,
 						column == 1 ? 2 : 0, 0, 0, 0,
-						mirror ? t(0x22) + column : kNone, kNone, column, t(0x16), 0, 0);
+						m78 ? t(0x22) + column : kNone, kNone, column, t(0x16), 0, 0);
 			} else if (viewKind < 3 || viewKind == 5) {
 				if (column < 4)
-					emit(0xFF, mirror ? t(0x40) + column : t(0x3E) + column, pieceLair,
-						2, 2, 0, 0, mirror ? t(0x3E) + column : kNone, selLair,
-						column, t(0x1C), 0, 0);
+					emit(0xFF, m78 ? t(0x40) + column : t(0x3E) + column, pieceLair,
+						2, 2, 0, 0, m74 ? t(0x3E) + column : kNone,
+						m74 ? bLair : kNone, column, t(0x1C), 0, 0);
 			} else if (viewKind < 5 && column < 4) {
-				emit(0xFF, mirror ? t(0x54) + column : t(0x52) + column, pieceLair,
-					2, 2, 0, 0, mirror ? t(0x52) + column : kNone, selLair,
+				emit(0xFF, m78 ? t(0x54) + column : t(0x52) + column, pieceLair,
+					2, 2, 0, 0, m78 ? t(0x52) + column : kNone, selLair,
 					column, t(0x20), 0, 0);
 			}
 		}
@@ -202,23 +217,24 @@ void ViewCompositor::spawnObjects(uint column, uint kind, uint viewKind, bool mi
 	if (column < keep) {
 		if (kind == 5) {
 			if (column < 4)
-				emit(0xFF, mirror ? t(0x58) + column : t(0x56) + column, kNone, 2, 0, 0, 0,
-					mirror ? t(0x56) + column : kNone, kNone, column, t(0x1E), 0, 0);
+				emit(0xFF, m78 ? t(0x58) + column : t(0x56) + column, kNone, 2, 0, 0, 0,
+					m78 ? t(0x56) + column : kNone, kNone, column, t(0x1E), 0, 0);
 		} else if (kind == 8 || kind == 9) {
-			const uint16 base = kind == 8 ? t(0x36) : t(0x3A);
-			pieceLair = column + base + 3;
-			emit(0xFF, mirror ? t(0x2C) + column : t(0x2A) + column, kNone, 2, 2, 0, 0,
-				mirror ? t(0x2A) + column : kNone, kNone, column, t(0x16), 0, 0);
+			emit(0xFF, m78 ? t(0x2C) + column : t(0x2A) + column, kNone, 2, 2, 0, 0,
+				m78 ? t(0x2A) + column : kNone, kNone, column, t(0x16), 0, 0);
+			if (column == 0 && t(0x18) != kNone) {
+				const uint16 b = t(0x18) + (kind == 8 ? 1 : 3);
+				emit(0xFD, b, kNone, 2, 0, 0, 0, b, kNone, column, t(0x04), 0, 1);
+			}
 		} else if (kind == 7) {
-			emit(0xFF, t(0x4E) + column, kNone, 2, 2, 0, 0,
-				mirror ? t(0x4E) + column : kNone, kNone, column, t(0x1E), 0, 0);
+			// shape 7's pair is emitted above; it has no separate case emit.
 		} else if (kind == 1 || kind == 3 || kind == 6) {
 			if (viewKind == 0)
-				emit(0xFF, mirror ? t(0x2C) + column : t(0x2A) + column, pieceLair, 2, 2, 0, 0,
-					mirror ? t(0x2A) + column : kNone, selLair, column, t(0x16), 0, 0);
+				emit(0xFF, m78 ? t(0x2C) + column : t(0x2A) + column, pieceLair, 2, 2, 0, 0,
+					m78 ? t(0x2A) + column : kNone, selLair, column, t(0x16), 0, 0);
 			else if (viewKind == 2)
-				emit(0xFF, mirror ? t(0x44) + column : t(0x42) + column, pieceLair, 2, 2, 0, 0,
-					mirror ? t(0x42) + column : kNone, selLair, column, t(0x1A), 0, 0);
+				emit(0xFF, m78 ? t(0x44) + column : t(0x42) + column, pieceLair, 2, 2, 0, 0,
+					m74 ? t(0x42) + column : kNone, selLair, column, t(0x1A), 0, 0);
 		}
 	}
 }
