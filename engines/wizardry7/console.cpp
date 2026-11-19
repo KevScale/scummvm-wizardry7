@@ -965,15 +965,22 @@ bool Wizardry7Console::cmdSheet(int argc, const char **argv) {
 	static const char *const names[7] = { "STR", "INT", "PIE", "VIT", "DEX", "SPD", "PER" };
 	for (uint i = 0; i < 7; ++i)
 		print("%s %u%s", names[i], c.stats[i], i == 6 ? "\n" : "  ");
+	static const char *const weaponryNames[10] = {
+		"WAND/DAGGER", "SWORD", "AXE", "MACE/FLAIL", "POLE/STAFF",
+		"THROW", "SLING", "BOW", "SHIELD", "HANDS/FEET"
+	};
+	static const char *const realmNames[6] = { "FIRE", "WATER", "AIR", "EARTH", "MENTAL", "MAGIC" };
 	print("weaponry:");
 	for (uint i = 0; i < 10; ++i)
-		print(" %u", c.weaponry[i]);
+		if (c.weaponry[i])
+			print(" %s=%u", weaponryNames[i], c.weaponry[i]);
 	print("\nskills: SWIM %u CLIMB %u SCOUT %u KIRI %u MUSIC %u | ART %u MYTH %u MAP %u SCRIBE %u\n",
 		c.swimming, c.climbing, c.scouting, c.kirijutsu, c.music, c.artifacts,
 		c.mythology, c.mapping, c.scribe);
 	print("spell points:");
 	for (uint i = 0; i < 6; ++i)
-		print(" %u/%u", c.spellPoints[i][0], c.spellPoints[i][1]);
+		if (c.spellPoints[i][1])
+			print(" %s=%u/%u", realmNames[i], c.spellPoints[i][0], c.spellPoints[i][1]);
 	print("\nSTR tier %u\n", c.strTier);
 	for (uint i = 0; i < 20; ++i) {
 		if (!c.inventory[i])
@@ -1405,6 +1412,8 @@ bool Wizardry7Console::cmdRoster(int argc, const char **argv) {
 		return true;
 	}
 
+	ExperienceTable xpTable;
+	const bool haveXp = xpTable.load(*_vm->getScenario());
 	print("'%s': %u slots\n", argv[1], roster.getSlotCount());
 	for (uint i = 0; i < roster.getSlotCount(); ++i) {
 		if (!roster.isSlotUsed(i)) {
@@ -1412,9 +1421,11 @@ bool Wizardry7Console::cmdRoster(int argc, const char **argv) {
 			continue;
 		}
 		const SaveCharacter &c = roster.getCharacter(i);
-		print("  %2u  %-8s age %u hp %u/%u st %u/%u ac %u cc %u race %u gender %u class %u align %u\n",
-			i, c.name.c_str(), c.age, c.hp, c.hpMax, c.stamina, c.staminaMax,
-			c.ac, c.carryingCapacity, c.race, c.gender, c.klass, c.alignment);
+		const uint8 level = haveXp ? xpTable.getLevel(c.klass, c.xp) : c.level;
+		print("  %2u  %-12s lvl %u rank %u age %u hp %u/%u st %u/%u ac %u cc %u race %u gender %u class %u align %u\n",
+			i, c.name.c_str(), level, ExperienceTable::getRank(level), c.age, c.hp,
+			c.hpMax, c.stamina, c.staminaMax, c.ac, c.carryingCapacity, c.race,
+			c.gender, c.klass, c.alignment);
 	}
 	return true;
 }
