@@ -137,8 +137,12 @@ public:
 		record[0x177] = 12; // portrait
 		record[0x1B9] = 10; // AC slot copies
 		record[0x24] = 1; // level 1
+		record[0x178] = 10; // weaponry SWORD
 		record[0x182] = 3; record[0x183] = 1; record[0x184] = 1;
+		record[0x189] = 5; record[0x18B] = 4;
 		record[0x190] = 1;
+		record[0x28] = 7; record[0x2A] = 9; // fire MP cur/max
+		record[0x130] = 1;
 		record[0x40 + 6] = 1; // first slot count
 
 		Wizardry7::SaveGame save;
@@ -159,6 +163,12 @@ public:
 		TS_ASSERT_EQUALS(c.climbing, 1);
 		TS_ASSERT_EQUALS(c.mapping, 0);
 		TS_ASSERT_EQUALS(c.artifacts, 1);
+		TS_ASSERT_EQUALS(c.weaponry[0], 10);
+		TS_ASSERT_EQUALS(c.kirijutsu, 5);
+		TS_ASSERT_EQUALS(c.music, 4);
+		TS_ASSERT_EQUALS(c.spellPoints[0][0], 7);
+		TS_ASSERT_EQUALS(c.spellPoints[0][1], 9);
+		TS_ASSERT_EQUALS(c.strTier, 1);
 		TS_ASSERT_EQUALS(c.race, 3);
 		TS_ASSERT_EQUALS(c.gender, 1);
 		TS_ASSERT_EQUALS(c.klass, 2);

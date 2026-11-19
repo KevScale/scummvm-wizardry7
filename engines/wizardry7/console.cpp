@@ -941,8 +941,16 @@ bool Wizardry7Console::cmdSheet(int argc, const char **argv) {
 	static const char *const names[7] = { "STR", "INT", "PIE", "VIT", "DEX", "SPD", "PER" };
 	for (uint i = 0; i < 7; ++i)
 		print("%s %u%s", names[i], c.stats[i], i == 6 ? "\n" : "  ");
-	print("skills: SWIM %u CLIMB %u SCOUT %u | ART %u MYTH %u MAP %u SCRIBE %u\n",
-		c.swimming, c.climbing, c.scouting, c.artifacts, c.mythology, c.mapping, c.scribe);
+	print("weaponry:");
+	for (uint i = 0; i < 10; ++i)
+		print(" %u", c.weaponry[i]);
+	print("\nskills: SWIM %u CLIMB %u SCOUT %u KIRI %u MUSIC %u | ART %u MYTH %u MAP %u SCRIBE %u\n",
+		c.swimming, c.climbing, c.scouting, c.kirijutsu, c.music, c.artifacts,
+		c.mythology, c.mapping, c.scribe);
+	print("spell points:");
+	for (uint i = 0; i < 6; ++i)
+		print(" %u/%u", c.spellPoints[i][0], c.spellPoints[i][1]);
+	print("\nSTR tier %u\n", c.strTier);
 	for (uint i = 0; i < 20; ++i) {
 		if (!c.inventory[i])
 			continue;
@@ -989,7 +997,7 @@ bool Wizardry7Console::cmdCreate(int argc, const char **argv) {
 	if (action == "start") {
 		const bool gold = argc >= 3 && Common::String(argv[2]).equalsIgnoreCase("gold");
 		_vm->startCreation(gold);
-		print("Creation started at %s step\n", gold ? "name" : "sex");
+		print("Creation started at name step\n");
 		return true;
 	}
 	if (!_vm->isCreationStarted()) {

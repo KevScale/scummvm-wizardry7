@@ -57,9 +57,20 @@ static void parseCharacter(const byte *record, SaveCharacter &character) {
 	for (uint i = 0; i < 7; ++i)
 		character.stats[i] = record[0x170 + i];
 	character.portrait = record[0x177];
+	for (uint i = 0; i < 10; ++i)
+		character.weaponry[i] = record[0x178 + i];
 	character.swimming = record[0x182];
 	character.climbing = record[0x183];
 	character.scouting = record[0x184];
+	character.kirijutsu = record[0x189];
+	character.music = record[0x18B];
+	character.strTier = record[0x130];
+	for (uint realm = 0; realm < 6; ++realm) {
+		character.spellPoints[realm][0] = READ_LE_UINT16(record + 0x28 + realm * 4);
+		character.spellPoints[realm][1] = READ_LE_UINT16(record + 0x2A + realm * 4);
+	}
+	for (uint i = 0; i < 13; ++i)
+		character.resist[i] = record[0x19B + i];
 	character.artifacts = record[0x190];
 	character.mythology = record[0x191];
 	character.mapping = record[0x192];

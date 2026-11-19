@@ -40,7 +40,11 @@ struct SaveCharacter {
 	SaveCharacter() : age(0), xp(0), hp(0), hpMax(0), stamina(0), staminaMax(0),
 		weight(0), carryingCapacity(0), level(0), ac(0), race(0), gender(0),
 		alignment(0), klass(0), knack(0), portrait(0), swimming(0), climbing(0),
-		scouting(0), artifacts(0), mythology(0), mapping(0), scribe(0) {
+		scouting(0), kirijutsu(0), music(0), artifacts(0), mythology(0), mapping(0),
+		scribe(0), strTier(0) {
+		memset(weaponry, 0, sizeof(weaponry));
+		memset(spellPoints, 0, sizeof(spellPoints));
+		memset(resist, 0, sizeof(resist));
 		memset(stats, 0, sizeof(stats));
 		memset(inventoryCount, 0, sizeof(inventoryCount));
 		memset(acSlots, 0, sizeof(acSlots));
@@ -68,8 +72,14 @@ struct SaveCharacter {
 	uint8 inventoryCount[20]; // slot +6 quantity/charges
 	uint8 inventoryKind[20]; // slot +4 cached item kind
 	uint8 acSlots[5]; // copies at +0x1B9..+0x1BD
+	uint8 weaponry[10]; // +0x178..+0x181
 	uint8 swimming, climbing, scouting; // +0x182..+0x184
+	uint8 kirijutsu; // +0x189
+	uint8 music; // +0x18B
 	uint8 artifacts, mythology, mapping, scribe; // +0x190..+0x193
+	uint16 spellPoints[6][2]; // +0x28..+0x3F: six realms, current/max
+	uint8 strTier; // +0x130: (STR>15)+(STR>17)
+	uint8 resist[13]; // +0x19B (second identical copy at +0x1A9)
 };
 
 /**
