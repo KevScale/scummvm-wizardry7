@@ -4,6 +4,7 @@ MODULE_OBJS := \
 	attack.o \
 	console.o \
 	creation.o \
+	datadir.o \
 	equipment.o \
 	font.o \
 	gfx.o \

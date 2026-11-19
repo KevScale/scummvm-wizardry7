@@ -27,6 +27,13 @@
 class Wizardry7MetaEngineDetection : public AdvancedMetaEngineDetection<Wizardry7::Wizardry7GameDescription> {
 public:
 	Wizardry7MetaEngineDetection() : AdvancedMetaEngineDetection(Wizardry7::gameDescriptions, Wizardry7::wizardry7Games) {
+		// The Gold data files live in Basedata/. The detection entries name
+		// them without the prefix, so also look one directory deeper than the
+		// selected path: this accepts either the install root or Basedata/
+		// itself as the game path.
+		static const char *const directoryGlobs[] = { "Basedata", nullptr };
+		_directoryGlobs = directoryGlobs;
+		_maxScanDepth = 2;
 		_flags = kADFlagMatchFullPaths;
 	}
 

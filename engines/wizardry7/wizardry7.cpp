@@ -32,6 +32,7 @@
 #include "image/bmp.h"
 
 #include "wizardry7/console.h"
+#include "wizardry7/datadir.h"
 #include "wizardry7/font.h"
 #include "wizardry7/items.h"
 #include "wizardry7/maze.h"
@@ -62,6 +63,14 @@ Wizardry7Engine::Wizardry7Engine(OSystem *syst, const Wizardry7GameDescription *
 
 Wizardry7Engine::~Wizardry7Engine() {
 	delete _screen;
+}
+
+void Wizardry7Engine::initializePath(const Common::FSNode &gamePath) {
+	Engine::initializePath(gamePath);
+
+	// Gold keeps its data files in Basedata/; reach them when the launcher was
+	// pointed at the install root instead of that directory.
+	registerDataDirectory(gamePath);
 }
 
 bool Wizardry7Engine::loadGameData() {

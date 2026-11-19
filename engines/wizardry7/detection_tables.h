@@ -30,13 +30,18 @@ static const PlainGameDescriptor wizardry7Games[] = {
 };
 
 // MD5 values cover the first 5000 bytes (AdvancedDetector default).
+//
+// The Gold file names carry no Basedata/ prefix: the launcher may be pointed
+// at the install root or at Basedata/ itself, and detection.cpp makes the
+// detector look one directory down (see _directoryGlobs) so a single entry
+// matches both layouts.
 static const Wizardry7GameDescription gameDescriptions[] = {
 	{
 		{
 			"wizardry7",
 			"Gold",
-			AD_ENTRY2s("Basedata/MSG.GLD", "1053a6e809f2a9f8898ee03324c32060", 344064,
-				"Basedata/SCENARIO.GLD", "2509289c55646ece02b7756454865479", 368320),
+			AD_ENTRY2s("MSG.GLD", "1053a6e809f2a9f8898ee03324c32060", 344064,
+				"SCENARIO.GLD", "2509289c55646ece02b7756454865479", 368320),
 			Common::EN_ANY,
 			Common::kPlatformWindows,
 			ADGF_UNSTABLE,

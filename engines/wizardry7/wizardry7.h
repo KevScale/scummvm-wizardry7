@@ -48,6 +48,7 @@ public:
 	~Wizardry7Engine() override;
 
 	Common::Error run() override;
+	void initializePath(const Common::FSNode &gamePath) override;
 
 	bool isGold() const { return _gameDescription->gameType == kGameGold; }
 
