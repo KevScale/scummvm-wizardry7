@@ -602,6 +602,43 @@ bool Wizardry7Engine::showViewCell(uint mazeId, int partyA, int partyB, uint fac
 	return true;
 }
 
+bool Wizardry7Engine::runMazeWalk(uint mazeId, int partyA, int partyB, uint facing,
+		uint mode, bool mirror) {
+	MazePosition pos;
+	pos.maze = mazeId;
+	pos.a = partyA;
+	pos.b = partyB;
+	pos.facing = facing & 3;
+	while (!shouldQuit()) {
+		if (!showViewCell(pos.maze, pos.a, pos.b, pos.facing, mode, mirror))
+			return false;
+		Common::Event event;
+		bool got = false;
+		while (!got && !shouldQuit()) {
+			while (g_system->getEventManager()->pollEvent(event)) {
+				if (event.type == Common::EVENT_QUIT)
+					return true;
+				if (event.type == Common::EVENT_KEYDOWN) {
+					got = true;
+					break;
+				}
+			}
+			g_system->delayMillis(10);
+		}
+		if (!got)
+			break;
+		switch (event.kbd.keycode) {
+		case Common::KEYCODE_ESCAPE: return true;
+		case Common::KEYCODE_UP: pos.stepForward(); break;
+		case Common::KEYCODE_DOWN: pos.stepBackward(); break;
+		case Common::KEYCODE_LEFT: pos.turnLeft(); break;
+		case Common::KEYCODE_RIGHT: pos.turnRight(); break;
+		default: break;
+		}
+	}
+	return true;
+}
+
 bool Wizardry7Engine::showCharacterReview(const Common::Path &rosterPath, uint slot,
 		const Common::String &fontName) {
 	CharacterRoster roster;

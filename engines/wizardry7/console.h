@@ -72,6 +72,7 @@ private:
 	bool cmdKindTable(int argc, const char **argv);
 	bool cmdViewCell(int argc, const char **argv);
 	bool cmdShapeGrid(int argc, const char **argv);
+	bool cmdMazeWalk(int argc, const char **argv);
 	bool cmdCreate(int argc, const char **argv);
 	bool cmdParty(int argc, const char **argv);
 	bool cmdScreen(int argc, const char **argv);

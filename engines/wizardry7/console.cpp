@@ -114,6 +114,7 @@ Wizardry7Console::Wizardry7Console(Wizardry7Engine *vm) : GUI::Debugger(), _vm(v
 	registerCmd("cellray", WRAP_METHOD(Wizardry7Console, cmdCellRay));
 	registerCmd("kindtable", WRAP_METHOD(Wizardry7Console, cmdKindTable));
 	registerCmd("viewcell", WRAP_METHOD(Wizardry7Console, cmdViewCell));
+	registerCmd("mazewalk", WRAP_METHOD(Wizardry7Console, cmdMazeWalk));
 	registerCmd("shapegrid", WRAP_METHOD(Wizardry7Console, cmdShapeGrid));
 	registerCmd("script", WRAP_METHOD(Wizardry7Console, cmdScript));
 }
@@ -249,6 +250,8 @@ bool Wizardry7Console::runScript(const Common::Path &path) {
 			ok &= cmdKindTable(count, argv);
 		else if (command == "viewcell")
 			ok &= cmdViewCell(count, argv);
+		else if (command == "mazewalk")
+			ok &= cmdMazeWalk(count, argv);
 		else if (command == "shapegrid")
 			ok &= cmdShapeGrid(count, argv);
 		else if (command == "script")
@@ -493,6 +496,23 @@ bool Wizardry7Console::cmdCharGen(int argc, const char **argv) {
 
 bool Wizardry7Console::cmdCharGenUI(int argc, const char **argv) {
 	_vm->runCharacterCreationUI("VBFONT0.VGA", argc >= 2 ? Common::Path(argv[1]) : Common::Path());
+	return true;
+}
+
+bool Wizardry7Console::cmdMazeWalk(int argc, const char **argv) {
+	if (argc < 5 || argc > 7) {
+		print("Usage: mazewalk <maze> <a> <b> <facing> [mode] [mirror]\n");
+		return true;
+	}
+	int maze = 0, a = 0, b = 0, facing = 0, mode = 3, mirror = 1;
+	if (!parseInteger(argv[1], maze) || !parseInteger(argv[2], a) ||
+		!parseInteger(argv[3], b) || !parseInteger(argv[4], facing) ||
+		(argc >= 6 && !parseInteger(argv[5], mode)) ||
+		(argc >= 7 && !parseInteger(argv[6], mirror))) {
+		print("Bad mazewalk arguments\n");
+		return true;
+	}
+	_vm->runMazeWalk((uint)maze, a, b, (uint)facing, (uint)mode, mirror != 0);
 	return true;
 }
 
