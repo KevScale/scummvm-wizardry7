@@ -34,6 +34,7 @@
 #include "wizardry7/console.h"
 #include "wizardry7/font.h"
 #include "wizardry7/items.h"
+#include "wizardry7/maze.h"
 #include "wizardry7/xp.h"
 #include "wizardry7/view.h"
 #include "wizardry7/save.h"
@@ -571,6 +572,28 @@ bool Wizardry7Engine::showViewTrace(const Common::Path &path) {
 	compositor.loadBundles();
 	if (!compositor.drawTrace(path, _screen))
 		return false;
+	_screen->makeAllDirty();
+	_screen->update();
+	return true;
+}
+
+bool Wizardry7Engine::showViewCell(uint mazeId, int partyA, int partyB, uint facing,
+		uint mode, bool mirror) {
+	MazeRecord maze;
+	if (!maze.load(_scenario, mazeId) || facing > 3)
+		return false;
+	if (!showScreen("PCVWSCRN"))
+		return false;
+	ViewCompositor compositor;
+	compositor.loadBundles();
+	const Common::Array<ViewPiece> fixed = ViewCompositor::fixedPieces(mode, mirror);
+	for (uint i = 0; i < fixed.size(); ++i)
+		compositor.drawPiece(_screen, fixed[i]);
+	uint8 kinds[5][5];
+	maze.deriveKindTable(partyA, partyB, facing, kinds);
+	const Common::Array<ViewPiece> painter = ViewCompositor::painterPieces(kinds, mirror);
+	for (uint i = 0; i < painter.size(); ++i)
+		compositor.drawPiece(_screen, painter[i]);
 	_screen->makeAllDirty();
 	_screen->update();
 	return true;

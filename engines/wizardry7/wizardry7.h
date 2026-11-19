@@ -71,6 +71,7 @@ public:
 	bool showViewFixed(uint mode, bool mirror);
 	bool showViewPainter(const byte kinds[5][5], bool mirror);
 	bool showViewTrace(const Common::Path &path);
+	bool showViewCell(uint mazeId, int partyA, int partyB, uint facing, uint mode, bool mirror);
 
 	/** Interactive DOS-style creation dialogs (mouse/keyboard). */
 	bool runCharacterCreationUI(const Common::String &fontName = "VBFONT0.VGA",

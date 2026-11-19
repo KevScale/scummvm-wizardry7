@@ -98,6 +98,28 @@ bool MazeRecord::getKindRay(uint cell, uint localZ, uint localX, int dz, int dx,
 	return true;
 }
 
+void MazePosition::stepForward() {
+	switch (facing) {
+	case 0: ++b; break;
+	case 1: ++a; break;
+	case 2: --b; break;
+	default: --a; break;
+	}
+}
+
+void MazePosition::stepBackward() {
+	switch (facing) {
+	case 0: --b; break;
+	case 1: --a; break;
+	case 2: ++b; break;
+	default: ++a; break;
+	}
+}
+
+bool MazePosition::resolve(const MazeRecord &mazeRecord, uint &cell, uint &localA, uint &localB) const {
+	return mazeRecord.findCell(a, b, cell, localA, localB);
+}
+
 bool MazeRecord::deriveKindTable(int partyA, int partyB, uint facing, uint8 kinds[5][5]) const {
 	memset(kinds, 0, sizeof(uint8) * 25);
 	static const int kDepth5[5] = { -2, -1, 0, 1, 2 };

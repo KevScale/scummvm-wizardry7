@@ -37,6 +37,21 @@ class WizardryRNG;
  * 0x000..0x08F is a 12x12 encounter-group -> monster table; the remaining
  * tables are documented in docs/formats/maze-and-monsters.md.
  */
+/** Minimal party position/turn model (collision/triggers still separate). */
+struct MazePosition {
+	uint maze;
+	int a;
+	int b;
+	uint8 facing; // 0..3
+
+	MazePosition() : maze(0), a(0), b(0), facing(0) {}
+	void turnLeft() { facing = (facing + 3) & 3; }
+	void turnRight() { facing = (facing + 1) & 3; }
+	void stepForward();
+	void stepBackward();
+	bool resolve(const class MazeRecord &mazeRecord, uint &cell, uint &localA, uint &localB) const;
+};
+
 class MazeRecord {
 public:
 	enum {

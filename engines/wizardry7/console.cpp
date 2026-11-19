@@ -113,6 +113,7 @@ Wizardry7Console::Wizardry7Console(Wizardry7Engine *vm) : GUI::Debugger(), _vm(v
 	registerCmd("cell", WRAP_METHOD(Wizardry7Console, cmdCell));
 	registerCmd("cellray", WRAP_METHOD(Wizardry7Console, cmdCellRay));
 	registerCmd("kindtable", WRAP_METHOD(Wizardry7Console, cmdKindTable));
+	registerCmd("viewcell", WRAP_METHOD(Wizardry7Console, cmdViewCell));
 	registerCmd("script", WRAP_METHOD(Wizardry7Console, cmdScript));
 }
 
@@ -245,6 +246,8 @@ bool Wizardry7Console::runScript(const Common::Path &path) {
 			ok &= cmdCellRay(count, argv);
 		else if (command == "kindtable")
 			ok &= cmdKindTable(count, argv);
+		else if (command == "viewcell")
+			ok &= cmdViewCell(count, argv);
 		else if (command == "script")
 			ok &= cmdScript(count, argv);
 		else {
@@ -487,6 +490,27 @@ bool Wizardry7Console::cmdCharGen(int argc, const char **argv) {
 
 bool Wizardry7Console::cmdCharGenUI(int argc, const char **argv) {
 	_vm->runCharacterCreationUI("VBFONT0.VGA", argc >= 2 ? Common::Path(argv[1]) : Common::Path());
+	return true;
+}
+
+bool Wizardry7Console::cmdViewCell(int argc, const char **argv) {
+	if (argc < 5 || argc > 7) {
+		print("Usage: viewcell <maze> <a> <b> <facing> [mode] [mirror]\n");
+		return true;
+	}
+	int maze = 0, a = 0, b = 0, facing = 0, mode = 3, mirror = 1;
+	if (!parseInteger(argv[1], maze) || !parseInteger(argv[2], a) ||
+		!parseInteger(argv[3], b) || !parseInteger(argv[4], facing) ||
+		(argc >= 6 && !parseInteger(argv[5], mode)) ||
+		(argc >= 7 && !parseInteger(argv[6], mirror))) {
+		print("Bad viewcell arguments\n");
+		return true;
+	}
+	if (!_vm->showViewCell((uint)maze, a, b, (uint)facing, (uint)mode, mirror != 0)) {
+		print("Cannot render view cell\n");
+		return true;
+	}
+	print("Rendered maze %d cell view at %d,%d facing %d\n", maze, a, b, facing);
 	return true;
 }
 
@@ -1297,13 +1321,17 @@ bool Wizardry7Console::cmdSaveInfo(int argc, const char **argv) {
 		return true;
 	}
 
+	ExperienceTable xpTable;
+	const bool haveXp = xpTable.load(*_vm->getScenario());
 	print("'%s': %s, %u bytes, %u character(s)\n", argv[1],
 		SaveGame::getKindName(save.getKind()), save.getSize(), save.getCharacterCount());
 	for (uint i = 0; i < save.getCharacterCount(); ++i) {
 		const SaveCharacter &c = save.getCharacter(i);
-		print("  %2u %-8s age %u xp %u hp %u/%u st %u/%u ac %u cc %u wt %u race %u class %u align %u knack %u\n",
-			i, c.name.c_str(), c.age, c.xp, c.hp, c.hpMax, c.stamina, c.staminaMax,
-			c.ac, c.carryingCapacity, c.weight, c.race, c.klass, c.alignment, c.knack);
+		const uint8 level = haveXp ? xpTable.getLevel(c.klass, c.xp) : c.level;
+		print("  %2u %-12s lvl %u rank %u age %u xp %u hp %u/%u st %u/%u ac %u cc %u wt %u race %u class %u align %u knack %u\n",
+			i, c.name.c_str(), level, ExperienceTable::getRank(level), c.age, c.xp,
+			c.hp, c.hpMax, c.stamina, c.staminaMax, c.ac, c.carryingCapacity, c.weight,
+			c.race, c.klass, c.alignment, c.knack);
 	}
 	return true;
 }

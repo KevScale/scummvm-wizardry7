@@ -794,6 +794,24 @@ public:
 		TS_ASSERT_EQUALS(maze.selectEncounterMonster(2, rng), 42);
 	}
 
+	void testMazePosition() {
+		Wizardry7::MazePosition pos;
+		pos.maze = 14; pos.a = 125; pos.b = 130;
+		TS_ASSERT_EQUALS(pos.facing, 0);
+		pos.stepForward(); // facing0: b+1
+		TS_ASSERT_EQUALS(pos.b, 131);
+		pos.stepBackward();
+		TS_ASSERT_EQUALS(pos.b, 130);
+		pos.turnRight();
+		TS_ASSERT_EQUALS(pos.facing, 1);
+		pos.stepForward(); // facing1: a+1
+		TS_ASSERT_EQUALS(pos.a, 126);
+		pos.turnLeft(); pos.turnLeft();
+		TS_ASSERT_EQUALS(pos.facing, 3);
+		pos.stepForward(); // facing3: a-1
+		TS_ASSERT_EQUALS(pos.a, 125);
+	}
+
 	void testMonsterRecord() {
 		byte record[232];
 		memset(record, 0, sizeof(record));
